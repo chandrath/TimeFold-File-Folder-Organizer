@@ -10,6 +10,8 @@
     <SelfContained>true</SelfContained>
     <RuntimeIdentifier>win-x64</RuntimeIdentifier>
     <IncludeNativeLibrariesForSelfExtract>true</IncludeNativeLibrariesForSelfExtract>
+    <PublishReadyToRun>true</PublishReadyToRun>
+    <EnableCompressionInSingleFile>true</EnableCompressionInSingleFile>
     <ApplicationIcon />
     <AssemblyName>FileOrganizer</AssemblyName>
     <RootNamespace>FileOrganizer</RootNamespace>

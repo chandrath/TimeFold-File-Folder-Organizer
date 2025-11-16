@@ -12,14 +12,21 @@ namespace FileOrganizer.Services
     {
         private readonly string _workingDirectory;
         private readonly string _executablePath;
+        private string _outputDirectory;
         
-        public FileOrganizerService(string executablePath)
+        public FileOrganizerService(string executablePath, string? workingDirectory = null, string? outputDirectory = null)
         {
             _executablePath = executablePath;
-            _workingDirectory = Path.GetDirectoryName(executablePath) ?? Environment.CurrentDirectory;
+            _workingDirectory = workingDirectory ?? Path.GetDirectoryName(executablePath) ?? Environment.CurrentDirectory;
+            _outputDirectory = outputDirectory ?? _workingDirectory;
         }
         
         public string WorkingDirectory => _workingDirectory;
+        public string OutputDirectory 
+        { 
+            get => _outputDirectory;
+            set => _outputDirectory = value;
+        }
         
         public List<FileItem> ScanFiles(bool includeTopLevelFolders)
         {
@@ -142,7 +149,7 @@ namespace FileOrganizer.Services
                 return result;
             
             var timestamp = DateTime.Now.ToString("yyyy-MM-dd_HHmmss");
-            var sortedFolder = Path.Combine(_workingDirectory, $"Sorted_{timestamp}");
+            var sortedFolder = Path.Combine(_outputDirectory, $"Sorted_{timestamp}");
             
             try
             {
@@ -215,8 +222,8 @@ namespace FileOrganizer.Services
                 
                 result.SortedFolderPath = sortedFolder;
                 
-                // Create CSV log
-                var csvPath = Path.Combine(_workingDirectory, $"OrganizationLog_{timestamp}.csv");
+                // Create CSV log in output directory
+                var csvPath = Path.Combine(_outputDirectory, $"OrganizationLog_{timestamp}.csv");
                 CsvLogger.WriteLog(csvPath, processedFiles, result);
                 result.CsvLogPath = csvPath;
             }
