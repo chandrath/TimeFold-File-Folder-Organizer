@@ -260,7 +260,7 @@ namespace FileOrganizer
                 Text = "Include Top-Level Folders (Move entire folders, contents inside will not be touched)",
                 Location = new Point(10, 35),
                 AutoSize = true,
-                Checked = false
+                Checked = true
             };
             
             _chkShowProgress = new CheckBox
@@ -289,9 +289,9 @@ namespace FileOrganizer
             _lstFiles = new ListView
             {
                 Location = new Point(PADDING, currentY),
-                Anchor = AnchorStyles.Top | AnchorStyles.Left | AnchorStyles.Right | AnchorStyles.Bottom,
+                Anchor = AnchorStyles.Top | AnchorStyles.Left | AnchorStyles.Right,
                 Width = this.ClientSize.Width - (PADDING * 2),
-                Height = 220,
+                Height = 180,
                 View = View.Details,
                 FullRowSelect = true,
                 GridLines = true,
@@ -303,7 +303,7 @@ namespace FileOrganizer
             _lstFiles.Columns.Add("Month Folder", 200);
             _lstFiles.Columns.Add("Modified Date", 150);
             _lstFiles.Columns.Add("Size", 120);
-            currentY += 230;
+            currentY += 195;
             
             // Summary label
             _lblSummary = new Label
@@ -315,7 +315,7 @@ namespace FileOrganizer
                 Width = this.ClientSize.Width - (PADDING * 2),
                 AutoSize = false
             };
-            currentY += 25;
+            currentY += 30;
             
             // Conflicts panel
             _pnlConflicts = new Panel
@@ -323,7 +323,7 @@ namespace FileOrganizer
                 Location = new Point(PADDING, currentY),
                 Anchor = AnchorStyles.Top | AnchorStyles.Left | AnchorStyles.Right,
                 Width = this.ClientSize.Width - (PADDING * 2),
-                Height = 70,
+                Height = 60,
                 BorderStyle = BorderStyle.FixedSingle,
                 BackColor = Color.FromArgb(255, 250, 240),
                 Visible = false
@@ -335,24 +335,26 @@ namespace FileOrganizer
                 Font = new Font("Segoe UI", 9, FontStyle.Bold),
                 ForeColor = Color.OrangeRed,
                 Location = new Point(10, 10),
-                Size = new Size(_pnlConflicts.Width - 20, 50),
+                Size = new Size(_pnlConflicts.Width - 20, 40),
                 AutoSize = false
             };
             
             _pnlConflicts.Controls.Add(_lblConflicts);
-            currentY += 80;
+            currentY += 70;
             
-            // Buttons
+            // Action Button - Always visible at bottom
+            currentY += 15; // Add spacing before button
             _btnStart = new Button
             {
                 Text = "Start Organization",
-                Size = new Size(170, 40),
-                Location = new Point(this.ClientSize.Width - 190, currentY),
+                Size = new Size(180, 42),
+                Location = new Point(this.ClientSize.Width - 200, currentY),
                 Anchor = AnchorStyles.Top | AnchorStyles.Right,
                 BackColor = Color.FromArgb(0, 120, 215),
                 ForeColor = Color.White,
                 FlatStyle = FlatStyle.Flat,
-                Font = new Font("Segoe UI", 10, FontStyle.Bold)
+                Font = new Font("Segoe UI", 10, FontStyle.Bold),
+                TabIndex = 0
             };
             _btnStart.FlatAppearance.BorderSize = 0;
             _btnStart.Click += BtnStart_Click;
@@ -534,8 +536,9 @@ namespace FileOrganizer
                 _lblConflicts.Width = _pnlConflicts.Width - 20;
                 _lblSummary.Width = availableWidth;
                 
-                // Update button positions
-                _btnStart.Left = Math.Max(PADDING, this.ClientSize.Width - 190);
+                // Update button positions - ensure it's always visible on right
+                _btnStart.Left = Math.Max(PADDING, this.ClientSize.Width - _btnStart.Width - PADDING);
+                _btnStart.Top = _pnlConflicts.Bottom + 15;
                 _btnBrowseSource.Left = _txtSourceFolder.Right + 8;
                 _btnUseCurrentFolder.Left = _btnBrowseSource.Right + 8;
                 _btnBrowseOutput.Left = _txtOutputFolder.Right + 8;
@@ -557,7 +560,7 @@ namespace FileOrganizer
             _txtSourceFolder.Text = "";
             _txtOutputFolder.Text = "";
             _chkUseSourceAsOutput.Checked = true;
-            _chkIncludeFolders.Checked = false;
+                _chkIncludeFolders.Checked = true;
             _chkShowProgress.Checked = true;
             _filesToOrganize.Clear();
             _lstFiles.Items.Clear();
