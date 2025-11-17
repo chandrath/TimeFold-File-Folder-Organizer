@@ -113,21 +113,21 @@ namespace FileOrganizer
             };
             currentY += 22;
             
-            _rbMonthYear = new RadioButton
-            {
-                Text = "Month Year (e.g., \"January 2024\")",
-                Location = new Point(leftMargin, currentY),
-                AutoSize = true,
-                Checked = _settings.FolderFormat == FolderFormat.MonthYear
-            };
-            currentY += 22;
-            
             _rbYearMonth = new RadioButton
             {
                 Text = "Year Month (e.g., \"2024 January\")",
                 Location = new Point(leftMargin, currentY),
                 AutoSize = true,
                 Checked = _settings.FolderFormat == FolderFormat.YearMonth
+            };
+            currentY += 22;
+            
+            _rbMonthYear = new RadioButton
+            {
+                Text = "Month Year (e.g., \"January 2024\")",
+                Location = new Point(leftMargin, currentY),
+                AutoSize = true,
+                Checked = _settings.FolderFormat == FolderFormat.MonthYear
             };
             currentY += 35;
             

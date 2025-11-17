@@ -440,20 +440,31 @@ namespace FileOrganizer
             var pnlCompleteButtons = new Panel
             {
                 Dock = DockStyle.Bottom,
-                Height = 60,
+                Height = 100,
                 Padding = new Padding(PADDING)
             };
             
-            // Center buttons horizontally
-            int buttonSpacing = 10;
-            int totalButtonWidth = 140 + 160 + 120 + (buttonSpacing * 2);
-            int startX = (this.ClientSize.Width - totalButtonWidth) / 2;
+            // Big prominent "New Organization" button - centered
+            _btnStartNewProject = new Button
+            {
+                Text = "New Organization",
+                Size = new Size(250, 55),
+                Location = new Point(0, 10),
+                Anchor = AnchorStyles.None,
+                BackColor = Color.FromArgb(0, 150, 0),
+                ForeColor = Color.White,
+                FlatStyle = FlatStyle.Flat,
+                Font = new Font("Segoe UI", 12, FontStyle.Bold)
+            };
+            _btnStartNewProject.FlatAppearance.BorderSize = 0;
+            _btnStartNewProject.Click += BtnStartNewProject_Click;
             
+            // Smaller secondary buttons below
             _btnOpenFolder = new Button
             {
                 Text = "Open Folder",
-                Size = new Size(140, 40),
-                Location = new Point(startX, 10),
+                Size = new Size(120, 35),
+                Location = new Point(0, 70),
                 Anchor = AnchorStyles.None,
                 BackColor = Color.FromArgb(0, 120, 215),
                 ForeColor = Color.White,
@@ -462,24 +473,11 @@ namespace FileOrganizer
             _btnOpenFolder.FlatAppearance.BorderSize = 0;
             _btnOpenFolder.Click += BtnOpenFolder_Click;
             
-            _btnStartNewProject = new Button
-            {
-                Text = "New Operation",
-                Size = new Size(160, 40),
-                Location = new Point(_btnOpenFolder.Right + buttonSpacing, 10),
-                Anchor = AnchorStyles.None,
-                BackColor = Color.Green,
-                ForeColor = Color.White,
-                FlatStyle = FlatStyle.Flat
-            };
-            _btnStartNewProject.FlatAppearance.BorderSize = 0;
-            _btnStartNewProject.Click += BtnStartNewProject_Click;
-            
             _btnClose = new Button
             {
                 Text = "Close",
-                Size = new Size(120, 40),
-                Location = new Point(_btnStartNewProject.Right + buttonSpacing, 10),
+                Size = new Size(120, 35),
+                Location = new Point(130, 70),
                 Anchor = AnchorStyles.None,
                 BackColor = Color.Gray,
                 ForeColor = Color.White,
@@ -488,19 +486,19 @@ namespace FileOrganizer
             _btnClose.FlatAppearance.BorderSize = 0;
             _btnClose.Click += (s, e) => this.Close();
             
-            pnlCompleteButtons.Controls.Add(_btnOpenFolder);
-            pnlCompleteButtons.Controls.Add(_btnStartNewProject);
-            pnlCompleteButtons.Controls.Add(_btnClose);
-            
-            // Handle resize for completion buttons
+            // Center all buttons horizontally
             pnlCompleteButtons.Resize += (s, e) =>
             {
-                int totalWidth = 140 + 160 + 120 + (buttonSpacing * 2);
-                int x = (pnlCompleteButtons.Width - totalWidth) / 2;
-                _btnOpenFolder.Left = x;
-                _btnStartNewProject.Left = _btnOpenFolder.Right + buttonSpacing;
-                _btnClose.Left = _btnStartNewProject.Right + buttonSpacing;
+                _btnStartNewProject.Left = (pnlCompleteButtons.Width - _btnStartNewProject.Width) / 2;
+                int smallButtonsWidth = 120 + 10 + 120;
+                int smallButtonsStartX = (pnlCompleteButtons.Width - smallButtonsWidth) / 2;
+                _btnOpenFolder.Left = smallButtonsStartX;
+                _btnClose.Left = smallButtonsStartX + 130;
             };
+            
+            pnlCompleteButtons.Controls.Add(_btnStartNewProject);
+            pnlCompleteButtons.Controls.Add(_btnOpenFolder);
+            pnlCompleteButtons.Controls.Add(_btnClose);
             
             _pnlComplete.Controls.Add(lblCompleteTitle);
             _pnlComplete.Controls.Add(_lblCompleteSummary);
