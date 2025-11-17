@@ -18,12 +18,14 @@ namespace FileOrganizer
         private CancellationTokenSource? _cancellationTokenSource;
         private string _executablePath;
         private string _executableDirectory;
+        private AppSettings _settings = new AppSettings();
         
         // UI Controls
         private MenuStrip _menuStrip = null!;
         private ToolStripMenuItem _menuFile = null!;
         private ToolStripMenuItem _menuFileNew = null!;
         private ToolStripMenuItem _menuFileExit = null!;
+        private ToolStripMenuItem _menuPreferences = null!;
         private ToolStripMenuItem _menuHelp = null!;
         private ToolStripMenuItem _menuAbout = null!;
         
@@ -36,8 +38,6 @@ namespace FileOrganizer
         private TextBox _txtOutputFolder = null!;
         private Button _btnBrowseOutput = null!;
         private Button _btnStart = null!;
-        private CheckBox _chkIncludeFolders = null!;
-        private CheckBox _chkShowProgress = null!;
         private ListView _lstFiles = null!;
         private Label _lblSummary = null!;
         private Label _lblConflicts = null!;
@@ -86,6 +86,10 @@ namespace FileOrganizer
             _menuFileExit = new ToolStripMenuItem("Exit", null, MenuFileExit_Click);
             _menuFile.DropDownItems.Add(_menuFileExit);
             
+            // Preferences Menu
+            _menuPreferences = new ToolStripMenuItem("Preferences");
+            _menuPreferences.Click += MenuPreferences_Click;
+            
             // Help Menu
             _menuHelp = new ToolStripMenuItem("Help");
             _menuAbout = new ToolStripMenuItem("About");
@@ -93,6 +97,7 @@ namespace FileOrganizer
             _menuHelp.DropDownItems.Add(_menuAbout);
             
             _menuStrip.Items.Add(_menuFile);
+            _menuStrip.Items.Add(_menuPreferences);
             _menuStrip.Items.Add(_menuHelp);
             this.MainMenuStrip = _menuStrip;
             this.Controls.Add(_menuStrip);
@@ -236,46 +241,6 @@ namespace FileOrganizer
             _btnBrowseOutput.Click += BtnBrowseOutput_Click;
             currentY += 40;
             
-            // Options panel
-            var pnlOptions = new Panel
-            {
-                Location = new Point(PADDING, currentY),
-                Anchor = AnchorStyles.Top | AnchorStyles.Left | AnchorStyles.Right,
-                Width = this.ClientSize.Width - (PADDING * 2),
-                Height = 75,
-                BorderStyle = BorderStyle.FixedSingle,
-                BackColor = Color.FromArgb(252, 252, 252)
-            };
-            
-            var lblOptions = new Label
-            {
-                Text = "Options",
-                Font = new Font("Segoe UI", 10, FontStyle.Bold),
-                Location = new Point(10, 10),
-                AutoSize = true
-            };
-            
-            _chkIncludeFolders = new CheckBox
-            {
-                Text = "Include Top-Level Folders (Move entire folders, contents inside will not be touched)",
-                Location = new Point(10, 35),
-                AutoSize = true,
-                Checked = true
-            };
-            
-            _chkShowProgress = new CheckBox
-            {
-                Text = "Show Detailed Progress",
-                Location = new Point(10, 55),
-                AutoSize = true,
-                Checked = true
-            };
-            
-            pnlOptions.Controls.Add(lblOptions);
-            pnlOptions.Controls.Add(_chkIncludeFolders);
-            pnlOptions.Controls.Add(_chkShowProgress);
-            currentY += 90;
-            
             // Files list
             var lblFiles = new Label
             {
@@ -340,24 +305,27 @@ namespace FileOrganizer
             };
             
             _pnlConflicts.Controls.Add(_lblConflicts);
-            currentY += 70;
+            currentY += 80;
             
-            // Action Button - Always visible at bottom
-            currentY += 15; // Add spacing before button
+            // Action Button - Properly positioned after conflicts/summary, centered
+            currentY += 25; // Spacing after conflicts panel
             _btnStart = new Button
             {
                 Text = "Start Organization",
-                Size = new Size(180, 42),
-                Location = new Point(this.ClientSize.Width - 200, currentY),
-                Anchor = AnchorStyles.Top | AnchorStyles.Right,
+                Size = new Size(220, 45),
+                Location = new Point(PADDING, currentY),
+                Anchor = AnchorStyles.Top | AnchorStyles.Left | AnchorStyles.Right,
                 BackColor = Color.FromArgb(0, 120, 215),
                 ForeColor = Color.White,
                 FlatStyle = FlatStyle.Flat,
-                Font = new Font("Segoe UI", 10, FontStyle.Bold),
+                Font = new Font("Segoe UI", 11, FontStyle.Bold),
                 TabIndex = 0
             };
             _btnStart.FlatAppearance.BorderSize = 0;
             _btnStart.Click += BtnStart_Click;
+            
+            // Center button horizontally - will be updated on resize
+            this.Load += (s, e) => CenterStartButton();
             
             _pnlMain.Controls.Add(_lblTitle);
             _pnlMain.Controls.Add(lblSourceFolderTitle);
@@ -369,7 +337,6 @@ namespace FileOrganizer
             _pnlMain.Controls.Add(_chkUseSourceAsOutput);
             _pnlMain.Controls.Add(_txtOutputFolder);
             _pnlMain.Controls.Add(_btnBrowseOutput);
-            _pnlMain.Controls.Add(pnlOptions);
             _pnlMain.Controls.Add(lblFiles);
             _pnlMain.Controls.Add(_lstFiles);
             _pnlMain.Controls.Add(_lblSummary);
@@ -469,12 +436,25 @@ namespace FileOrganizer
                 AutoSize = false
             };
             
+            // Buttons panel for completion screen
+            var pnlCompleteButtons = new Panel
+            {
+                Dock = DockStyle.Bottom,
+                Height = 60,
+                Padding = new Padding(PADDING)
+            };
+            
+            // Center buttons horizontally
+            int buttonSpacing = 10;
+            int totalButtonWidth = 140 + 160 + 120 + (buttonSpacing * 2);
+            int startX = (this.ClientSize.Width - totalButtonWidth) / 2;
+            
             _btnOpenFolder = new Button
             {
                 Text = "Open Folder",
-                Size = new Size(130, 38),
-                Location = new Point(this.ClientSize.Width - 400, this.ClientSize.Height - 70),
-                Anchor = AnchorStyles.Bottom | AnchorStyles.Right,
+                Size = new Size(140, 40),
+                Location = new Point(startX, 10),
+                Anchor = AnchorStyles.None,
                 BackColor = Color.FromArgb(0, 120, 215),
                 ForeColor = Color.White,
                 FlatStyle = FlatStyle.Flat
@@ -484,10 +464,10 @@ namespace FileOrganizer
             
             _btnStartNewProject = new Button
             {
-                Text = "Start New Project",
-                Size = new Size(150, 38),
-                Location = new Point(this.ClientSize.Width - 260, this.ClientSize.Height - 70),
-                Anchor = AnchorStyles.Bottom | AnchorStyles.Right,
+                Text = "New Operation",
+                Size = new Size(160, 40),
+                Location = new Point(_btnOpenFolder.Right + buttonSpacing, 10),
+                Anchor = AnchorStyles.None,
                 BackColor = Color.Green,
                 ForeColor = Color.White,
                 FlatStyle = FlatStyle.Flat
@@ -498,9 +478,9 @@ namespace FileOrganizer
             _btnClose = new Button
             {
                 Text = "Close",
-                Size = new Size(110, 38),
-                Location = new Point(this.ClientSize.Width - 110, this.ClientSize.Height - 70),
-                Anchor = AnchorStyles.Bottom | AnchorStyles.Right,
+                Size = new Size(120, 40),
+                Location = new Point(_btnStartNewProject.Right + buttonSpacing, 10),
+                Anchor = AnchorStyles.None,
                 BackColor = Color.Gray,
                 ForeColor = Color.White,
                 FlatStyle = FlatStyle.Flat
@@ -508,11 +488,23 @@ namespace FileOrganizer
             _btnClose.FlatAppearance.BorderSize = 0;
             _btnClose.Click += (s, e) => this.Close();
             
+            pnlCompleteButtons.Controls.Add(_btnOpenFolder);
+            pnlCompleteButtons.Controls.Add(_btnStartNewProject);
+            pnlCompleteButtons.Controls.Add(_btnClose);
+            
+            // Handle resize for completion buttons
+            pnlCompleteButtons.Resize += (s, e) =>
+            {
+                int totalWidth = 140 + 160 + 120 + (buttonSpacing * 2);
+                int x = (pnlCompleteButtons.Width - totalWidth) / 2;
+                _btnOpenFolder.Left = x;
+                _btnStartNewProject.Left = _btnOpenFolder.Right + buttonSpacing;
+                _btnClose.Left = _btnStartNewProject.Right + buttonSpacing;
+            };
+            
             _pnlComplete.Controls.Add(lblCompleteTitle);
             _pnlComplete.Controls.Add(_lblCompleteSummary);
-            _pnlComplete.Controls.Add(_btnOpenFolder);
-            _pnlComplete.Controls.Add(_btnStartNewProject);
-            _pnlComplete.Controls.Add(_btnClose);
+            _pnlComplete.Controls.Add(pnlCompleteButtons);
             
             this.Controls.Add(_pnlMain);
             this.Controls.Add(_pnlProgress);
@@ -520,6 +512,14 @@ namespace FileOrganizer
             
             // Handle window resize
             this.Resize += MainForm_Resize;
+        }
+        
+        private void CenterStartButton()
+        {
+            if (_btnStart != null && _pnlMain.Visible)
+            {
+                _btnStart.Left = Math.Max(PADDING, (this.ClientSize.Width - _btnStart.Width) / 2);
+            }
         }
         
         private void MainForm_Resize(object? sender, EventArgs e)
@@ -536,9 +536,10 @@ namespace FileOrganizer
                 _lblConflicts.Width = _pnlConflicts.Width - 20;
                 _lblSummary.Width = availableWidth;
                 
-                // Update button positions - ensure it's always visible on right
-                _btnStart.Left = Math.Max(PADDING, this.ClientSize.Width - _btnStart.Width - PADDING);
-                _btnStart.Top = _pnlConflicts.Bottom + 15;
+                // Center the start button
+                CenterStartButton();
+                
+                // Update other button positions
                 _btnBrowseSource.Left = _txtSourceFolder.Right + 8;
                 _btnUseCurrentFolder.Left = _btnBrowseSource.Right + 8;
                 _btnBrowseOutput.Left = _txtOutputFolder.Right + 8;
@@ -560,8 +561,6 @@ namespace FileOrganizer
             _txtSourceFolder.Text = "";
             _txtOutputFolder.Text = "";
             _chkUseSourceAsOutput.Checked = true;
-                _chkIncludeFolders.Checked = true;
-            _chkShowProgress.Checked = true;
             _filesToOrganize.Clear();
             _lstFiles.Items.Clear();
             _lblSummary.Text = "";
@@ -574,9 +573,35 @@ namespace FileOrganizer
         
         private void InitializeOrganizer()
         {
+            // Apply settings
+            ApplySettings();
+            
             // Default to executable directory
             SetSourceFolder(_executableDirectory);
             UpdateOutputFolder();
+        }
+        
+        private void ApplySettings()
+        {
+            // Apply "Show on Top" setting
+            this.TopMost = _settings.ShowOnTop;
+            
+            // Update service folder format
+            if (_organizerService != null)
+            {
+                _organizerService.FolderFormat = _settings.FolderFormat;
+            }
+        }
+        
+        private void MenuPreferences_Click(object? sender, EventArgs e)
+        {
+            using var prefsForm = new PreferencesForm(_settings);
+            if (prefsForm.ShowDialog() == DialogResult.OK)
+            {
+                _settings = prefsForm.Settings;
+                ApplySettings();
+                LoadPreview(); // Reload to update folder format display
+            }
         }
         
         private void SetSourceFolder(string folder)
@@ -585,6 +610,7 @@ namespace FileOrganizer
             {
                 _txtSourceFolder.Text = folder;
                 _organizerService = new FileOrganizerService(_executablePath, folder);
+                _organizerService.FolderFormat = _settings.FolderFormat;
                 UpdateOutputFolder();
                 LoadPreview();
             }
@@ -707,9 +733,7 @@ namespace FileOrganizer
             
             try
             {
-                _chkIncludeFolders.CheckedChanged -= ChkIncludeFolders_CheckedChanged;
-                _filesToOrganize = _organizerService.ScanFiles(_chkIncludeFolders.Checked);
-                _chkIncludeFolders.CheckedChanged += ChkIncludeFolders_CheckedChanged;
+                _filesToOrganize = _organizerService.ScanFiles(_settings.IncludeTopLevelFolders);
                 
                 UpdateFileList();
                 UpdateSummary();
@@ -793,10 +817,6 @@ namespace FileOrganizer
             }
         }
         
-        private void ChkIncludeFolders_CheckedChanged(object? sender, EventArgs e)
-        {
-            LoadPreview();
-        }
         
         private async void BtnStart_Click(object? sender, EventArgs e)
         {
@@ -847,7 +867,7 @@ namespace FileOrganizer
                 _progressBar.Value = p.current;
                 _lblProgress.Text = $"Processing: {p.current} of {p.total} files";
                 
-                if (_chkShowProgress.Checked)
+                if (_settings.ShowDetailedProgress)
                 {
                     _txtStatus.AppendText($"✓ {p.currentFile}\r\n");
                     _txtStatus.SelectionStart = _txtStatus.Text.Length;

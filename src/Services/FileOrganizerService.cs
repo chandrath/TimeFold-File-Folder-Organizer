@@ -13,6 +13,7 @@ namespace FileOrganizer.Services
         private readonly string _workingDirectory;
         private readonly string _executablePath;
         private string _outputDirectory;
+        private FolderFormat _folderFormat = FolderFormat.MonthYear;
         
         public FileOrganizerService(string executablePath, string? workingDirectory = null, string? outputDirectory = null)
         {
@@ -253,9 +254,17 @@ namespace FileOrganizer.Services
             return newPath;
         }
         
+        public FolderFormat FolderFormat
+        {
+            get => _folderFormat;
+            set => _folderFormat = value;
+        }
+        
         private string FormatMonthYear(DateTime date)
         {
-            return date.ToString("MMMM yyyy", System.Globalization.CultureInfo.InvariantCulture);
+            return _folderFormat == FolderFormat.MonthYear
+                ? date.ToString("MMMM yyyy", System.Globalization.CultureInfo.InvariantCulture)
+                : date.ToString("yyyy MMMM", System.Globalization.CultureInfo.InvariantCulture);
         }
     }
 }
