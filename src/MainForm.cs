@@ -1,8 +1,10 @@
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Drawing;
 using System.IO;
 using System.Linq;
+using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Windows.Forms;
@@ -51,8 +53,9 @@ namespace FileOrganizer
         private Label _lblCompleteSummary = null!;
         private Button _btnOpenFolder = null!;
         private Button _btnStartNewProject = null!;
-        private Button _btnClose = null!;
         private Button _btnCancel = null!;
+        private Panel _pnlCompleteActions = null!;
+        private OrganizationResult? _lastResult;
         
         private const int PADDING = 12;
         
@@ -324,8 +327,8 @@ namespace FileOrganizer
             _btnStart.FlatAppearance.BorderSize = 0;
             _btnStart.Click += BtnStart_Click;
             
-            // Center button horizontally - will be updated on resize
-            this.Load += (s, e) => CenterStartButton();
+            // Ensure layout is correct once the form loads
+            this.Load += MainForm_Load;
             
             _pnlMain.Controls.Add(_lblTitle);
             _pnlMain.Controls.Add(lblSourceFolderTitle);
@@ -418,91 +421,82 @@ namespace FileOrganizer
             
             var lblCompleteTitle = new Label
             {
-                Text = "✅ Organization Complete!",
+                Text = "Organization Complete!",
                 Font = new Font("Segoe UI", 16, FontStyle.Bold),
                 ForeColor = Color.Green,
-                Location = new Point(PADDING, PADDING + 25),
-                AutoSize = true
+                AutoSize = true,
+                Dock = DockStyle.Top,
+                Margin = new Padding(0)
             };
             
             _lblCompleteSummary = new Label
             {
                 Text = "",
                 Font = new Font("Segoe UI", 10),
-                Location = new Point(PADDING, lblCompleteTitle.Bottom + 20),
-                Anchor = AnchorStyles.Top | AnchorStyles.Left | AnchorStyles.Right | AnchorStyles.Bottom,
-                Width = this.ClientSize.Width - (PADDING * 2),
-                Height = this.ClientSize.Height - 150,
-                AutoSize = false
+                AutoSize = true,
+                MaximumSize = new Size(this.ClientSize.Width - (PADDING * 2), 0),
+                Margin = new Padding(0, 20, 0, 0),
+                Dock = DockStyle.Top
             };
             
-            // Buttons panel for completion screen
-            var pnlCompleteButtons = new Panel
+            // Completion actions container
+            _pnlCompleteActions = new Panel
             {
-                Dock = DockStyle.Bottom,
-                Height = 100,
-                Padding = new Padding(PADDING)
+                Dock = DockStyle.Top,
+                Height = 170,
+                Padding = new Padding(0, 20, 0, 0)
             };
             
-            // Big prominent "New Organization" button - centered
-            _btnStartNewProject = new Button
-            {
-                Text = "New Organization",
-                Size = new Size(250, 55),
-                Location = new Point(0, 10),
-                Anchor = AnchorStyles.None,
-                BackColor = Color.FromArgb(0, 150, 0),
-                ForeColor = Color.White,
-                FlatStyle = FlatStyle.Flat,
-                Font = new Font("Segoe UI", 12, FontStyle.Bold)
-            };
-            _btnStartNewProject.FlatAppearance.BorderSize = 0;
-            _btnStartNewProject.Click += BtnStartNewProject_Click;
-            
-            // Smaller secondary buttons below
             _btnOpenFolder = new Button
             {
-                Text = "Open Folder",
-                Size = new Size(120, 35),
-                Location = new Point(0, 70),
-                Anchor = AnchorStyles.None,
+                Text = "Open Output Folder",
+                Size = new Size(260, 55),
+                Location = new Point(0, 0),
                 BackColor = Color.FromArgb(0, 120, 215),
                 ForeColor = Color.White,
-                FlatStyle = FlatStyle.Flat
+                FlatStyle = FlatStyle.Flat,
+                Font = new Font("Segoe UI", 11, FontStyle.Bold)
             };
             _btnOpenFolder.FlatAppearance.BorderSize = 0;
             _btnOpenFolder.Click += BtnOpenFolder_Click;
             
-            _btnClose = new Button
+            _btnStartNewProject = new Button
             {
-                Text = "Close",
-                Size = new Size(120, 35),
-                Location = new Point(130, 70),
-                Anchor = AnchorStyles.None,
-                BackColor = Color.Gray,
+                Text = "New Operation",
+                Size = new Size(260, 55),
+                Location = new Point(0, _btnOpenFolder.Bottom + 15),
+                BackColor = Color.FromArgb(0, 150, 0),
                 ForeColor = Color.White,
-                FlatStyle = FlatStyle.Flat
+                FlatStyle = FlatStyle.Flat,
+                Font = new Font("Segoe UI", 11, FontStyle.Bold)
             };
-            _btnClose.FlatAppearance.BorderSize = 0;
-            _btnClose.Click += (s, e) => this.Close();
+            _btnStartNewProject.FlatAppearance.BorderSize = 0;
+            _btnStartNewProject.Click += BtnStartNewProject_Click;
             
-            // Center all buttons horizontally
-            pnlCompleteButtons.Resize += (s, e) =>
+            _pnlCompleteActions.Resize += (s, e) =>
             {
-                _btnStartNewProject.Left = (pnlCompleteButtons.Width - _btnStartNewProject.Width) / 2;
-                int smallButtonsWidth = 120 + 10 + 120;
-                int smallButtonsStartX = (pnlCompleteButtons.Width - smallButtonsWidth) / 2;
-                _btnOpenFolder.Left = smallButtonsStartX;
-                _btnClose.Left = smallButtonsStartX + 130;
+                CenterCompletionButtons();
             };
+            _pnlCompleteActions.Controls.Add(_btnOpenFolder);
+            _pnlCompleteActions.Controls.Add(_btnStartNewProject);
             
-            pnlCompleteButtons.Controls.Add(_btnStartNewProject);
-            pnlCompleteButtons.Controls.Add(_btnOpenFolder);
-            pnlCompleteButtons.Controls.Add(_btnClose);
+            var completionLayout = new TableLayoutPanel
+            {
+                Dock = DockStyle.Fill,
+                ColumnCount = 1,
+                AutoScroll = true,
+                Padding = new Padding(0)
+            };
+            completionLayout.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 100));
+            completionLayout.RowStyles.Add(new RowStyle(SizeType.AutoSize));
+            completionLayout.RowStyles.Add(new RowStyle(SizeType.AutoSize));
+            completionLayout.RowStyles.Add(new RowStyle(SizeType.AutoSize));
+            lblCompleteTitle.Margin = new Padding(0, 0, 0, 0);
+            completionLayout.Controls.Add(lblCompleteTitle, 0, 0);
+            completionLayout.Controls.Add(_lblCompleteSummary, 0, 1);
+            completionLayout.Controls.Add(_pnlCompleteActions, 0, 2);
             
-            _pnlComplete.Controls.Add(lblCompleteTitle);
-            _pnlComplete.Controls.Add(_lblCompleteSummary);
-            _pnlComplete.Controls.Add(pnlCompleteButtons);
+            _pnlComplete.Controls.Add(completionLayout);
             
             this.Controls.Add(_pnlMain);
             this.Controls.Add(_pnlProgress);
@@ -512,36 +506,111 @@ namespace FileOrganizer
             this.Resize += MainForm_Resize;
         }
         
+        private void MainForm_Load(object? sender, EventArgs e)
+        {
+            UpdateMainLayout();
+        }
+        
+        private void UpdateMainLayout()
+        {
+            if (_pnlMain != null && _pnlMain.Visible)
+            {
+                int innerWidth = Math.Max(300, _pnlMain.ClientSize.Width - (_pnlMain.Padding.Left + _pnlMain.Padding.Right));
+                
+                if (_txtSourceFolder != null)
+                {
+                    _txtSourceFolder.Width = Math.Max(300, innerWidth - 240);
+                }
+                
+                if (_btnBrowseSource != null && _txtSourceFolder != null)
+                {
+                    _btnBrowseSource.Left = _txtSourceFolder.Right + 8;
+                }
+                
+                if (_btnUseCurrentFolder != null && _btnBrowseSource != null)
+                {
+                    _btnUseCurrentFolder.Left = _btnBrowseSource.Right + 8;
+                }
+                
+                if (_txtOutputFolder != null)
+                {
+                    _txtOutputFolder.Width = Math.Max(300, innerWidth - 95);
+                }
+                
+                if (_btnBrowseOutput != null && _txtOutputFolder != null)
+                {
+                    _btnBrowseOutput.Left = _txtOutputFolder.Right + 8;
+                }
+                
+                if (_pnlSourceDrop != null)
+                {
+                    _pnlSourceDrop.Width = innerWidth;
+                }
+                
+                if (_lstFiles != null)
+                {
+                    _lstFiles.Width = innerWidth;
+                }
+                
+                if (_pnlConflicts != null)
+                {
+                    _pnlConflicts.Width = innerWidth;
+                }
+                
+                if (_lblConflicts != null && _pnlConflicts != null)
+                {
+                    _lblConflicts.Width = Math.Max(0, _pnlConflicts.Width - 20);
+                }
+                
+                if (_lblSummary != null)
+                {
+                    _lblSummary.Width = innerWidth;
+                }
+                
+                CenterStartButton();
+            }
+            
+            if (_pnlComplete != null && _pnlComplete.Visible)
+            {
+                int completeWidth = Math.Max(300, _pnlComplete.ClientSize.Width - (_pnlComplete.Padding.Left + _pnlComplete.Padding.Right));
+                if (_lblCompleteSummary != null)
+                {
+                    _lblCompleteSummary.MaximumSize = new Size(completeWidth, 0);
+                }
+                CenterCompletionButtons();
+            }
+        }
+        
         private void CenterStartButton()
         {
             if (_btnStart != null && _pnlMain.Visible)
             {
-                _btnStart.Left = Math.Max(PADDING, (this.ClientSize.Width - _btnStart.Width) / 2);
+                var availableWidth = _pnlMain.ClientSize.Width - (_pnlMain.Padding.Left + _pnlMain.Padding.Right);
+                var centeredLeft = _pnlMain.Padding.Left + Math.Max(0, (availableWidth - _btnStart.Width) / 2);
+                _btnStart.Left = Math.Max(PADDING, centeredLeft);
             }
+        }
+        
+        private void CenterCompletionButtons()
+        {
+            if (_pnlCompleteActions == null || _btnOpenFolder == null || _btnStartNewProject == null)
+                return;
+            
+            int availableWidth = _pnlCompleteActions.ClientSize.Width;
+            if (availableWidth <= 0)
+                return;
+            int left = Math.Max(0, (availableWidth - _btnOpenFolder.Width) / 2);
+            
+            _btnOpenFolder.Top = 0;
+            _btnOpenFolder.Left = left;
+            
+            _btnStartNewProject.Left = left;
+            _btnStartNewProject.Top = _btnOpenFolder.Bottom + 15;
         }
         
         private void MainForm_Resize(object? sender, EventArgs e)
         {
-            // Update widths for anchored controls
-            if (_pnlMain.Visible)
-            {
-                var availableWidth = this.ClientSize.Width - (PADDING * 2);
-                _txtSourceFolder.Width = Math.Max(300, availableWidth - 240);
-                _txtOutputFolder.Width = Math.Max(300, availableWidth - 95);
-                _pnlSourceDrop.Width = availableWidth;
-                _lstFiles.Width = availableWidth;
-                _pnlConflicts.Width = availableWidth;
-                _lblConflicts.Width = _pnlConflicts.Width - 20;
-                _lblSummary.Width = availableWidth;
-                
-                // Center the start button
-                CenterStartButton();
-                
-                // Update other button positions
-                _btnBrowseSource.Left = _txtSourceFolder.Right + 8;
-                _btnUseCurrentFolder.Left = _btnBrowseSource.Right + 8;
-                _btnBrowseOutput.Left = _txtOutputFolder.Right + 8;
-            }
+            UpdateMainLayout();
         }
         
         private void MenuFileNew_Click(object? sender, EventArgs e)
@@ -567,6 +636,8 @@ namespace FileOrganizer
             _pnlMain.Visible = true;
             _pnlProgress.Visible = false;
             _pnlComplete.Visible = false;
+            _lastResult = null;
+            UpdateMainLayout();
         }
         
         private void InitializeOrganizer()
@@ -919,30 +990,54 @@ namespace FileOrganizer
             _pnlMain.Visible = false;
             _pnlProgress.Visible = false;
             _pnlComplete.Visible = true;
+            _lastResult = result;
             
-            var summary = "Summary:\r\n" +
-                         "─────────────────────────────────────\r\n" +
-                         $"✓ Files Moved: {result.FilesMoved}\r\n" +
-                         $"✓ Month Folders Created: {result.MonthFoldersCreated}\r\n" +
-                         $"✓ Conflicts Resolved: {result.ConflictsResolved}\r\n";
+            var summaryBuilder = new StringBuilder();
+            summaryBuilder.AppendLine("Organization Complete!");
+            summaryBuilder.AppendLine();
+            summaryBuilder.AppendLine("Summary.");
+            summaryBuilder.AppendLine();
+            summaryBuilder.AppendLine($"v/ Files Moved: {result.FilesMoved}");
+            summaryBuilder.AppendLine($"s/ Month Folders Created: {result.MonthFoldersCreated}");
+            summaryBuilder.AppendLine($"v/ Conflicts Resolved: {result.ConflictsResolved}");
             
             if (result.Errors > 0)
             {
-                summary += $"⚠ Errors: {result.Errors}\r\n";
+                summaryBuilder.AppendLine($"!/ Errors: {result.Errors}");
             }
             
-            summary += $"\r\nOutput Folder:\r\n{result.SortedFolderPath}\r\n\r\n" +
-                      $"CSV Log:\r\n{result.CsvLogPath}";
+            summaryBuilder.AppendLine();
+            summaryBuilder.AppendLine("Output Folder:");
+            summaryBuilder.AppendLine(string.IsNullOrWhiteSpace(result.SortedFolderPath) ? "Not available" : result.SortedFolderPath);
+            summaryBuilder.AppendLine();
+            summaryBuilder.AppendLine("CSV Log:");
+            summaryBuilder.AppendLine(string.IsNullOrWhiteSpace(result.CsvLogPath) ? "Not created" : result.CsvLogPath);
             
-            _lblCompleteSummary.Text = summary;
+            _lblCompleteSummary.Text = summaryBuilder.ToString();
+            
+            bool outputExists = !string.IsNullOrWhiteSpace(result.SortedFolderPath) && Directory.Exists(result.SortedFolderPath);
+            _btnOpenFolder.Enabled = outputExists;
+            CenterCompletionButtons();
+            UpdateMainLayout();
         }
         
         private void BtnOpenFolder_Click(object? sender, EventArgs e)
         {
-            if (_organizerService != null && !string.IsNullOrEmpty(_organizerService.OutputDirectory) && Directory.Exists(_organizerService.OutputDirectory))
+            var targetPath = _lastResult?.SortedFolderPath;
+            if (!string.IsNullOrWhiteSpace(targetPath) && Directory.Exists(targetPath))
             {
-                System.Diagnostics.Process.Start("explorer.exe", _organizerService.OutputDirectory);
+                Process.Start("explorer.exe", targetPath);
+                return;
             }
+            
+            var fallback = _organizerService?.OutputDirectory;
+            if (!string.IsNullOrWhiteSpace(fallback) && Directory.Exists(fallback))
+            {
+                Process.Start("explorer.exe", fallback);
+                return;
+            }
+            
+            MessageBox.Show("Output folder is not available yet.", "Folder Unavailable", MessageBoxButtons.OK, MessageBoxIcon.Information);
         }
         
         private void BtnStartNewProject_Click(object? sender, EventArgs e)
