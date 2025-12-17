@@ -10,6 +10,7 @@ using System.Threading.Tasks;
 using System.Windows.Forms;
 using FileOrganizer.Models;
 using FileOrganizer.Services;
+using FileOrganizer.Controls;
 
 namespace FileOrganizer
 {
@@ -33,13 +34,13 @@ namespace FileOrganizer
         
         private Label _lblTitle = null!;
         private TextBox _txtSourceFolder = null!;
-        private Button _btnBrowseSource = null!;
-        private Button _btnUseCurrentFolder = null!;
+        private ModernButton _btnBrowseSource = null!;
+        private ModernButton _btnUseCurrentFolder = null!;
         private Panel _pnlSourceDrop = null!;
         private CheckBox _chkUseSourceAsOutput = null!;
         private TextBox _txtOutputFolder = null!;
-        private Button _btnBrowseOutput = null!;
-        private Button _btnStart = null!;
+        private ModernButton _btnBrowseOutput = null!;
+        private ModernButton _btnStart = null!;
         private ListView _lstFiles = null!;
         private Label _lblSummary = null!;
         private Label _lblConflicts = null!;
@@ -51,9 +52,9 @@ namespace FileOrganizer
         private Panel _pnlProgress = null!;
         private Panel _pnlComplete = null!;
         private Label _lblCompleteSummary = null!;
-        private Button _btnOpenFolder = null!;
-        private Button _btnStartNewProject = null!;
-        private Button _btnCancel = null!;
+        private ModernButton _btnOpenFolder = null!;
+        private ModernButton _btnStartNewProject = null!;
+        private ModernButton _btnCancel = null!;
         private Panel _pnlCompleteActions = null!;
         private OrganizationResult? _lastResult;
         
@@ -71,15 +72,19 @@ namespace FileOrganizer
         private void InitializeComponent()
         {
             this.Text = "File Organizer by Date";
-            this.Size = new Size(920, 780);
-            this.MinimumSize = new Size(850, 650);
+            this.Size = new Size(950, 720);
+            this.MinimumSize = new Size(850, 600);
             this.StartPosition = FormStartPosition.CenterScreen;
             this.FormBorderStyle = FormBorderStyle.Sizable;
             this.MaximizeBox = true;
             this.MinimizeBox = true;
+            this.BackColor = Color.FromArgb(245, 247, 250);
+            this.Font = new Font("Segoe UI", 9F, FontStyle.Regular, GraphicsUnit.Point);
             
             // Menu Bar
             _menuStrip = new MenuStrip();
+            _menuStrip.BackColor = Color.White;
+            _menuStrip.RenderMode = ToolStripRenderMode.System;
             
             // File Menu
             _menuFile = new ToolStripMenuItem("File");
@@ -110,67 +115,68 @@ namespace FileOrganizer
             {
                 Dock = DockStyle.Fill,
                 AutoScroll = true,
-                Padding = new Padding(PADDING)
+                Padding = new Padding(PADDING + 5)
             };
             
             // Title
             _lblTitle = new Label
             {
-                Text = "📁 File Organizer by Date",
-                Font = new Font("Segoe UI", 18, FontStyle.Bold),
-                ForeColor = Color.FromArgb(0, 51, 102),
+                Text = "File Organizer",
+                Font = new Font("Segoe UI", 24, FontStyle.Bold),
+                ForeColor = Color.FromArgb(31, 41, 55),
                 AutoSize = true,
-                Location = new Point(PADDING, PADDING + 25)
+                Location = new Point(PADDING, PADDING + 10)
             };
             
-            int currentY = _lblTitle.Bottom + 20;
+            int currentY = _lblTitle.Bottom + 30;
             
             // Source Folder Selection
             var lblSourceFolderTitle = new Label
             {
-                Text = "Source Folder (to organize):",
-                Font = new Font("Segoe UI", 10, FontStyle.Bold),
+                Text = "Source Folder",
+                Font = new Font("Segoe UI", 11, FontStyle.Bold),
+                ForeColor = Color.FromArgb(55, 65, 81),
                 Location = new Point(PADDING, currentY),
                 AutoSize = true
             };
-            currentY = lblSourceFolderTitle.Bottom + 8;
+            currentY = lblSourceFolderTitle.Bottom + 10;
             
             _txtSourceFolder = new TextBox
             {
-                Location = new Point(PADDING, currentY),
+                Location = new Point(PADDING, currentY + 5),
                 Anchor = AnchorStyles.Top | AnchorStyles.Left | AnchorStyles.Right,
-                Width = this.ClientSize.Width - (PADDING * 2) - 240,
-                Height = 25,
+                Width = this.ClientSize.Width - (PADDING * 2) - 260,
+                Height = 30,
                 ReadOnly = true,
                 BackColor = Color.White,
-                BorderStyle = BorderStyle.FixedSingle
+                BorderStyle = BorderStyle.FixedSingle,
+                Font = new Font("Segoe UI", 10)
             };
             
-            _btnBrowseSource = new Button
+            _btnBrowseSource = new ModernButton
             {
-                Text = "Browse...",
-                Size = new Size(85, 27),
-                Location = new Point(_txtSourceFolder.Right + 8, currentY - 1),
+                Text = "Browse",
+                Size = new Size(100, 35),
+                Location = new Point(_txtSourceFolder.Right + 10, currentY),
                 Anchor = AnchorStyles.Top | AnchorStyles.Right,
-                FlatStyle = FlatStyle.Flat,
-                BackColor = Color.FromArgb(240, 240, 240)
+                BackColor = Color.FromArgb(229, 231, 235),
+                ForeColor = Color.Black,
+                BorderRadius = 8
             };
-            _btnBrowseSource.FlatAppearance.BorderColor = Color.Gray;
             _btnBrowseSource.Click += BtnBrowseSource_Click;
             
-            _btnUseCurrentFolder = new Button
+            _btnUseCurrentFolder = new ModernButton
             {
-                Text = "📂 Use Current",
-                Size = new Size(130, 27),
-                Location = new Point(_btnBrowseSource.Right + 8, currentY - 1),
+                Text = "Use Current",
+                Size = new Size(130, 35),
+                Location = new Point(_btnBrowseSource.Right + 10, currentY),
                 Anchor = AnchorStyles.Top | AnchorStyles.Right,
-                BackColor = Color.FromArgb(0, 120, 215),
+                BackColor = Color.FromArgb(59, 130, 246),
                 ForeColor = Color.White,
-                FlatStyle = FlatStyle.Flat
+                BorderRadius = 8
             };
-            _btnUseCurrentFolder.FlatAppearance.BorderSize = 0;
             _btnUseCurrentFolder.Click += BtnUseCurrentFolder_Click;
-            currentY += 35;
+            currentY += 45;
             
             // Drag & Drop Panel for Source
             _pnlSourceDrop = new Panel
@@ -178,30 +184,32 @@ namespace FileOrganizer
                 Location = new Point(PADDING, currentY),
                 Anchor = AnchorStyles.Top | AnchorStyles.Left | AnchorStyles.Right,
                 Width = this.ClientSize.Width - (PADDING * 2),
-                Height = 45,
+                Height = 60,
                 BorderStyle = BorderStyle.FixedSingle,
-                BackColor = Color.FromArgb(248, 248, 248),
+                BackColor = Color.White,
                 AllowDrop = true
             };
             
             var lblDropHint = new Label
             {
-                Text = "📁 Drag and drop a folder here (folders only)",
-                Font = new Font("Segoe UI", 9),
+                Text = "Drag and drop a folder here",
+                Font = new Font("Segoe UI", 10, FontStyle.Italic),
                 ForeColor = Color.Gray,
-                Location = new Point(10, 12),
-                AutoSize = true
+                AutoSize = false,
+                TextAlign = ContentAlignment.MiddleCenter,
+                Dock = DockStyle.Fill
             };
             _pnlSourceDrop.Controls.Add(lblDropHint);
             _pnlSourceDrop.DragEnter += PnlSourceDrop_DragEnter;
             _pnlSourceDrop.DragDrop += PnlSourceDrop_DragDrop;
-            currentY += 55;
+            currentY += 75;
             
             // Output Folder Selection
             var lblOutputFolderTitle = new Label
             {
-                Text = "Output Folder (where Sorted folder will be created):",
-                Font = new Font("Segoe UI", 10, FontStyle.Bold),
+                Text = "Output Folder",
+                Font = new Font("Segoe UI", 11, FontStyle.Bold),
+                ForeColor = Color.FromArgb(55, 65, 81),
                 Location = new Point(PADDING, currentY),
                 AutoSize = true
             };
@@ -210,45 +218,47 @@ namespace FileOrganizer
             _chkUseSourceAsOutput = new CheckBox
             {
                 Text = "Use source folder as output (default)",
-                Font = new Font("Segoe UI", 9),
+                Font = new Font("Segoe UI", 10),
                 Location = new Point(PADDING, currentY),
                 AutoSize = true,
                 Checked = true
             };
             _chkUseSourceAsOutput.CheckedChanged += ChkUseSourceAsOutput_CheckedChanged;
-            currentY += 28;
+            currentY += 30;
             
             _txtOutputFolder = new TextBox
             {
-                Location = new Point(PADDING, currentY),
+                Location = new Point(PADDING, currentY + 5),
                 Anchor = AnchorStyles.Top | AnchorStyles.Left | AnchorStyles.Right,
-                Width = this.ClientSize.Width - (PADDING * 2) - 95,
-                Height = 25,
+                Width = this.ClientSize.Width - (PADDING * 2) - 120,
+                Height = 30,
                 ReadOnly = true,
-                BackColor = Color.FromArgb(240, 240, 240),
+                BackColor = Color.FromArgb(243, 244, 246),
                 BorderStyle = BorderStyle.FixedSingle,
-                Enabled = false
+                Enabled = false,
+                Font = new Font("Segoe UI", 10)
             };
             
-            _btnBrowseOutput = new Button
+            _btnBrowseOutput = new ModernButton
             {
-                Text = "Browse...",
-                Size = new Size(85, 27),
-                Location = new Point(_txtOutputFolder.Right + 8, currentY - 1),
+                Text = "Browse",
+                Size = new Size(100, 35),
+                Location = new Point(_txtOutputFolder.Right + 10, currentY),
                 Anchor = AnchorStyles.Top | AnchorStyles.Right,
-                FlatStyle = FlatStyle.Flat,
-                BackColor = Color.FromArgb(240, 240, 240),
-                Enabled = false
+                BackColor = Color.FromArgb(229, 231, 235),
+                ForeColor = Color.Black,
+                Enabled = false,
+                BorderRadius = 8
             };
-            _btnBrowseOutput.FlatAppearance.BorderColor = Color.Gray;
             _btnBrowseOutput.Click += BtnBrowseOutput_Click;
-            currentY += 40;
+            currentY += 50;
             
             // Files list
             var lblFiles = new Label
             {
-                Text = "Files to Organize (Preview)",
-                Font = new Font("Segoe UI", 10, FontStyle.Bold),
+                Text = "Preview",
+                Font = new Font("Segoe UI", 11, FontStyle.Bold),
+                ForeColor = Color.FromArgb(55, 65, 81),
                 Location = new Point(PADDING, currentY),
                 AutoSize = true
             };
@@ -259,25 +269,28 @@ namespace FileOrganizer
                 Location = new Point(PADDING, currentY),
                 Anchor = AnchorStyles.Top | AnchorStyles.Left | AnchorStyles.Right,
                 Width = this.ClientSize.Width - (PADDING * 2),
-                Height = 180,
+                Height = 200,
                 View = View.Details,
                 FullRowSelect = true,
-                GridLines = true,
+                GridLines = false,
                 MultiSelect = false,
-                BorderStyle = BorderStyle.FixedSingle
+                BorderStyle = BorderStyle.None,
+                BackColor = Color.White,
+                Font = new Font("Segoe UI", 9)
             };
             
             _lstFiles.Columns.Add("File Name", 400);
             _lstFiles.Columns.Add("Month Folder", 200);
             _lstFiles.Columns.Add("Modified Date", 150);
             _lstFiles.Columns.Add("Size", 120);
-            currentY += 195;
+            currentY += 215;
             
             // Summary label
             _lblSummary = new Label
             {
                 Text = "",
                 Font = new Font("Segoe UI", 9),
+                ForeColor = Color.FromArgb(75, 85, 99),
                 Location = new Point(PADDING, currentY),
                 Anchor = AnchorStyles.Top | AnchorStyles.Left | AnchorStyles.Right,
                 Width = this.ClientSize.Width - (PADDING * 2),
@@ -293,7 +306,7 @@ namespace FileOrganizer
                 Width = this.ClientSize.Width - (PADDING * 2),
                 Height = 60,
                 BorderStyle = BorderStyle.FixedSingle,
-                BackColor = Color.FromArgb(255, 250, 240),
+                BackColor = Color.FromArgb(254, 242, 242),
                 Visible = false
             };
             
@@ -301,7 +314,7 @@ namespace FileOrganizer
             {
                 Text = "⚠ Conflicts Detected:",
                 Font = new Font("Segoe UI", 9, FontStyle.Bold),
-                ForeColor = Color.OrangeRed,
+                ForeColor = Color.FromArgb(220, 38, 38),
                 Location = new Point(10, 10),
                 Size = new Size(_pnlConflicts.Width - 20, 40),
                 AutoSize = false
@@ -310,24 +323,22 @@ namespace FileOrganizer
             _pnlConflicts.Controls.Add(_lblConflicts);
             currentY += 80;
             
-            // Action Button - Properly positioned after conflicts/summary, centered
-            currentY += 25; // Spacing after conflicts panel
-            _btnStart = new Button
+            // Action Button
+            currentY += 25;
+            _btnStart = new ModernButton
             {
                 Text = "Start Organization",
-                Size = new Size(220, 45),
+                Size = new Size(250, 50),
                 Location = new Point(PADDING, currentY),
-                Anchor = AnchorStyles.Top | AnchorStyles.Left | AnchorStyles.Right,
-                BackColor = Color.FromArgb(0, 120, 215),
+                Anchor = AnchorStyles.Top,
+                BackColor = Color.FromArgb(37, 99, 235),
                 ForeColor = Color.White,
-                FlatStyle = FlatStyle.Flat,
-                Font = new Font("Segoe UI", 11, FontStyle.Bold),
-                TabIndex = 0
+                Font = new Font("Segoe UI", 12, FontStyle.Bold),
+                TabIndex = 0,
+                BorderRadius = 25
             };
-            _btnStart.FlatAppearance.BorderSize = 0;
             _btnStart.Click += BtnStart_Click;
             
-            // Ensure layout is correct once the form loads
             this.Load += MainForm_Load;
             
             _pnlMain.Controls.Add(_lblTitle);
@@ -351,23 +362,24 @@ namespace FileOrganizer
             {
                 Dock = DockStyle.Fill,
                 Visible = false,
-                Padding = new Padding(PADDING)
+                Padding = new Padding(PADDING + 20)
             };
             
             var lblProgressTitle = new Label
             {
-                Text = "📁 Organizing Files...",
-                Font = new Font("Segoe UI", 16, FontStyle.Bold),
+                Text = "Organizing Files...",
+                Font = new Font("Segoe UI", 18, FontStyle.Bold),
+                ForeColor = Color.FromArgb(31, 41, 55),
                 Location = new Point(PADDING, PADDING + 25),
                 AutoSize = true
             };
             
             _progressBar = new ProgressBar
             {
-                Location = new Point(PADDING, lblProgressTitle.Bottom + 20),
+                Location = new Point(PADDING, lblProgressTitle.Bottom + 30),
                 Anchor = AnchorStyles.Top | AnchorStyles.Left | AnchorStyles.Right,
                 Width = this.ClientSize.Width - (PADDING * 2),
-                Height = 35,
+                Height = 20,
                 Style = ProgressBarStyle.Continuous
             };
             
@@ -375,34 +387,34 @@ namespace FileOrganizer
             {
                 Text = "Initializing...",
                 Font = new Font("Segoe UI", 10),
-                Location = new Point(PADDING, _progressBar.Bottom + 12),
+                Location = new Point(PADDING, _progressBar.Bottom + 15),
                 AutoSize = true
             };
             
             _txtStatus = new TextBox
             {
-                Location = new Point(PADDING, _lblProgress.Bottom + 15),
+                Location = new Point(PADDING, _lblProgress.Bottom + 20),
                 Anchor = AnchorStyles.Top | AnchorStyles.Left | AnchorStyles.Right | AnchorStyles.Bottom,
                 Width = this.ClientSize.Width - (PADDING * 2),
-                Height = this.ClientSize.Height - _lblProgress.Bottom - 80,
+                Height = this.ClientSize.Height - _lblProgress.Bottom - 100,
                 Multiline = true,
                 ReadOnly = true,
                 ScrollBars = ScrollBars.Vertical,
                 Font = new Font("Consolas", 9),
-                BorderStyle = BorderStyle.FixedSingle
+                BorderStyle = BorderStyle.FixedSingle,
+                BackColor = Color.White
             };
             
-            _btnCancel = new Button
+            _btnCancel = new ModernButton
             {
                 Text = "Cancel",
-                Size = new Size(110, 35),
-                Location = new Point(this.ClientSize.Width - 130, this.ClientSize.Height - 60),
+                Size = new Size(120, 40),
+                Location = new Point(this.ClientSize.Width - 140, this.ClientSize.Height - 60),
                 Anchor = AnchorStyles.Bottom | AnchorStyles.Right,
-                BackColor = Color.OrangeRed,
+                BackColor = Color.FromArgb(220, 38, 38),
                 ForeColor = Color.White,
-                FlatStyle = FlatStyle.Flat
+                BorderRadius = 8
             };
-            _btnCancel.FlatAppearance.BorderSize = 0;
             _btnCancel.Click += BtnCancel_Click;
             
             _pnlProgress.Controls.Add(lblProgressTitle);
@@ -416,23 +428,23 @@ namespace FileOrganizer
             {
                 Dock = DockStyle.Fill,
                 Visible = false,
-                Padding = new Padding(PADDING)
+                Padding = new Padding(PADDING + 20)
             };
             
             var lblCompleteTitle = new Label
             {
                 Text = "Organization Complete!",
-                Font = new Font("Segoe UI", 16, FontStyle.Bold),
-                ForeColor = Color.Green,
+                Font = new Font("Segoe UI", 20, FontStyle.Bold),
+                ForeColor = Color.FromArgb(16, 185, 129),
                 AutoSize = true,
                 Dock = DockStyle.Top,
-                Margin = new Padding(0)
+                Margin = new Padding(0, 20, 0, 20) // Added top margin to fix cut-off
             };
             
             _lblCompleteSummary = new Label
             {
                 Text = "",
-                Font = new Font("Segoe UI", 10),
+                Font = new Font("Segoe UI", 11),
                 AutoSize = true,
                 MaximumSize = new Size(this.ClientSize.Width - (PADDING * 2), 0),
                 Margin = new Padding(0, 20, 0, 0),
@@ -443,34 +455,32 @@ namespace FileOrganizer
             _pnlCompleteActions = new Panel
             {
                 Dock = DockStyle.Top,
-                Height = 170,
-                Padding = new Padding(0, 20, 0, 0)
+                Height = 200,
+                Padding = new Padding(0, 40, 0, 0)
             };
             
-            _btnOpenFolder = new Button
+            _btnOpenFolder = new ModernButton
             {
                 Text = "Open Output Folder",
-                Size = new Size(260, 55),
+                Size = new Size(280, 60),
                 Location = new Point(0, 0),
-                BackColor = Color.FromArgb(0, 120, 215),
+                BackColor = Color.FromArgb(37, 99, 235),
                 ForeColor = Color.White,
-                FlatStyle = FlatStyle.Flat,
-                Font = new Font("Segoe UI", 11, FontStyle.Bold)
+                Font = new Font("Segoe UI", 12, FontStyle.Bold),
+                BorderRadius = 10
             };
-            _btnOpenFolder.FlatAppearance.BorderSize = 0;
             _btnOpenFolder.Click += BtnOpenFolder_Click;
             
-            _btnStartNewProject = new Button
+            _btnStartNewProject = new ModernButton
             {
                 Text = "New Operation",
-                Size = new Size(260, 55),
-                Location = new Point(0, _btnOpenFolder.Bottom + 15),
-                BackColor = Color.FromArgb(0, 150, 0),
+                Size = new Size(280, 60),
+                Location = new Point(0, _btnOpenFolder.Bottom + 20),
+                BackColor = Color.FromArgb(16, 185, 129),
                 ForeColor = Color.White,
-                FlatStyle = FlatStyle.Flat,
-                Font = new Font("Segoe UI", 11, FontStyle.Bold)
+                Font = new Font("Segoe UI", 12, FontStyle.Bold),
+                BorderRadius = 10
             };
-            _btnStartNewProject.FlatAppearance.BorderSize = 0;
             _btnStartNewProject.Click += BtnStartNewProject_Click;
             
             _pnlCompleteActions.Resize += (s, e) =>
@@ -485,13 +495,13 @@ namespace FileOrganizer
                 Dock = DockStyle.Fill,
                 ColumnCount = 1,
                 AutoScroll = true,
-                Padding = new Padding(0)
+                Padding = new Padding(20, 40, 20, 20) // Added top padding to container
             };
             completionLayout.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 100));
             completionLayout.RowStyles.Add(new RowStyle(SizeType.AutoSize));
             completionLayout.RowStyles.Add(new RowStyle(SizeType.AutoSize));
             completionLayout.RowStyles.Add(new RowStyle(SizeType.AutoSize));
-            lblCompleteTitle.Margin = new Padding(0, 0, 0, 0);
+            
             completionLayout.Controls.Add(lblCompleteTitle, 0, 0);
             completionLayout.Controls.Add(_lblCompleteSummary, 0, 1);
             completionLayout.Controls.Add(_pnlCompleteActions, 0, 2);
