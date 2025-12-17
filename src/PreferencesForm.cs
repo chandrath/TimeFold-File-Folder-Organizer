@@ -11,6 +11,7 @@ namespace FileOrganizer
         private CheckBox _chkIncludeFolders = null!;
         private CheckBox _chkShowProgress = null!;
         private CheckBox _chkShowOnTop = null!;
+        private CheckBox _chkGenerateCsvLog = null!;
         private RadioButton _rbMonthYear = null!;
         private RadioButton _rbYearMonth = null!;
         private Button _btnOK = null!;
@@ -25,6 +26,7 @@ namespace FileOrganizer
                 IncludeTopLevelFolders = currentSettings.IncludeTopLevelFolders,
                 ShowDetailedProgress = currentSettings.ShowDetailedProgress,
                 ShowOnTop = currentSettings.ShowOnTop,
+                GenerateCsvLog = currentSettings.GenerateCsvLog,
                 FolderFormat = currentSettings.FolderFormat
             };
             InitializeComponent();
@@ -33,7 +35,7 @@ namespace FileOrganizer
         private void InitializeComponent()
         {
             this.Text = "Preferences";
-            this.Size = new Size(520, 350);
+            this.Size = new Size(520, 420);
             this.StartPosition = FormStartPosition.CenterParent;
             this.FormBorderStyle = FormBorderStyle.FixedDialog;
             this.MaximizeBox = false;
@@ -81,6 +83,15 @@ namespace FileOrganizer
                 Location = new Point(leftMargin, currentY),
                 AutoSize = true,
                 Checked = _settings.ShowDetailedProgress
+            };
+            currentY += spacing;
+            
+            _chkGenerateCsvLog = new CheckBox
+            {
+                Text = "Generate CSV Log File",
+                Location = new Point(leftMargin, currentY),
+                AutoSize = true,
+                Checked = _settings.GenerateCsvLog
             };
             currentY += spacing;
             
@@ -157,6 +168,7 @@ namespace FileOrganizer
             this.Controls.Add(_chkIncludeFolders);
             this.Controls.Add(lblProgress);
             this.Controls.Add(_chkShowProgress);
+            this.Controls.Add(_chkGenerateCsvLog);
             this.Controls.Add(lblWindow);
             this.Controls.Add(_chkShowOnTop);
             this.Controls.Add(lblFormat);
@@ -174,6 +186,7 @@ namespace FileOrganizer
             _settings.IncludeTopLevelFolders = _chkIncludeFolders.Checked;
             _settings.ShowDetailedProgress = _chkShowProgress.Checked;
             _settings.ShowOnTop = _chkShowOnTop.Checked;
+            _settings.GenerateCsvLog = _chkGenerateCsvLog.Checked;
             _settings.FolderFormat = _rbMonthYear.Checked ? FolderFormat.MonthYear : FolderFormat.YearMonth;
         }
     }

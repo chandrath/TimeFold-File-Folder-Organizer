@@ -139,7 +139,8 @@ namespace FileOrganizer.Services
         public async Task<OrganizationResult> OrganizeFilesAsync(
             List<FileItem> files,
             IProgress<(int current, int total, string currentFile)> progress,
-            CancellationToken cancellationToken)
+            CancellationToken cancellationToken,
+            bool generateCsvLog = true)
         {
             var result = new OrganizationResult
             {
@@ -223,10 +224,13 @@ namespace FileOrganizer.Services
                 
                 result.SortedFolderPath = sortedFolder;
                 
-                // Create CSV log in output directory
-                var csvPath = Path.Combine(_outputDirectory, $"OrganizationLog_{timestamp}.csv");
-                CsvLogger.WriteLog(csvPath, processedFiles, result);
-                result.CsvLogPath = csvPath;
+                // Create CSV log in output directory (if enabled)
+                if (generateCsvLog)
+                {
+                    var csvPath = Path.Combine(_outputDirectory, $"OrganizationLog_{timestamp}.csv");
+                    CsvLogger.WriteLog(csvPath, processedFiles, result);
+                    result.CsvLogPath = csvPath;
+                }
             }
             catch (Exception ex)
             {

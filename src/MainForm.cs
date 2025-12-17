@@ -370,15 +370,15 @@ namespace FileOrganizer
                 Text = "Organizing Files...",
                 Font = new Font("Segoe UI", 18, FontStyle.Bold),
                 ForeColor = Color.FromArgb(31, 41, 55),
-                Location = new Point(PADDING, PADDING + 25),
+                Location = new Point(0, 25),
                 AutoSize = true
             };
             
             _progressBar = new ProgressBar
             {
-                Location = new Point(PADDING, lblProgressTitle.Bottom + 30),
+                Location = new Point(0, lblProgressTitle.Bottom + 30),
                 Anchor = AnchorStyles.Top | AnchorStyles.Left | AnchorStyles.Right,
-                Width = this.ClientSize.Width - (PADDING * 2),
+                Width = _pnlProgress.ClientSize.Width - (_pnlProgress.Padding.Left + _pnlProgress.Padding.Right),
                 Height = 20,
                 Style = ProgressBarStyle.Continuous
             };
@@ -387,15 +387,15 @@ namespace FileOrganizer
             {
                 Text = "Initializing...",
                 Font = new Font("Segoe UI", 10),
-                Location = new Point(PADDING, _progressBar.Bottom + 15),
+                Location = new Point(0, _progressBar.Bottom + 15),
                 AutoSize = true
             };
             
             _txtStatus = new TextBox
             {
-                Location = new Point(PADDING, _lblProgress.Bottom + 20),
+                Location = new Point(0, _lblProgress.Bottom + 20),
                 Anchor = AnchorStyles.Top | AnchorStyles.Left | AnchorStyles.Right | AnchorStyles.Bottom,
-                Width = this.ClientSize.Width - (PADDING * 2),
+                Width = _pnlProgress.ClientSize.Width - (_pnlProgress.Padding.Left + _pnlProgress.Padding.Right),
                 Height = this.ClientSize.Height - _lblProgress.Bottom - 100,
                 Multiline = true,
                 ReadOnly = true,
@@ -957,9 +957,10 @@ namespace FileOrganizer
             try
             {
                 var orgResult = await _organizerService.OrganizeFilesAsync(
-                    _filesToOrganize,
-                    progress,
-                    _cancellationTokenSource.Token);
+            _filesToOrganize,
+            progress,
+            _cancellationTokenSource.Token,
+            _settings.GenerateCsvLog);
                 
                 ShowCompletion(orgResult);
             }

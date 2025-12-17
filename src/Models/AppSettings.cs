@@ -5,6 +5,7 @@ namespace FileOrganizer.Models
         public bool IncludeTopLevelFolders { get; set; } = true;
         public bool ShowDetailedProgress { get; set; } = true;
         public bool ShowOnTop { get; set; } = false;
+        public bool GenerateCsvLog { get; set; } = true;
         public FolderFormat FolderFormat { get; set; } = FolderFormat.YearMonth;
     }
     
