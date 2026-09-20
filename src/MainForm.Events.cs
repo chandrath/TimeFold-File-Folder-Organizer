@@ -319,25 +319,22 @@ namespace FileOrganizer
             _lastResult = result;
 
             var summaryBuilder = new StringBuilder();
-            summaryBuilder.AppendLine("Organization Complete!");
-            summaryBuilder.AppendLine();
-            summaryBuilder.AppendLine("Summary:");
-            summaryBuilder.AppendLine();
-            summaryBuilder.AppendLine($"✓ Files Moved: {result.FilesMoved}");
-            summaryBuilder.AppendLine($"✓ Month Folders Created: {result.MonthFoldersCreated}");
-            summaryBuilder.AppendLine($"✓ Conflicts Resolved: {result.ConflictsResolved}");
+            summaryBuilder.AppendLine("PERFORMANCE SUMMARY");
+            summaryBuilder.AppendLine($"  • Files Moved:             {result.FilesMoved} of {result.TotalFiles}");
+            summaryBuilder.AppendLine($"  • Month Folders Created:   {result.MonthFoldersCreated}");
+            summaryBuilder.AppendLine($"  • Name Conflicts Renamed:  {result.ConflictsResolved}");
 
             if (result.Errors > 0)
             {
-                summaryBuilder.AppendLine($"⚠ Errors: {result.Errors}");
+                summaryBuilder.AppendLine($"  ⚠ Errors Encountered:      {result.Errors}");
             }
 
             summaryBuilder.AppendLine();
-            summaryBuilder.AppendLine("Output Folder:");
-            summaryBuilder.AppendLine(string.IsNullOrWhiteSpace(result.SortedFolderPath) ? "Not available" : result.SortedFolderPath);
+            summaryBuilder.AppendLine("OUTPUT DESTINATION");
+            summaryBuilder.AppendLine($"  📂 {(string.IsNullOrWhiteSpace(result.SortedFolderPath) ? "Not available" : result.SortedFolderPath)}");
             summaryBuilder.AppendLine();
-            summaryBuilder.AppendLine("CSV Log:");
-            summaryBuilder.AppendLine(string.IsNullOrWhiteSpace(result.CsvLogPath) ? "Not created" : result.CsvLogPath);
+            summaryBuilder.AppendLine("AUDIT LOG");
+            summaryBuilder.AppendLine($"  📊 {(string.IsNullOrWhiteSpace(result.CsvLogPath) ? "Not generated" : result.CsvLogPath)}");
 
             _lblCompleteSummary.Text = summaryBuilder.ToString();
 
