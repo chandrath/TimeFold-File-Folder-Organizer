@@ -20,6 +20,7 @@ namespace FileOrganizer.Models
         public string FolderSuffix { get; set; } = Config.AppConstants.DefaultFolderSuffix;
         public DateSource FileDateSource { get; set; } = Config.AppConstants.DefaultFileDateSource;
         public DateSource FolderDateSource { get; set; } = Config.AppConstants.DefaultFolderDateSource;
+        public int MaxPreviewItems { get; set; } = Config.AppConstants.DefaultMaxPreviewItems;
 
         public static AppSettings LoadFromFile()
         {

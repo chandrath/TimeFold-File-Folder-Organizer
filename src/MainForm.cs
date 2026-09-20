@@ -312,14 +312,14 @@ namespace FileOrganizer
             if (subIndex == 2) // Modified Date
             {
                 newText = !file.IsCreatedDateActive
-                    ? $"✔ Active Date (Modified)\nUsed to organize this item into target folder '{file.TargetFolder}'.\nTip: Change date source rules in Settings > Preferences (Ctrl+,)"
-                    : $"Inactive Date (Modified)\nOriginal file timestamp (not used for folder placement).\nTip: Change date source rules in Settings > Preferences (Ctrl+,)";
+                    ? $"✔ Active Date (Modified)\nUsed to organize this item into target folder '{file.TargetFolder}'.\nTip: Change date source rules in Settings > Preferences"
+                    : $"Inactive Date (Modified)\nOriginal file timestamp (not used for folder placement).\nTip: Change date source rules in Settings > Preferences";
             }
             else if (subIndex == 3) // Created Date
             {
                 newText = file.IsCreatedDateActive
-                    ? $"✔ Active Date (Created)\nUsed to organize this item into target folder '{file.TargetFolder}'.\nTip: Change date source rules in Settings > Preferences (Ctrl+,)"
-                    : $"Inactive Date (Created)\nOriginal file timestamp (not used for folder placement).\nTip: Change date source rules in Settings > Preferences (Ctrl+,)";
+                    ? $"✔ Active Date (Created)\nUsed to organize this item into target folder '{file.TargetFolder}'.\nTip: Change date source rules in Settings > Preferences"
+                    : $"Inactive Date (Created)\nOriginal file timestamp (not used for folder placement).\nTip: Change date source rules in Settings > Preferences";
             }
 
             if (newText != null)

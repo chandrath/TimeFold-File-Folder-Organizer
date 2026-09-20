@@ -176,7 +176,9 @@ namespace FileOrganizer
             Color mutedColor = _settings.DarkMode ? Color.FromArgb(148, 163, 184) : Color.FromArgb(100, 116, 139);
             var boldFont = GetBoldListFont();
 
-            foreach (var file in _filesToOrganize.Take(1000))
+            int maxPreview = _settings.MaxPreviewItems > 0 ? _settings.MaxPreviewItems : AppConstants.DefaultMaxPreviewItems;
+
+            foreach (var file in _filesToOrganize.Take(maxPreview))
             {
                 var item = new ListViewItem(file.Name) { UseItemStyleForSubItems = false };
                 item.SubItems.Add(file.TypeDisplay);
@@ -198,9 +200,9 @@ namespace FileOrganizer
                 _lstFiles.Items.Add(item);
             }
 
-            if (_filesToOrganize.Count > 1000)
+            if (_filesToOrganize.Count > maxPreview)
             {
-                var item = new ListViewItem($"... and {_filesToOrganize.Count - 1000} more files")
+                var item = new ListViewItem($"... and {(_filesToOrganize.Count - maxPreview):N0} more files")
                 {
                     ForeColor = Color.Gray
                 };

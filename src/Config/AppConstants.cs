@@ -101,6 +101,9 @@ namespace FileOrganizer.Config
         public const string DefaultFolderSuffix = "";
         public const DateSource DefaultFileDateSource = DateSource.Modified;
         public const DateSource DefaultFolderDateSource = DateSource.Modified;
+        public const int DefaultMaxPreviewItems = 1000;
+        public const int MaxAllowedPreviewItems = 100000;
+        public const int MinAllowedPreviewItems = 100;
 
         // Detection Thresholds
         public const double TimestampSimilarityThreshold = 0.85; // 85%
