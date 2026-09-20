@@ -237,10 +237,13 @@ namespace FileOrganizer
 
             _chkShowOnTop = new CheckBox { Text = "Keep application window always on top", Location = new Point(leftMargin, currentY), AutoSize = true, Checked = _settings.ShowOnTop };
 
-            // Buttons: Left (Config Location), Right (Save / Cancel)
+            // Buttons: Left (Config Location, Defaults), Right (Save / Cancel)
             int buttonY = this.ClientSize.Height - 52;
-            var btnOpenConfig = new Button { Text = "📂 Config Location", Size = new Size(140, 32), Location = new Point(leftMargin, buttonY), Font = new Font("Segoe UI", 8.5F) };
+            var btnOpenConfig = new Button { Text = "📂 Config Location", Size = new Size(130, 32), Location = new Point(leftMargin, buttonY), Font = new Font("Segoe UI", 8.5F) };
             btnOpenConfig.Click += (s, e) => AppConstants.OpenConfigLocation();
+
+            var btnDefaults = new Button { Text = "↺ Defaults", Size = new Size(90, 32), Location = new Point(leftMargin + 138, buttonY), Font = new Font("Segoe UI", 8.5F) };
+            btnDefaults.Click += (s, e) => RestoreDefaults();
 
             _btnCancel = new Button { Text = "Cancel", Size = new Size(90, 32), Location = new Point(this.ClientSize.Width - leftMargin - 90, buttonY), DialogResult = DialogResult.Cancel };
             _btnOK = new Button { Text = "Save", Size = new Size(90, 32), Location = new Point(this.ClientSize.Width - leftMargin - 90 - 10 - 90, buttonY), DialogResult = DialogResult.OK };
@@ -250,7 +253,7 @@ namespace FileOrganizer
                 lblOrgHeader, _chkIncludeFolders, _chkIgnoreSystemFiles, lblNamingHeader, _cmbFormat,
                 _btnFlipOrder, _chkShortMonth, lblPrefix, lblSuffix, _txtPrefix, _txtSuffix,
                 pnlLivePreview, lblBehaviorHeader, _chkShowProgress, _chkGenerateCsvLog, _chkShowOnTop,
-                btnOpenConfig, _btnOK, _btnCancel
+                btnOpenConfig, btnDefaults, _btnOK, _btnCancel
             ]);
 
             this.AcceptButton = _btnOK;
@@ -334,6 +337,34 @@ namespace FileOrganizer
             _lblSample2.Text = $"  📁 {AppConstants.FormatFolderDate(d2, format, prefix, suffix)}";
             _lblSample3.Text = $"  📁 {AppConstants.FormatFolderDate(d3, format, prefix, suffix)}";
             _lblSample4.Text = $"  📁 {AppConstants.FormatFolderDate(d4, format, prefix, suffix)}";
+        }
+
+        private void RestoreDefaults()
+        {
+            _chkIncludeFolders.Checked = AppConstants.DefaultIncludeTopLevelFolders;
+            _chkIgnoreSystemFiles.Checked = AppConstants.DefaultIgnoreSystemFiles;
+            _chkShowProgress.Checked = AppConstants.DefaultShowDetailedProgress;
+            _chkShowOnTop.Checked = AppConstants.DefaultShowOnTop;
+            _chkGenerateCsvLog.Checked = AppConstants.DefaultGenerateCsvLog;
+
+            _txtPrefix.Text = AppConstants.DefaultFolderPrefix;
+            _txtSuffix.Text = AppConstants.DefaultFolderSuffix;
+
+            _isFlipped = false;
+            _useShortMonth = false;
+            _chkShortMonth.Checked = false;
+
+            for (int i = 0; i < _cmbFormat.Items.Count; i++)
+            {
+                if (_cmbFormat.Items[i] is FormatItem item && !item.IsHeader && item.Core == CoreFormat.YearMonth)
+                {
+                    _cmbFormat.SelectedIndex = i;
+                    break;
+                }
+            }
+
+            UpdateOptionsState();
+            UpdateLivePreview();
         }
 
         private void BtnOK_Click(object? sender, EventArgs e)
