@@ -19,8 +19,9 @@ namespace FileOrganizer.Config
         public const string BuildNumber = "20260920";
         public const string AppDescription = "A modern Windows desktop utility to organize files and folders into custom date-based directory structures (Month, Day, Quarter, Half-Year, ISO 8601, and Year) based on their modified timestamps.";
         public const string Author = "Shree";
-        public const string RepositoryUrl = "https://github.com/chandrath/OrganizeFiles-ByDate";
-        public const string CopyrightText = "© 2024-2026 - Free and Open Source Software";
+        public const string RepositoryUrl = "https://github.com/chandrath/TimeFold-File-Folder-Organizer";
+        public const string LicenseText = "GNU General Public License v3.0 (GPLv3) - Free and Open Source";
+        public const string CopyrightText = LicenseText;
 
         // Application Icon & Logo (SSoT)
         private static readonly Lazy<Icon?> _lazyAppIcon = new(() =>
@@ -91,6 +92,8 @@ namespace FileOrganizer.Config
         public const bool DefaultShowOnTop = false;
         public const bool DefaultGenerateCsvLog = true;
         public const bool DefaultUse24HourTimestamp = false;
+        public const bool DefaultAutoLoadExeDirectoryOnStartup = false;
+        public const int MaxRecentFolders = 5;
         public const FolderFormat DefaultFolderFormat = FolderFormat.YearMonth;
         public const string DefaultFolderPrefix = "";
         public const string DefaultFolderSuffix = "";

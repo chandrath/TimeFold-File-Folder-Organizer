@@ -15,6 +15,7 @@ namespace FileOrganizer
         private CheckBox _chkShowOnTop = null!;
         private CheckBox _chkGenerateCsvLog = null!;
         private CheckBox _chkUse24Hour = null!;
+        private CheckBox _chkAutoLoadExeDir = null!;
 
         // Folder Naming Controls
         private ComboBox _cmbFormat = null!;
@@ -69,6 +70,8 @@ namespace FileOrganizer
                 ShowDetailedProgress = currentSettings.ShowDetailedProgress,
                 ShowOnTop = currentSettings.ShowOnTop,
                 GenerateCsvLog = currentSettings.GenerateCsvLog,
+                Use24HourTimestamp = currentSettings.Use24HourTimestamp,
+                AutoLoadExeDirectoryOnStartup = currentSettings.AutoLoadExeDirectoryOnStartup,
                 FolderFormat = currentSettings.FolderFormat,
                 FolderPrefix = currentSettings.FolderPrefix,
                 FolderSuffix = currentSettings.FolderSuffix
@@ -80,7 +83,7 @@ namespace FileOrganizer
         {
             this.Text = "Preferences";
             if (AppConstants.AppIcon != null) this.Icon = AppConstants.AppIcon;
-            this.Size = new Size(580, 725);
+            this.Size = new Size(580, 755);
             this.StartPosition = FormStartPosition.CenterParent;
             this.FormBorderStyle = FormBorderStyle.FixedDialog;
             this.MaximizeBox = false;
@@ -241,6 +244,9 @@ namespace FileOrganizer
             currentY += spacing;
 
             _chkUse24Hour = new CheckBox { Text = "Use 24-hour time for output folder (e.g. 19-13 instead of 07-13PM)", Location = new Point(leftMargin, currentY), AutoSize = true, Checked = _settings.Use24HourTimestamp };
+            currentY += spacing;
+
+            _chkAutoLoadExeDir = new CheckBox { Text = "Auto-load application folder on startup", Location = new Point(leftMargin, currentY), AutoSize = true, Checked = _settings.AutoLoadExeDirectoryOnStartup };
 
             // Buttons: Left (Config Location, Defaults), Right (Save / Cancel)
             int buttonY = this.ClientSize.Height - 52;
@@ -257,7 +263,7 @@ namespace FileOrganizer
             this.Controls.AddRange([
                 lblOrgHeader, _chkIncludeFolders, _chkIgnoreSystemFiles, lblNamingHeader, _cmbFormat,
                 _btnFlipOrder, _chkShortMonth, lblPrefix, lblSuffix, _txtPrefix, _txtSuffix,
-                pnlLivePreview, lblBehaviorHeader, _chkShowProgress, _chkGenerateCsvLog, _chkShowOnTop, _chkUse24Hour,
+                pnlLivePreview, lblBehaviorHeader, _chkShowProgress, _chkGenerateCsvLog, _chkShowOnTop, _chkUse24Hour, _chkAutoLoadExeDir,
                 btnOpenConfig, btnDefaults, _btnOK, _btnCancel
             ]);
 
@@ -352,6 +358,7 @@ namespace FileOrganizer
             _chkShowOnTop.Checked = AppConstants.DefaultShowOnTop;
             _chkGenerateCsvLog.Checked = AppConstants.DefaultGenerateCsvLog;
             _chkUse24Hour.Checked = AppConstants.DefaultUse24HourTimestamp;
+            _chkAutoLoadExeDir.Checked = AppConstants.DefaultAutoLoadExeDirectoryOnStartup;
 
             _txtPrefix.Text = AppConstants.DefaultFolderPrefix;
             _txtSuffix.Text = AppConstants.DefaultFolderSuffix;
@@ -381,6 +388,7 @@ namespace FileOrganizer
             _settings.ShowOnTop = _chkShowOnTop.Checked;
             _settings.GenerateCsvLog = _chkGenerateCsvLog.Checked;
             _settings.Use24HourTimestamp = _chkUse24Hour.Checked;
+            _settings.AutoLoadExeDirectoryOnStartup = _chkAutoLoadExeDir.Checked;
             _settings.FolderFormat = ResolveFolderFormat();
             _settings.FolderPrefix = AppConstants.SanitizeFolderName(_txtPrefix.Text);
             _settings.FolderSuffix = AppConstants.SanitizeFolderName(_txtSuffix.Text);

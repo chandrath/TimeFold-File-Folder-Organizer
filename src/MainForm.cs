@@ -26,6 +26,7 @@ namespace FileOrganizer
         private MenuStrip _menuStrip = null!;
         private ToolStripMenuItem _menuFile = null!;
         private ToolStripMenuItem _menuFileNew = null!;
+        private ToolStripMenuItem _menuFileRecent = null!;
         private ToolStripMenuItem _menuFileExit = null!;
         private ToolStripMenuItem _menuPreferences = null!;
         private ToolStripMenuItem _menuHelp = null!;
@@ -36,6 +37,7 @@ namespace FileOrganizer
         private Label _lblTitle = null!;
         private TextBox _txtSourceFolder = null!;
         private ModernButton _btnBrowseSource = null!;
+        private ModernButton _btnRecentFolders = null!;
         private ModernButton _btnUseCurrentFolder = null!;
         private Panel _pnlSourceDrop = null!;
         private CheckBox _chkUseSourceAsOutput = null!;
@@ -76,8 +78,15 @@ namespace FileOrganizer
         private void InitializeOrganizer()
         {
             ApplySettings();
-            SetSourceFolder(_executableDirectory);
-            UpdateOutputFolder();
+            UpdateRecentMenus();
+            if (_settings.AutoLoadExeDirectoryOnStartup && Directory.Exists(_executableDirectory))
+            {
+                SetSourceFolder(_executableDirectory);
+            }
+            else
+            {
+                UpdateOutputFolder();
+            }
         }
 
         private void ApplySettings()
@@ -105,11 +114,65 @@ namespace FileOrganizer
             if (Directory.Exists(folder))
             {
                 _txtSourceFolder.Text = folder;
+                _settings.AddRecentFolder(folder);
+                UpdateRecentMenus();
                 _organizerService = new FileOrganizerService(_executablePath, folder);
                 _organizerService.ApplyNamingSettings(_settings.FolderFormat, _settings.FolderPrefix, _settings.FolderSuffix, _settings.Use24HourTimestamp);
                 UpdateOutputFolder();
                 LoadPreview();
             }
+        }
+
+        private void UpdateRecentMenus()
+        {
+            if (_menuFileRecent != null)
+            {
+                PopulateRecentMenu(_menuFileRecent.DropDownItems);
+            }
+        }
+
+        private void PopulateRecentMenu(ToolStripItemCollection items)
+        {
+            items.Clear();
+            if (_settings.RecentFolders.Count == 0)
+            {
+                var emptyItem = new ToolStripMenuItem("(No recent folders)") { Enabled = false };
+                items.Add(emptyItem);
+                return;
+            }
+
+            for (int i = 0; i < _settings.RecentFolders.Count; i++)
+            {
+                string path = _settings.RecentFolders[i];
+                string name = Path.GetFileName(path);
+                if (string.IsNullOrEmpty(name)) name = path;
+                string label = $"&{i + 1}. {name}  ({path})";
+
+                var item = new ToolStripMenuItem(label) { ToolTipText = path };
+                item.Click += (s, e) =>
+                {
+                    if (Directory.Exists(path))
+                    {
+                        SetSourceFolder(path);
+                    }
+                    else
+                    {
+                        MessageBox.Show($"The folder could not be found:\n\n{path}\n\nIt may have been moved, deleted, or on an unplugged drive.", "Folder Not Found", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                        _settings.RemoveRecentFolder(path);
+                        UpdateRecentMenus();
+                    }
+                };
+                items.Add(item);
+            }
+
+            items.Add(new ToolStripSeparator());
+            var clearItem = new ToolStripMenuItem("🗑 Clear Recent History");
+            clearItem.Click += (s, e) =>
+            {
+                _settings.ClearRecentFolders();
+                UpdateRecentMenus();
+            };
+            items.Add(clearItem);
         }
 
         private void UpdateOutputFolder()

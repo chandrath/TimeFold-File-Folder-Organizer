@@ -34,8 +34,9 @@ namespace FileOrganizer
             };
             _menuFile = new ToolStripMenuItem("File");
             _menuFileNew = new ToolStripMenuItem("New", null, MenuFileNew_Click);
+            _menuFileRecent = new ToolStripMenuItem("Recent Folders");
             _menuFileExit = new ToolStripMenuItem("Exit", null, MenuFileExit_Click);
-            _menuFile.DropDownItems.AddRange(new ToolStripItem[] { _menuFileNew, new ToolStripSeparator(), _menuFileExit });
+            _menuFile.DropDownItems.AddRange(new ToolStripItem[] { _menuFileNew, _menuFileRecent, new ToolStripSeparator(), _menuFileExit });
 
             _menuPreferences = new ToolStripMenuItem("Preferences");
             _menuPreferences.Click += MenuPreferences_Click;
@@ -115,19 +116,23 @@ namespace FileOrganizer
             };
             var lblSourceTitle = new Label { Text = "Source Folder", Font = new Font("Segoe UI", 9.5F, FontStyle.Bold), ForeColor = Color.FromArgb(55, 65, 81), AutoSize = true, Margin = new Padding(0, 0, 0, 3) };
 
-            var pnlSourceRow = new TableLayoutPanel { Dock = DockStyle.Top, ColumnCount = 3, Height = 36, Margin = new Padding(0, 0, 0, 4) };
+            var pnlSourceRow = new TableLayoutPanel { Dock = DockStyle.Top, ColumnCount = 4, Height = 36, Margin = new Padding(0, 0, 0, 4) };
             pnlSourceRow.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 100));
-            pnlSourceRow.ColumnStyles.Add(new ColumnStyle(SizeType.Absolute, 96));
-            pnlSourceRow.ColumnStyles.Add(new ColumnStyle(SizeType.Absolute, 114));
+            pnlSourceRow.ColumnStyles.Add(new ColumnStyle(SizeType.Absolute, 84));
+            pnlSourceRow.ColumnStyles.Add(new ColumnStyle(SizeType.Absolute, 94));
+            pnlSourceRow.ColumnStyles.Add(new ColumnStyle(SizeType.Absolute, 108));
 
-            _txtSourceFolder = new TextBox { Dock = DockStyle.Fill, Height = 32, ReadOnly = true, BackColor = Color.White, BorderStyle = BorderStyle.FixedSingle, Font = new Font("Segoe UI", 9.5F), Margin = new Padding(0, 2, 8, 2) };
+            _txtSourceFolder = new TextBox { Dock = DockStyle.Fill, Height = 32, ReadOnly = true, BackColor = Color.White, BorderStyle = BorderStyle.FixedSingle, Font = new Font("Segoe UI", 9.5F), PlaceholderText = "Select, drop, or pick a recent folder...", Margin = new Padding(0, 2, 8, 2) };
             _btnBrowseSource = new ModernButton { Text = "Browse", Dock = DockStyle.Fill, BackColor = AppConstants.ColorBorder, ForeColor = Color.Black, BorderRadius = 6, Margin = new Padding(0, 0, 6, 0) };
             _btnBrowseSource.Click += BtnBrowseSource_Click;
+            _btnRecentFolders = new ModernButton { Text = "Recent ▾", Dock = DockStyle.Fill, BackColor = AppConstants.ColorBorder, ForeColor = Color.Black, BorderRadius = 6, Margin = new Padding(0, 0, 6, 0) };
+            _btnRecentFolders.Click += BtnRecentFolders_Click;
             _btnUseCurrentFolder = new ModernButton { Text = "Use Current", Dock = DockStyle.Fill, BackColor = Color.FromArgb(59, 130, 246), ForeColor = Color.White, BorderRadius = 6, Margin = Padding.Empty };
             _btnUseCurrentFolder.Click += BtnUseCurrentFolder_Click;
             pnlSourceRow.Controls.Add(_txtSourceFolder, 0, 0);
             pnlSourceRow.Controls.Add(_btnBrowseSource, 1, 0);
-            pnlSourceRow.Controls.Add(_btnUseCurrentFolder, 2, 0);
+            pnlSourceRow.Controls.Add(_btnRecentFolders, 2, 0);
+            pnlSourceRow.Controls.Add(_btnUseCurrentFolder, 3, 0);
 
             _pnlSourceDrop = new Panel { Dock = DockStyle.Top, Height = 34, BorderStyle = BorderStyle.FixedSingle, BackColor = Color.White, AllowDrop = true, Margin = new Padding(0, 0, 0, 8) };
             var lblDropHint = new Label { Text = "📂 Drag and drop any folder here to select it as the source", Font = new Font("Segoe UI", 9F, FontStyle.Italic), ForeColor = Color.FromArgb(107, 114, 128), TextAlign = ContentAlignment.MiddleCenter, Dock = DockStyle.Fill };

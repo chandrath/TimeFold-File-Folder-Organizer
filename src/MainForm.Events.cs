@@ -61,6 +61,13 @@ namespace FileOrganizer
             SetSourceFolder(_executableDirectory);
         }
 
+        private void BtnRecentFolders_Click(object? sender, EventArgs e)
+        {
+            var menu = new ContextMenuStrip { ShowImageMargin = false };
+            PopulateRecentMenu(menu.Items);
+            menu.Show(_btnRecentFolders, new Point(0, _btnRecentFolders.Height + 2));
+        }
+
         private void BtnBrowseOutput_Click(object? sender, EventArgs e)
         {
             using var dialog = new FolderBrowserDialog

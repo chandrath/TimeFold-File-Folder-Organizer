@@ -12,6 +12,8 @@ namespace FileOrganizer.Models
         public bool ShowOnTop { get; set; } = Config.AppConstants.DefaultShowOnTop;
         public bool GenerateCsvLog { get; set; } = Config.AppConstants.DefaultGenerateCsvLog;
         public bool Use24HourTimestamp { get; set; } = Config.AppConstants.DefaultUse24HourTimestamp;
+        public bool AutoLoadExeDirectoryOnStartup { get; set; } = Config.AppConstants.DefaultAutoLoadExeDirectoryOnStartup;
+        public System.Collections.Generic.List<string> RecentFolders { get; set; } = new();
         public FolderFormat FolderFormat { get; set; } = Config.AppConstants.DefaultFolderFormat;
         public string FolderPrefix { get; set; } = Config.AppConstants.DefaultFolderPrefix;
         public string FolderSuffix { get; set; } = Config.AppConstants.DefaultFolderSuffix;
@@ -50,6 +52,41 @@ namespace FileOrganizer.Models
             {
                 // Fail-safe: ignore disk write errors to prevent application crash
             }
+        }
+
+        public void AddRecentFolder(string folder)
+        {
+            if (string.IsNullOrWhiteSpace(folder)) return;
+            try
+            {
+                string fullPath = Path.GetFullPath(folder).TrimEnd(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar);
+                RecentFolders.RemoveAll(f => string.Equals(f.TrimEnd(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar), fullPath, StringComparison.OrdinalIgnoreCase));
+                RecentFolders.Insert(0, fullPath);
+                if (RecentFolders.Count > Config.AppConstants.MaxRecentFolders)
+                {
+                    RecentFolders.RemoveRange(Config.AppConstants.MaxRecentFolders, RecentFolders.Count - Config.AppConstants.MaxRecentFolders);
+                }
+                SaveToFile();
+            }
+            catch { }
+        }
+
+        public void RemoveRecentFolder(string folder)
+        {
+            if (string.IsNullOrWhiteSpace(folder)) return;
+            try
+            {
+                string fullPath = Path.GetFullPath(folder).TrimEnd(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar);
+                int removed = RecentFolders.RemoveAll(f => string.Equals(f.TrimEnd(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar), fullPath, StringComparison.OrdinalIgnoreCase));
+                if (removed > 0) SaveToFile();
+            }
+            catch { }
+        }
+
+        public void ClearRecentFolders()
+        {
+            RecentFolders.Clear();
+            SaveToFile();
         }
     }
     

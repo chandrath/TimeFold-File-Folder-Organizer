@@ -107,9 +107,9 @@ namespace FileOrganizer
                 catch { }
             };
             
-            var lblCopyright = new Label
+            var lblLicense = new Label
             {
-                Text = Config.AppConstants.CopyrightText,
+                Text = Config.AppConstants.LicenseText,
                 Font = new Font("Segoe UI", 8),
                 ForeColor = Color.Gray,
                 Location = new Point(20, 260),
@@ -126,7 +126,7 @@ namespace FileOrganizer
             
             this.Controls.AddRange([
                 picLogo, lblTitle, lblVersion, lblDescription, lblDeveloperHeader,
-                lblDeveloperName, lblSourceCode, linkSource, lblCopyright, btnClose
+                lblDeveloperName, lblSourceCode, linkSource, lblLicense, btnClose
             ]);
         }
     }
