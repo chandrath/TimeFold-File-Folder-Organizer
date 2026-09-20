@@ -163,6 +163,22 @@ namespace FileOrganizer.Config
             return sanitized.ToString();
         }
 
+        private static readonly string[] QuarterMonthsFull =
+        [
+            "January, February & March",
+            "April, May & June",
+            "July, August & September",
+            "October, November & December"
+        ];
+
+        private static readonly string[] QuarterMonthsShort =
+        [
+            "Jan, Feb & Mar",
+            "Apr, May & Jun",
+            "Jul, Aug & Sep",
+            "Oct, Nov & Dec"
+        ];
+
         public static string FormatFolderDate(DateTime date, FolderFormat format, string prefix = "", string suffix = "")
         {
             int year = date.Year;
@@ -188,6 +204,8 @@ namespace FileOrganizer.Config
                 FolderFormat.DayShortMonthYear => $"{day} {monthShort} {year}",
                 FolderFormat.YearQuarter => $"{year} Q{quarter}",
                 FolderFormat.QuarterYear => $"Q{quarter} {year}",
+                FolderFormat.YearQuarterMonths => $"{year} Q{quarter} ({QuarterMonthsFull[quarter - 1]})",
+                FolderFormat.YearQuarterShortMonths => $"{year} Q{quarter} ({QuarterMonthsShort[quarter - 1]})",
                 FolderFormat.YearHalf => $"{year} H{half}",
                 FolderFormat.HalfYear => $"H{half} {year}",
                 FolderFormat.YearOnly => $"{year}",

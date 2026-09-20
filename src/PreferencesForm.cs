@@ -41,7 +41,7 @@ namespace FileOrganizer
 
         public AppSettings Settings => _settings;
 
-        private enum CoreFormat { Header, YearMonth, IsoMonth, Daily, YearQuarter, YearHalf, YearOnly }
+        private enum CoreFormat { Header, YearMonth, IsoMonth, Daily, YearQuarter, YearQuarterMonths, YearHalf, YearOnly }
 
         private class FormatItem(string displayName, CoreFormat core, bool isHeader = false)
         {
@@ -54,12 +54,14 @@ namespace FileOrganizer
         private static string GetFormatDisplayName(CoreFormat core, bool flipped, bool shortMonth, int year)
         {
             string m = shortMonth ? "Mar" : "March";
+            string qm = shortMonth ? "Jan, Feb & Mar" : "January, February & March";
             return core switch
             {
                 CoreFormat.YearMonth => flipped ? $"Month & Year (e.g. {m} {year})" : $"Year & Month (e.g. {year} {m})",
                 CoreFormat.IsoMonth => flipped ? $"ISO 8601 (e.g. 03-{year})" : $"ISO 8601 (e.g. {year}-03)",
                 CoreFormat.Daily => flipped ? $"Day, Month & Year (e.g. 15 {m} {year})" : $"Year, Month & Day (e.g. {year} {m} 15)",
                 CoreFormat.YearQuarter => flipped ? $"Quarter & Year (e.g. Q1 {year})" : $"Year & Quarter (e.g. {year} Q1)",
+                CoreFormat.YearQuarterMonths => $"Year & Quarter with Months (e.g. {year} Q1 ({qm}))",
                 CoreFormat.YearHalf => flipped ? $"Half & Year (e.g. H1 {year})" : $"Year & Half (e.g. {year} H1)",
                 CoreFormat.YearOnly => $"Year (e.g. {year})",
                 _ => ""
@@ -120,7 +122,7 @@ namespace FileOrganizer
 
             _useShortMonth = _settings.FolderFormat switch
             {
-                FolderFormat.YearShortMonth or FolderFormat.ShortMonthYear or FolderFormat.YearShortMonthDay or FolderFormat.DayShortMonthYear => true,
+                FolderFormat.YearShortMonth or FolderFormat.ShortMonthYear or FolderFormat.YearShortMonthDay or FolderFormat.DayShortMonthYear or FolderFormat.YearQuarterShortMonths => true,
                 _ => false
             };
 
@@ -140,6 +142,7 @@ namespace FileOrganizer
                 new(GetFormatDisplayName(CoreFormat.Daily, _isFlipped, _useShortMonth, currentYear), CoreFormat.Daily),
                 new("── Quarters & Half-Years ────", CoreFormat.Header, true),
                 new(GetFormatDisplayName(CoreFormat.YearQuarter, _isFlipped, _useShortMonth, currentYear), CoreFormat.YearQuarter),
+                new(GetFormatDisplayName(CoreFormat.YearQuarterMonths, _isFlipped, _useShortMonth, currentYear), CoreFormat.YearQuarterMonths),
                 new(GetFormatDisplayName(CoreFormat.YearHalf, _isFlipped, _useShortMonth, currentYear), CoreFormat.YearHalf),
                 new("── Year Only ────────────────", CoreFormat.Header, true),
                 new(GetFormatDisplayName(CoreFormat.YearOnly, _isFlipped, _useShortMonth, currentYear), CoreFormat.YearOnly)
@@ -185,6 +188,7 @@ namespace FileOrganizer
                 FolderFormat.IsoMonth or FolderFormat.MonthIso or FolderFormat.IsoDate => CoreFormat.IsoMonth,
                 FolderFormat.YearMonthDay or FolderFormat.DayMonthYear or FolderFormat.YearShortMonthDay or FolderFormat.DayShortMonthYear => CoreFormat.Daily,
                 FolderFormat.YearQuarter or FolderFormat.QuarterYear => CoreFormat.YearQuarter,
+                FolderFormat.YearQuarterMonths or FolderFormat.YearQuarterShortMonths => CoreFormat.YearQuarterMonths,
                 FolderFormat.YearHalf or FolderFormat.HalfYear => CoreFormat.YearHalf,
                 FolderFormat.YearOnly => CoreFormat.YearOnly,
                 _ => CoreFormat.YearMonth
@@ -290,8 +294,8 @@ namespace FileOrganizer
         {
             if (_cmbFormat.SelectedItem is not FormatItem item) return;
 
-            bool canFlip = item.Core != CoreFormat.YearOnly;
-            bool canShortMonth = item.Core is CoreFormat.YearMonth or CoreFormat.Daily;
+            bool canFlip = item.Core != CoreFormat.YearOnly && item.Core != CoreFormat.YearQuarterMonths;
+            bool canShortMonth = item.Core is CoreFormat.YearMonth or CoreFormat.Daily or CoreFormat.YearQuarterMonths;
 
             bool isDark = _chkDarkMode?.Checked ?? _settings.DarkMode;
             var palette = AppTheme.GetPalette(isDark);
@@ -334,6 +338,7 @@ namespace FileOrganizer
                     (true, true) => FolderFormat.DayShortMonthYear
                 },
                 CoreFormat.YearQuarter => _isFlipped ? FolderFormat.QuarterYear : FolderFormat.YearQuarter,
+                CoreFormat.YearQuarterMonths => _useShortMonth ? FolderFormat.YearQuarterShortMonths : FolderFormat.YearQuarterMonths,
                 CoreFormat.YearHalf => _isFlipped ? FolderFormat.HalfYear : FolderFormat.YearHalf,
                 CoreFormat.YearOnly => FolderFormat.YearOnly,
                 _ => FolderFormat.YearMonth
@@ -354,7 +359,7 @@ namespace FileOrganizer
             var (d1, d2, d3, d4) = core switch
             {
                 CoreFormat.Daily => (new DateTime(currentYear, 3, 13), new DateTime(currentYear, 3, 14), new DateTime(currentYear, 3, 15), new DateTime(currentYear, 3, 16)),
-                CoreFormat.YearQuarter => (new DateTime(currentYear, 2, 1), new DateTime(currentYear, 5, 1), new DateTime(currentYear, 8, 1), new DateTime(currentYear, 11, 1)),
+                CoreFormat.YearQuarter or CoreFormat.YearQuarterMonths => (new DateTime(currentYear, 2, 1), new DateTime(currentYear, 5, 1), new DateTime(currentYear, 8, 1), new DateTime(currentYear, 11, 1)),
                 CoreFormat.YearHalf => (new DateTime(currentYear - 1, 3, 1), new DateTime(currentYear - 1, 9, 1), new DateTime(currentYear, 3, 1), new DateTime(currentYear, 9, 1)),
                 CoreFormat.YearOnly => (new DateTime(currentYear - 3, 1, 1), new DateTime(currentYear - 2, 1, 1), new DateTime(currentYear - 1, 1, 1), new DateTime(currentYear, 1, 1)),
                 _ => (new DateTime(currentYear, 1, 15), new DateTime(currentYear, 2, 15), new DateTime(currentYear, 3, 15), new DateTime(currentYear, 4, 15))

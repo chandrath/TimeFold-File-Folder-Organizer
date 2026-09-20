@@ -104,10 +104,12 @@ namespace FileOrganizer.Models
         DayMonthYear,        // "15 January 2026"
         YearShortMonthDay,   // "2026 Jan 15"
         DayShortMonthYear,   // "15 Jan 2026"
-        YearQuarter,         // "2026 Q1"
-        QuarterYear,         // "Q1 2026"
-        YearHalf,            // "2026 H1"
-        HalfYear,            // "H1 2026"
-        YearOnly             // "2026"
+        YearQuarter,            // "2026 Q1"
+        QuarterYear,            // "Q1 2026"
+        YearQuarterMonths,      // "2026 Q1 (January, February & March)"
+        YearQuarterShortMonths, // "2026 Q1 (Jan, Feb & Mar)"
+        YearHalf,               // "2026 H1"
+        HalfYear,               // "H1 2026"
+        YearOnly                // "2026"
     }
 }
