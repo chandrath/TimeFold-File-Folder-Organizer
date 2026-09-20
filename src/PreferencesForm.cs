@@ -78,6 +78,7 @@ namespace FileOrganizer
         private void InitializeComponent()
         {
             this.Text = "Preferences";
+            if (AppConstants.AppIcon != null) this.Icon = AppConstants.AppIcon;
             this.Size = new Size(580, 725);
             this.StartPosition = FormStartPosition.CenterParent;
             this.FormBorderStyle = FormBorderStyle.FixedDialog;

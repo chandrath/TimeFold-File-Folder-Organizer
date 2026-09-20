@@ -22,6 +22,32 @@ namespace FileOrganizer.Config
         public const string RepositoryUrl = "https://github.com/chandrath/OrganizeFiles-ByDate";
         public const string CopyrightText = "© 2024-2026 - Free and Open Source Software";
 
+        // Application Icon & Logo (SSoT)
+        private static readonly Lazy<Icon?> _lazyAppIcon = new(() =>
+        {
+            try
+            {
+                using var stream = typeof(AppConstants).Assembly.GetManifestResourceStream("FileOrganizer.Assets.app.ico");
+                if (stream != null) return new Icon(stream);
+            }
+            catch { }
+            return null;
+        });
+
+        private static readonly Lazy<Image?> _lazyAppLogo = new(() =>
+        {
+            try
+            {
+                using var stream = typeof(AppConstants).Assembly.GetManifestResourceStream("FileOrganizer.Assets.app.png");
+                if (stream != null) return Image.FromStream(stream);
+            }
+            catch { }
+            return null;
+        });
+
+        public static Icon? AppIcon => _lazyAppIcon.Value;
+        public static Image? AppLogo => _lazyAppLogo.Value;
+
         // Configuration File Paths (SSoT)
         public static string GetConfigDirectoryPath() =>
             Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), ShortAppName);

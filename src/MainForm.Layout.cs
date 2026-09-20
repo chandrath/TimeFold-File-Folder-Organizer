@@ -15,6 +15,7 @@ namespace FileOrganizer
         private void InitializeComponent()
         {
             this.Text = AppConstants.AppName;
+            if (AppConstants.AppIcon != null) this.Icon = AppConstants.AppIcon;
             this.Size = new Size(960, 720);
             this.MinimumSize = new Size(820, 560);
             this.StartPosition = FormStartPosition.CenterScreen;

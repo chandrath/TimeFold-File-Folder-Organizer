@@ -14,27 +14,36 @@ namespace FileOrganizer
         private void InitializeComponent()
         {
             this.Text = $"About {Config.AppConstants.ShortAppName}";
+            if (Config.AppConstants.AppIcon != null) this.Icon = Config.AppConstants.AppIcon;
             this.Size = new Size(520, 410);
             this.StartPosition = FormStartPosition.CenterParent;
             this.FormBorderStyle = FormBorderStyle.FixedDialog;
             this.MaximizeBox = false;
             this.MinimizeBox = false;
+
+            var picLogo = new PictureBox
+            {
+                Image = Config.AppConstants.AppLogo,
+                SizeMode = PictureBoxSizeMode.Zoom,
+                Size = new Size(58, 58),
+                Location = new Point(20, 16)
+            };
             
             var lblTitle = new Label
             {
                 Text = Config.AppConstants.AppName,
-                Font = new Font("Segoe UI", 15, FontStyle.Bold),
+                Font = new Font("Segoe UI", 14, FontStyle.Bold),
                 ForeColor = Color.FromArgb(30, 58, 138),
-                Location = new Point(20, 18),
+                Location = new Point(88, 18),
                 AutoSize = true
             };
             
             var lblVersion = new Label
             {
                 Text = $"Version {Config.AppConstants.AppVersion} (Build {Config.AppConstants.BuildNumber})",
-                Font = new Font("Segoe UI", 9.5F, FontStyle.Bold),
+                Font = new Font("Segoe UI", 9F, FontStyle.Bold),
                 ForeColor = Color.FromArgb(75, 85, 99),
-                Location = new Point(20, 54),
+                Location = new Point(88, 50),
                 AutoSize = true
             };
             
@@ -116,7 +125,7 @@ namespace FileOrganizer
             };
             
             this.Controls.AddRange([
-                lblTitle, lblVersion, lblDescription, lblDeveloperHeader,
+                picLogo, lblTitle, lblVersion, lblDescription, lblDeveloperHeader,
                 lblDeveloperName, lblSourceCode, linkSource, lblCopyright, btnClose
             ]);
         }

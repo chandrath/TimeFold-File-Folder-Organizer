@@ -12,10 +12,15 @@
     <IncludeNativeLibrariesForSelfExtract>true</IncludeNativeLibrariesForSelfExtract>
     <PublishReadyToRun>true</PublishReadyToRun>
     <EnableCompressionInSingleFile>true</EnableCompressionInSingleFile>
-    <ApplicationIcon />
+    <ApplicationIcon>Assets\app.ico</ApplicationIcon>
     <AssemblyName>FileOrganizer</AssemblyName>
     <RootNamespace>FileOrganizer</RootNamespace>
   </PropertyGroup>
+
+  <ItemGroup>
+    <EmbeddedResource Include="Assets\app.ico" />
+    <EmbeddedResource Include="Assets\app.png" />
+  </ItemGroup>
 
 </Project>
 
