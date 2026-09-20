@@ -30,7 +30,7 @@ namespace FileOrganizer.Services
             set => _outputDirectory = value;
         }
 
-        public List<FileItem> ScanFiles(bool includeTopLevelFolders)
+        public List<FileItem> ScanFiles(bool includeTopLevelFolders, bool ignoreSystemFiles = true)
         {
             var files = new List<FileItem>();
             var executableName = Path.GetFileName(_executablePath);
@@ -50,13 +50,15 @@ namespace FileOrganizer.Services
                         if (itemName.Equals(executableName, StringComparison.OrdinalIgnoreCase))
                             continue;
 
-                        // Exclude CSV files
-                        if (Path.GetExtension(itemPath).Equals(".csv", StringComparison.OrdinalIgnoreCase))
+                        // Exclude application's own CSV audit logs (preserve all user .csv data files)
+                        if (itemName.StartsWith(AppConstants.CsvLogPrefix, StringComparison.OrdinalIgnoreCase) &&
+                            Path.GetExtension(itemPath).Equals(".csv", StringComparison.OrdinalIgnoreCase))
+                        {
                             continue;
+                        }
 
-                        // Exclude Sorted_ and Unsorted_ folders
-                        if (itemName.StartsWith("Sorted_", StringComparison.OrdinalIgnoreCase) ||
-                            itemName.StartsWith("Unsorted_", StringComparison.OrdinalIgnoreCase))
+                        // Exclude application's own Sorted output folders
+                        if (itemName.StartsWith(AppConstants.SortedFolderPrefix, StringComparison.OrdinalIgnoreCase))
                         {
                             continue;
                         }
@@ -66,6 +68,25 @@ namespace FileOrganizer.Services
                         if (string.Equals(normalizedItem, normalizedOutput, StringComparison.OrdinalIgnoreCase))
                         {
                             continue;
+                        }
+
+                        // Ignore known Windows system files and protected directories
+                        if (ignoreSystemFiles)
+                        {
+                            if (AppConstants.KnownSystemFilesAndDirs.Contains(itemName))
+                                continue;
+
+                            try
+                            {
+                                var attributes = File.GetAttributes(itemPath);
+                                if ((attributes & FileAttributes.System) != 0)
+                                    continue;
+                            }
+                            catch
+                            {
+                                // If attributes cannot be read due to lock/permissions, skip
+                                continue;
+                            }
                         }
 
                         bool isDirectory = Directory.Exists(itemPath);
@@ -158,7 +179,7 @@ namespace FileOrganizer.Services
                 return result;
 
             var timestamp = DateTime.Now.ToString("yyyy-MM-dd_HHmmss");
-            var sortedFolder = Path.Combine(_outputDirectory, $"Sorted_{timestamp}");
+            var sortedFolder = Path.Combine(_outputDirectory, $"{AppConstants.SortedFolderPrefix}{timestamp}");
 
             var processedFiles = new List<FileItem>();
             int currentIndex = 0;
@@ -243,7 +264,7 @@ namespace FileOrganizer.Services
                 {
                     if (generateCsvLog && processedFiles.Count > 0)
                     {
-                        var csvCancelPath = Path.Combine(_outputDirectory, $"OrganizationLog_{timestamp}.csv");
+                        var csvCancelPath = Path.Combine(_outputDirectory, $"{AppConstants.CsvLogPrefix}{timestamp}.csv");
                         CsvLogger.WriteLog(csvCancelPath, processedFiles, result);
                         result.CsvLogPath = csvCancelPath;
                     }
@@ -253,7 +274,7 @@ namespace FileOrganizer.Services
                 // Create CSV log in output directory (if enabled)
                 if (generateCsvLog)
                 {
-                    var csvPath = Path.Combine(_outputDirectory, $"OrganizationLog_{timestamp}.csv");
+                    var csvPath = Path.Combine(_outputDirectory, $"{AppConstants.CsvLogPrefix}{timestamp}.csv");
                     CsvLogger.WriteLog(csvPath, processedFiles, result);
                     result.CsvLogPath = csvPath;
                 }

@@ -9,6 +9,7 @@ namespace FileOrganizer
     {
         private AppSettings _settings;
         private CheckBox _chkIncludeFolders = null!;
+        private CheckBox _chkIgnoreSystemFiles = null!;
         private CheckBox _chkShowProgress = null!;
         private CheckBox _chkShowOnTop = null!;
         private CheckBox _chkGenerateCsvLog = null!;
@@ -24,6 +25,7 @@ namespace FileOrganizer
             _settings = new AppSettings
             {
                 IncludeTopLevelFolders = currentSettings.IncludeTopLevelFolders,
+                IgnoreSystemFiles = currentSettings.IgnoreSystemFiles,
                 ShowDetailedProgress = currentSettings.ShowDetailedProgress,
                 ShowOnTop = currentSettings.ShowOnTop,
                 GenerateCsvLog = currentSettings.GenerateCsvLog,
@@ -35,7 +37,7 @@ namespace FileOrganizer
         private void InitializeComponent()
         {
             this.Text = "Preferences";
-            this.Size = new Size(520, 420);
+            this.Size = new Size(540, 465);
             this.StartPosition = FormStartPosition.CenterParent;
             this.FormBorderStyle = FormBorderStyle.FixedDialog;
             this.MaximizeBox = false;
@@ -62,10 +64,19 @@ namespace FileOrganizer
             {
                 Text = "Include Top-Level Folders (Move entire folders, contents inside will not be touched)",
                 Location = new Point(leftMargin, currentY),
-                Size = new Size(contentWidth, 50),
+                Size = new Size(contentWidth, 42),
                 Checked = _settings.IncludeTopLevelFolders
             };
-            currentY += 55;
+            currentY += 46;
+
+            _chkIgnoreSystemFiles = new CheckBox
+            {
+                Text = "Ignore Windows system files & protected folders (e.g. desktop.ini, Thumbs.db, $RECYCLE.BIN)",
+                Location = new Point(leftMargin, currentY),
+                Size = new Size(contentWidth, 40),
+                Checked = _settings.IgnoreSystemFiles
+            };
+            currentY += 46;
             
             // Progress Display
             var lblProgress = new Label
@@ -166,6 +177,7 @@ namespace FileOrganizer
             
             this.Controls.Add(lblIncludeFolders);
             this.Controls.Add(_chkIncludeFolders);
+            this.Controls.Add(_chkIgnoreSystemFiles);
             this.Controls.Add(lblProgress);
             this.Controls.Add(_chkShowProgress);
             this.Controls.Add(_chkGenerateCsvLog);
@@ -184,6 +196,7 @@ namespace FileOrganizer
         private void BtnOK_Click(object? sender, EventArgs e)
         {
             _settings.IncludeTopLevelFolders = _chkIncludeFolders.Checked;
+            _settings.IgnoreSystemFiles = _chkIgnoreSystemFiles.Checked;
             _settings.ShowDetailedProgress = _chkShowProgress.Checked;
             _settings.ShowOnTop = _chkShowOnTop.Checked;
             _settings.GenerateCsvLog = _chkGenerateCsvLog.Checked;

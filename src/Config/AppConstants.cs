@@ -20,12 +20,28 @@ namespace FileOrganizer.Config
         public const string RepositoryUrl = "https://github.com/chandrath/OrganizeFiles-ByDate";
         public const string CopyrightText = "© 2024-2026 - Free and Open Source Software";
 
+        // Output & Logging Prefixes (SSoT)
+        public const string SortedFolderPrefix = "Sorted_";
+        public const string CsvLogPrefix = "OrganizationLog_";
+
         // Default User Preferences
         public const bool DefaultIncludeTopLevelFolders = true;
+        public const bool DefaultIgnoreSystemFiles = true;
         public const bool DefaultShowDetailedProgress = true;
         public const bool DefaultShowOnTop = false;
         public const bool DefaultGenerateCsvLog = true;
         public const FolderFormat DefaultFolderFormat = FolderFormat.YearMonth;
+
+        // Known Windows System Files and Protected Directories
+        public static readonly HashSet<string> KnownSystemFilesAndDirs = new(System.StringComparer.OrdinalIgnoreCase)
+        {
+            "desktop.ini",
+            "thumbs.db",
+            "ehthumbs.db",
+            "ehthumbs_vista.db",
+            "$recycle.bin",
+            "system volume information"
+        };
 
         // UI Theme & Metrics
         public const int DefaultPadding = 12;

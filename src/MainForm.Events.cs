@@ -126,7 +126,7 @@ namespace FileOrganizer
 
             try
             {
-                _filesToOrganize = _organizerService.ScanFiles(_settings.IncludeTopLevelFolders);
+                _filesToOrganize = _organizerService.ScanFiles(_settings.IncludeTopLevelFolders, _settings.IgnoreSystemFiles);
                 UpdateFileList();
                 UpdateSummary();
                 CheckConflicts();
