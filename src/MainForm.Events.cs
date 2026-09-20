@@ -242,6 +242,8 @@ namespace FileOrganizer
             if (_filesToOrganize.Count == 0)
             {
                 _lblSummary.Text = "No files found to organize.";
+                _lblSummary.Font = new Font(_lblSummary.Font, FontStyle.Regular);
+                _lblSummary.ForeColor = AppTheme.GetPalette(_settings.DarkMode).TextMuted;
                 _btnStart.Enabled = false;
                 if (_pnlEmptyState != null) _pnlEmptyState.Visible = true;
                 _lstFiles.Visible = false;
@@ -256,9 +258,11 @@ namespace FileOrganizer
             var folderCount = _filesToOrganize.Count(f => f.IsDirectory);
             int total = _filesToOrganize.Count;
 
+            _lblSummary.Font = new Font(_lblSummary.Font, FontStyle.Bold);
+            _lblSummary.ForeColor = _settings.DarkMode ? Color.FromArgb(52, 211, 153) : Color.FromArgb(4, 120, 87);
             _lblSummary.Text = folderCount > 0
-                ? $"Ready: {total:N0} items ({fileCount:N0} files, {folderCount:N0} folders) → {grouped.Count} target date folder(s)"
-                : $"Ready: {fileCount:N0} file(s) → {grouped.Count} target date folder(s)";
+                ? $"✔ Ready: {total:N0} items ({fileCount:N0} files, {folderCount:N0} folders) → {grouped.Count:N0} target date folder(s)"
+                : $"✔ Ready: {fileCount:N0} file(s) → {grouped.Count:N0} target date folder(s)";
             _btnStart.Enabled = true;
         }
 

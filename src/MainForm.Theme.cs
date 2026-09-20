@@ -146,7 +146,12 @@ namespace FileOrganizer
             if (_lblTimestampWarning != null) _lblTimestampWarning.ForeColor = palette.WarningText;
 
             // 11. Footer Summary Label
-            if (_lblSummary != null) _lblSummary.ForeColor = palette.TextMuted;
+            if (_lblSummary != null)
+            {
+                _lblSummary.ForeColor = (_filesToOrganize.Count > 0)
+                    ? (isDark ? Color.FromArgb(52, 211, 153) : Color.FromArgb(4, 120, 87))
+                    : palette.TextMuted;
+            }
 
             // 12. Progress Panel
             if (_pnlProgress != null) _pnlProgress.BackColor = palette.CanvasBg;

@@ -289,6 +289,8 @@ namespace FileOrganizer
             _lstFiles.Items.Clear();
             _lstFiles.Visible = false;
             if (_pnlEmptyState != null) _pnlEmptyState.Visible = true;
+            _lblSummary.Font = new Font(_lblSummary.Font, FontStyle.Regular);
+            _lblSummary.ForeColor = AppTheme.GetPalette(_settings.DarkMode).TextMuted;
             _lblSummary.Text = "Select a source folder to preview files.";
             _pnlConflicts.Visible = false;
             _pnlTimestampWarning.Visible = false;
