@@ -204,6 +204,10 @@ namespace FileOrganizer
             _lblConflicts = new Label { Text = "⚠ Conflicts Detected:", Font = new Font("Segoe UI", 9F, FontStyle.Bold), ForeColor = AppConstants.ColorDanger, Dock = DockStyle.Fill, TextAlign = ContentAlignment.MiddleLeft };
             _pnlConflicts.Controls.Add(_lblConflicts);
 
+            _pnlTimestampWarning = new Panel { Dock = DockStyle.Top, Height = 36, BorderStyle = BorderStyle.FixedSingle, BackColor = Color.FromArgb(254, 243, 199), Visible = false, Padding = new Padding(8, 4, 8, 4), Margin = new Padding(0, 2, 0, 4) };
+            _lblTimestampWarning = new Label { Text = "", Font = new Font("Segoe UI", 8.5F, FontStyle.Bold), ForeColor = Color.FromArgb(146, 64, 14), Dock = DockStyle.Fill, TextAlign = ContentAlignment.MiddleLeft };
+            _pnlTimestampWarning.Controls.Add(_lblTimestampWarning);
+
             _lstFiles = new ListView
             {
                 Dock = DockStyle.Fill,
@@ -223,6 +227,7 @@ namespace FileOrganizer
             _lstFiles.ColumnClick += LstFiles_ColumnClick;
 
             _pnlCenterSection.Controls.Add(_lstFiles);
+            _pnlCenterSection.Controls.Add(_pnlTimestampWarning);
             _pnlCenterSection.Controls.Add(_pnlConflicts);
             _pnlCenterSection.Controls.Add(pnlPreviewHeader);
 

@@ -81,7 +81,8 @@ namespace FileOrganizer.Config
 
         // Output & Logging Prefixes (SSoT)
         public const string SortedFolderPrefix = "Sorted_";
-        public const string CsvLogPrefix = "OrganizationLog_";
+        public const string CsvLogPrefix = ShortAppName + "_Log_";
+        public const string LegacyCsvLogPrefix = "OrganizationLog_";
 
         // Default User Preferences
         public const bool DefaultIncludeTopLevelFolders = true;
@@ -89,9 +90,30 @@ namespace FileOrganizer.Config
         public const bool DefaultShowDetailedProgress = true;
         public const bool DefaultShowOnTop = false;
         public const bool DefaultGenerateCsvLog = true;
+        public const bool DefaultUse24HourTimestamp = false;
         public const FolderFormat DefaultFolderFormat = FolderFormat.YearMonth;
         public const string DefaultFolderPrefix = "";
         public const string DefaultFolderSuffix = "";
+
+        // Detection Thresholds
+        public const double TimestampSimilarityThreshold = 0.85; // 85%
+
+        public static string GetSortedFolderName(string outputDirectory, bool use24Hour, DateTime? now = null)
+        {
+            var dt = now ?? DateTime.Now;
+            string timestamp = use24Hour
+                ? dt.ToString("yyyy-MM-dd_HH-mm")
+                : dt.ToString("yyyy-MM-dd_hh-mmtt");
+
+            string baseFolder = Path.Combine(outputDirectory, $"{SortedFolderPrefix}{timestamp}");
+            string folder = baseFolder;
+            int counter = 1;
+            while (Directory.Exists(folder))
+            {
+                folder = $"{baseFolder} ({counter++})";
+            }
+            return folder;
+        }
 
         // Known Windows System Files and Protected Directories
         public static readonly HashSet<string> KnownSystemFilesAndDirs = new(StringComparer.OrdinalIgnoreCase)

@@ -14,6 +14,7 @@ namespace FileOrganizer
         private CheckBox _chkShowProgress = null!;
         private CheckBox _chkShowOnTop = null!;
         private CheckBox _chkGenerateCsvLog = null!;
+        private CheckBox _chkUse24Hour = null!;
 
         // Folder Naming Controls
         private ComboBox _cmbFormat = null!;
@@ -237,6 +238,9 @@ namespace FileOrganizer
             currentY += spacing;
 
             _chkShowOnTop = new CheckBox { Text = "Keep application window always on top", Location = new Point(leftMargin, currentY), AutoSize = true, Checked = _settings.ShowOnTop };
+            currentY += spacing;
+
+            _chkUse24Hour = new CheckBox { Text = "Use 24-hour time for output folder (e.g. 19-13 instead of 07-13PM)", Location = new Point(leftMargin, currentY), AutoSize = true, Checked = _settings.Use24HourTimestamp };
 
             // Buttons: Left (Config Location, Defaults), Right (Save / Cancel)
             int buttonY = this.ClientSize.Height - 52;
@@ -253,7 +257,7 @@ namespace FileOrganizer
             this.Controls.AddRange([
                 lblOrgHeader, _chkIncludeFolders, _chkIgnoreSystemFiles, lblNamingHeader, _cmbFormat,
                 _btnFlipOrder, _chkShortMonth, lblPrefix, lblSuffix, _txtPrefix, _txtSuffix,
-                pnlLivePreview, lblBehaviorHeader, _chkShowProgress, _chkGenerateCsvLog, _chkShowOnTop,
+                pnlLivePreview, lblBehaviorHeader, _chkShowProgress, _chkGenerateCsvLog, _chkShowOnTop, _chkUse24Hour,
                 btnOpenConfig, btnDefaults, _btnOK, _btnCancel
             ]);
 
@@ -347,6 +351,7 @@ namespace FileOrganizer
             _chkShowProgress.Checked = AppConstants.DefaultShowDetailedProgress;
             _chkShowOnTop.Checked = AppConstants.DefaultShowOnTop;
             _chkGenerateCsvLog.Checked = AppConstants.DefaultGenerateCsvLog;
+            _chkUse24Hour.Checked = AppConstants.DefaultUse24HourTimestamp;
 
             _txtPrefix.Text = AppConstants.DefaultFolderPrefix;
             _txtSuffix.Text = AppConstants.DefaultFolderSuffix;
@@ -375,6 +380,7 @@ namespace FileOrganizer
             _settings.ShowDetailedProgress = _chkShowProgress.Checked;
             _settings.ShowOnTop = _chkShowOnTop.Checked;
             _settings.GenerateCsvLog = _chkGenerateCsvLog.Checked;
+            _settings.Use24HourTimestamp = _chkUse24Hour.Checked;
             _settings.FolderFormat = ResolveFolderFormat();
             _settings.FolderPrefix = AppConstants.SanitizeFolderName(_txtPrefix.Text);
             _settings.FolderSuffix = AppConstants.SanitizeFolderName(_txtSuffix.Text);

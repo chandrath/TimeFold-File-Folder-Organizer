@@ -17,6 +17,7 @@ namespace FileOrganizer.Services
         private FolderFormat _folderFormat = AppConstants.DefaultFolderFormat;
         private string _folderPrefix = AppConstants.DefaultFolderPrefix;
         private string _folderSuffix = AppConstants.DefaultFolderSuffix;
+        private bool _use24HourTimestamp = AppConstants.DefaultUse24HourTimestamp;
 
         public FileOrganizerService(string executablePath, string? workingDirectory = null, string? outputDirectory = null)
         {
@@ -53,7 +54,8 @@ namespace FileOrganizer.Services
                             continue;
 
                         // Exclude application's own CSV audit logs (preserve all user .csv data files)
-                        if (itemName.StartsWith(AppConstants.CsvLogPrefix, StringComparison.OrdinalIgnoreCase) &&
+                        if ((itemName.StartsWith(AppConstants.CsvLogPrefix, StringComparison.OrdinalIgnoreCase) ||
+                             itemName.StartsWith(AppConstants.LegacyCsvLogPrefix, StringComparison.OrdinalIgnoreCase)) &&
                             Path.GetExtension(itemPath).Equals(".csv", StringComparison.OrdinalIgnoreCase))
                         {
                             continue;
@@ -180,8 +182,11 @@ namespace FileOrganizer.Services
             if (files.Count == 0)
                 return result;
 
-            var timestamp = DateTime.Now.ToString("yyyy-MM-dd_HHmmss");
-            var sortedFolder = Path.Combine(_outputDirectory, $"{AppConstants.SortedFolderPrefix}{timestamp}");
+            var sortedFolder = AppConstants.GetSortedFolderName(_outputDirectory, _use24HourTimestamp);
+            string sortedFolderName = Path.GetFileName(sortedFolder);
+            string logTimestamp = sortedFolderName.StartsWith(AppConstants.SortedFolderPrefix, StringComparison.OrdinalIgnoreCase)
+                ? sortedFolderName.Substring(AppConstants.SortedFolderPrefix.Length)
+                : DateTime.Now.ToString("yyyy-MM-dd_HHmmss");
 
             var processedFiles = new List<FileItem>();
             int currentIndex = 0;
@@ -266,7 +271,7 @@ namespace FileOrganizer.Services
                 {
                     if (generateCsvLog && processedFiles.Count > 0)
                     {
-                        var csvCancelPath = Path.Combine(_outputDirectory, $"{AppConstants.CsvLogPrefix}{timestamp}.csv");
+                        var csvCancelPath = Path.Combine(_outputDirectory, $"{AppConstants.CsvLogPrefix}{logTimestamp}.csv");
                         CsvLogger.WriteLog(csvCancelPath, processedFiles, result);
                         result.CsvLogPath = csvCancelPath;
                     }
@@ -276,7 +281,7 @@ namespace FileOrganizer.Services
                 // Create CSV log in output directory (if enabled)
                 if (generateCsvLog)
                 {
-                    var csvPath = Path.Combine(_outputDirectory, $"{AppConstants.CsvLogPrefix}{timestamp}.csv");
+                    var csvPath = Path.Combine(_outputDirectory, $"{AppConstants.CsvLogPrefix}{logTimestamp}.csv");
                     CsvLogger.WriteLog(csvPath, processedFiles, result);
                     result.CsvLogPath = csvPath;
                 }
@@ -362,11 +367,12 @@ namespace FileOrganizer.Services
             set => _folderSuffix = value ?? string.Empty;
         }
 
-        public void ApplyNamingSettings(FolderFormat format, string prefix, string suffix)
+        public void ApplyNamingSettings(FolderFormat format, string prefix, string suffix, bool use24Hour = false)
         {
             _folderFormat = format;
             _folderPrefix = prefix ?? string.Empty;
             _folderSuffix = suffix ?? string.Empty;
+            _use24HourTimestamp = use24Hour;
         }
 
         public string FormatTargetFolder(DateTime date)

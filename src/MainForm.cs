@@ -47,6 +47,8 @@ namespace FileOrganizer
         private Label _lblSummary = null!;
         private Panel _pnlConflicts = null!;
         private Label _lblConflicts = null!;
+        private Panel _pnlTimestampWarning = null!;
+        private Label _lblTimestampWarning = null!;
         private ModernButton _btnStart = null!;
 
         // UI Controls - Progress Panel
@@ -84,7 +86,7 @@ namespace FileOrganizer
 
             if (_organizerService != null)
             {
-                _organizerService.ApplyNamingSettings(_settings.FolderFormat, _settings.FolderPrefix, _settings.FolderSuffix);
+                _organizerService.ApplyNamingSettings(_settings.FolderFormat, _settings.FolderPrefix, _settings.FolderSuffix, _settings.Use24HourTimestamp);
             }
             UpdateFormatBadge();
         }
@@ -104,7 +106,7 @@ namespace FileOrganizer
             {
                 _txtSourceFolder.Text = folder;
                 _organizerService = new FileOrganizerService(_executablePath, folder);
-                _organizerService.ApplyNamingSettings(_settings.FolderFormat, _settings.FolderPrefix, _settings.FolderSuffix);
+                _organizerService.ApplyNamingSettings(_settings.FolderFormat, _settings.FolderPrefix, _settings.FolderSuffix, _settings.Use24HourTimestamp);
                 UpdateOutputFolder();
                 LoadPreview();
             }
@@ -144,6 +146,7 @@ namespace FileOrganizer
             _lstFiles.Items.Clear();
             _lblSummary.Text = "";
             _pnlConflicts.Visible = false;
+            _pnlTimestampWarning.Visible = false;
             _organizerService = null;
             _pnlMain.Visible = true;
             _pnlProgress.Visible = false;

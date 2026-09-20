@@ -11,6 +11,7 @@ namespace FileOrganizer.Models
         public bool ShowDetailedProgress { get; set; } = Config.AppConstants.DefaultShowDetailedProgress;
         public bool ShowOnTop { get; set; } = Config.AppConstants.DefaultShowOnTop;
         public bool GenerateCsvLog { get; set; } = Config.AppConstants.DefaultGenerateCsvLog;
+        public bool Use24HourTimestamp { get; set; } = Config.AppConstants.DefaultUse24HourTimestamp;
         public FolderFormat FolderFormat { get; set; } = Config.AppConstants.DefaultFolderFormat;
         public string FolderPrefix { get; set; } = Config.AppConstants.DefaultFolderPrefix;
         public string FolderSuffix { get; set; } = Config.AppConstants.DefaultFolderSuffix;

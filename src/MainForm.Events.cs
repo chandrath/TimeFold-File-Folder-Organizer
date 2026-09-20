@@ -7,6 +7,7 @@ using System.Linq;
 using System.Text;
 using System.Threading;
 using System.Windows.Forms;
+using FileOrganizer.Config;
 using FileOrganizer.Models;
 
 namespace FileOrganizer
@@ -131,6 +132,7 @@ namespace FileOrganizer
                 UpdateFileList();
                 UpdateSummary();
                 CheckConflicts();
+                CheckTimestampSimilarity();
             }
             catch (Exception ex)
             {
@@ -249,6 +251,36 @@ namespace FileOrganizer
             }
         }
 
+        private void CheckTimestampSimilarity()
+        {
+            if (_organizerService == null || _filesToOrganize.Count < 3)
+            {
+                _pnlTimestampWarning.Visible = false;
+                return;
+            }
+
+            var grouped = _organizerService.GroupByMonthYear(_filesToOrganize);
+            if (grouped.Count == 0)
+            {
+                _pnlTimestampWarning.Visible = false;
+                return;
+            }
+
+            var dominant = grouped.OrderByDescending(g => g.Value.Count).First();
+            double ratio = (double)dominant.Value.Count / _filesToOrganize.Count;
+
+            if (ratio >= AppConstants.TimestampSimilarityThreshold)
+            {
+                int percent = (int)(ratio * 100);
+                _lblTimestampWarning.Text = $"⚠ Notice: {percent}% of items share the same date/period and will be organized into '{dominant.Key}'.";
+                _pnlTimestampWarning.Visible = true;
+            }
+            else
+            {
+                _pnlTimestampWarning.Visible = false;
+            }
+        }
+
         private async void BtnStart_Click(object? sender, EventArgs e)
         {
             if (_organizerService == null || _filesToOrganize.Count == 0)
@@ -267,15 +299,20 @@ namespace FileOrganizer
                 return;
             }
 
+            string warningExtra = _pnlTimestampWarning.Visible
+                ? "\n\n⚠ Warning: Almost all items share identical or similar timestamps (common with downloaded ZIPs or chat media) and will be organized into a single folder."
+                : "";
+
             var result = MessageBox.Show(
                 $"You are about to organize {_filesToOrganize.Count} item(s) into date-based folders.\n\n" +
                 $"Source: {_txtSourceFolder.Text}\n" +
-                $"Output: {outputDir}\n\n" +
-                "This will move files from the source location to a Sorted folder in the output location.\n\n" +
+                $"Output: {outputDir}" +
+                warningExtra +
+                "\n\nThis will move files from the source location to a Sorted folder in the output location.\n\n" +
                 "Continue?",
                 "Confirm Organization",
                 MessageBoxButtons.YesNo,
-                MessageBoxIcon.Question);
+                _pnlTimestampWarning.Visible ? MessageBoxIcon.Warning : MessageBoxIcon.Question);
 
             if (result != DialogResult.Yes)
                 return;
