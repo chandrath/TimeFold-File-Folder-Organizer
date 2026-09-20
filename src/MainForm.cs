@@ -44,6 +44,8 @@ namespace FileOrganizer
         private TextBox _txtOutputFolder = null!;
         private ModernButton _btnBrowseOutput = null!;
         private ListView _lstFiles = null!;
+        private ContextMenuStrip _ctxFileMenu = null!;
+        private ModernButton _btnRefresh = null!;
         private ModernButton _lblFormatBadge = null!;
         private Panel _pnlEmptyState = null!;
         private Label _lblSummary = null!;

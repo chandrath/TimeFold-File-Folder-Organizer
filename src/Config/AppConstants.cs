@@ -17,7 +17,8 @@ namespace FileOrganizer.Config
         public const string ShortAppName = "TimeFold";
         public const string AppVersion = "1.0.0.0";
         public const string BuildNumber = "20260920";
-        public const string AppDescription = "A modern Windows desktop utility to organize files and folders into custom date-based directory structures (Month, Day, Quarter, Half-Year, ISO 8601, and Year) based on their modified timestamps.";
+        public const string AppTagline = "Effortlessly organize files & folders into a clean date-based timeline";
+        public const string AppDescription = AppTagline;
         public const string Author = "Shree";
         public const string RepositoryUrl = "https://github.com/chandrath/TimeFold-File-Folder-Organizer";
         public const string LicenseText = "GNU General Public License v3.0 (GPLv3) - Free and Open Source";

@@ -127,7 +127,7 @@ namespace FileOrganizer
             };
             _lblSubtitle = new Label
             {
-                Text = "Organize files & folders into date-based hierarchies by modified timestamps",
+                Text = AppConstants.AppTagline,
                 UseMnemonic = false,
                 Font = new Font("Segoe UI", 8.5F),
                 ForeColor = AppConstants.ColorTextMuted,
@@ -198,7 +198,7 @@ namespace FileOrganizer
             var pnlPreviewHeader = new Panel { Dock = DockStyle.Top, Height = 30, Margin = new Padding(0, 0, 0, 4) };
             _lblPreviewHeader = new Label
             {
-                Text = "File Preview",
+                Text = "Organization Plan",
                 Font = new Font("Segoe UI", 10F, FontStyle.Bold),
                 ForeColor = Color.FromArgb(55, 65, 81),
                 Dock = DockStyle.Left,
@@ -222,6 +222,25 @@ namespace FileOrganizer
             };
             _lblFormatBadge.Click += (s, e) => MenuPreferences_Click(s, e);
 
+            _btnRefresh = new ModernButton
+            {
+                Text = "🔄 Refresh",
+                Font = new Font("Segoe UI Emoji", 8.5F, FontStyle.Bold),
+                ForeColor = Color.FromArgb(55, 65, 81),
+                BackColor = Color.White,
+                BorderColor = Color.FromArgb(209, 213, 219),
+                BorderRadius = 12,
+                Dock = DockStyle.Right,
+                AutoSize = true,
+                Height = 26,
+                Padding = new Padding(8, 0, 8, 0),
+                Margin = new Padding(0, 0, 6, 0),
+                Cursor = Cursors.Hand
+            };
+            new ToolTip().SetToolTip(_btnRefresh, "Refresh list (F5)");
+            _btnRefresh.Click += (s, e) => LoadPreview();
+
+            pnlPreviewHeader.Controls.Add(_btnRefresh);
             pnlPreviewHeader.Controls.Add(_lblFormatBadge);
             pnlPreviewHeader.Controls.Add(_lblPreviewHeader);
 
@@ -409,6 +428,17 @@ namespace FileOrganizer
             // Send MenuStrip to back so it reserves the top 24px and never overlaps content
             _menuStrip.SendToBack();
             _pnlMain.BringToFront();
+
+            InitializeContextMenu();
+            this.KeyPreview = true;
+            this.KeyDown += (s, e) =>
+            {
+                if (e.KeyCode == Keys.F5)
+                {
+                    e.Handled = true;
+                    LoadPreview();
+                }
+            };
 
             this.Load += MainForm_Load;
             this.Resize += MainForm_Resize;

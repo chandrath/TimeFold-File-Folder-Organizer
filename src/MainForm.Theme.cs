@@ -95,8 +95,14 @@ namespace FileOrganizer
                 _btnBrowseOutput.BorderColor = palette.SecondaryButtonBorder;
             }
 
-            // 8. File Preview Header & ListView
+            // 8. Organization Plan Header, Refresh & ListView
             if (_lblPreviewHeader != null) _lblPreviewHeader.ForeColor = palette.TextPrimary;
+            if (_btnRefresh != null)
+            {
+                _btnRefresh.BackColor = palette.SecondaryButtonBg;
+                _btnRefresh.ForeColor = palette.SecondaryButtonText;
+                _btnRefresh.BorderColor = palette.SecondaryButtonBorder;
+            }
             if (_lblFormatBadge != null)
             {
                 _lblFormatBadge.BackColor = palette.BadgeBg;
@@ -108,6 +114,13 @@ namespace FileOrganizer
             {
                 _lstFiles.BackColor = palette.ListBg;
                 _lstFiles.ForeColor = palette.ListText;
+            }
+
+            if (_ctxFileMenu != null)
+            {
+                _ctxFileMenu.Renderer = isDark ? AppTheme.DarkMenuRenderer : new ToolStripProfessionalRenderer();
+                _ctxFileMenu.BackColor = palette.MenuBg;
+                SetMenuColors(_ctxFileMenu.Items, palette);
             }
 
             // 9. Empty State
