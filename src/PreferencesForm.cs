@@ -105,7 +105,7 @@ namespace FileOrganizer
             var lblOrgHeader = new Label { Text = "File & Folder Rules:", UseMnemonic = false, Font = new Font("Segoe UI", 10F, FontStyle.Bold), Location = new Point(leftMargin, currentY), AutoSize = true };
             currentY += 24;
 
-            _chkIncludeFolders = new CheckBox { Text = "Include Top-Level Folders (Move entire folder packages as atomic units)", Location = new Point(leftMargin, currentY), Size = new Size(contentWidth, 24), Checked = _settings.IncludeTopLevelFolders };
+            _chkIncludeFolders = new CheckBox { Text = "Include Folders (Move whole folders alongside files)", Location = new Point(leftMargin, currentY), Size = new Size(contentWidth, 24), Checked = _settings.IncludeTopLevelFolders };
             currentY += spacing;
 
             _chkIgnoreSystemFiles = new CheckBox { Text = "Ignore Windows system files & protected folders (desktop.ini, Thumbs.db, $RECYCLE.BIN)", UseMnemonic = false, Location = new Point(leftMargin, currentY), Size = new Size(contentWidth, 24), Checked = _settings.IgnoreSystemFiles };

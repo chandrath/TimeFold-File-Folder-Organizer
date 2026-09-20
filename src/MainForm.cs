@@ -41,6 +41,7 @@ namespace FileOrganizer
         private ModernButton _btnUseCurrentFolder = null!;
         private Panel _pnlSourceDrop = null!;
         private CheckBox _chkUseSourceAsOutput = null!;
+        private CheckBox _chkIncludeFolders = null!;
         private TextBox _txtOutputFolder = null!;
         private ModernButton _btnBrowseOutput = null!;
         private ListView _lstFiles = null!;
@@ -113,6 +114,10 @@ namespace FileOrganizer
             {
                 _organizerService.ApplyNamingSettings(_settings.FolderFormat, _settings.FolderPrefix, _settings.FolderSuffix, _settings.Use24HourTimestamp);
             }
+            if (_chkIncludeFolders != null && _chkIncludeFolders.Checked != _settings.IncludeTopLevelFolders)
+            {
+                _chkIncludeFolders.Checked = _settings.IncludeTopLevelFolders;
+            }
             UpdateFormatBadge();
         }
 
@@ -121,7 +126,7 @@ namespace FileOrganizer
             if (_lblFormatBadge != null)
             {
                 string sample = AppConstants.FormatFolderDate(DateTime.Now, _settings.FolderFormat, _settings.FolderPrefix, _settings.FolderSuffix);
-                _lblFormatBadge.Text = $"📅 {sample}  ⚙";
+                _lblFormatBadge.Text = $"📁 Format: {sample} ⚙";
             }
         }
 

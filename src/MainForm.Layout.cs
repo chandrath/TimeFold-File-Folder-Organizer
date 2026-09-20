@@ -184,12 +184,10 @@ namespace FileOrganizer
             pnlOutputRow.Controls.Add(_txtOutputFolder, 0, 0);
             pnlOutputRow.Controls.Add(_btnBrowseOutput, 1, 0);
 
-            topLayout.Controls.Add(pnlHeader);
-            topLayout.Controls.Add(_lblSourceTitle);
-            topLayout.Controls.Add(pnlSourceRow);
-            topLayout.Controls.Add(_pnlSourceDrop);
-            topLayout.Controls.Add(_chkUseSourceAsOutput);
-            topLayout.Controls.Add(pnlOutputRow);
+            _chkIncludeFolders = new CheckBox { Text = "Include folders (move whole folders alongside files)", Font = new Font("Segoe UI", 9.5F), ForeColor = Color.FromArgb(55, 65, 81), AutoSize = true, Checked = _settings.IncludeTopLevelFolders, Margin = new Padding(0, 2, 0, 4) };
+            _chkIncludeFolders.CheckedChanged += ChkIncludeFolders_CheckedChanged;
+
+            topLayout.Controls.AddRange(new Control[] { pnlHeader, _lblSourceTitle, pnlSourceRow, _pnlSourceDrop, _chkUseSourceAsOutput, pnlOutputRow, _chkIncludeFolders });
             _pnlTopSection.Controls.Add(topLayout);
 
             // 3. Center Elastic Preview Table
@@ -208,7 +206,7 @@ namespace FileOrganizer
 
             _lblFormatBadge = new ModernButton
             {
-                Text = "📅 Format ⚙",
+                Text = "📁 Format ⚙",
                 Font = new Font("Segoe UI Emoji", 8.5F, FontStyle.Bold),
                 ForeColor = AppConstants.ColorBadgeText,
                 BackColor = AppConstants.ColorBadgeBg,
@@ -220,6 +218,7 @@ namespace FileOrganizer
                 Padding = new Padding(8, 0, 8, 0),
                 Cursor = Cursors.Hand
             };
+            new ToolTip().SetToolTip(_lblFormatBadge, "Preview of date folder format. Click to customize in Preferences.");
             _lblFormatBadge.Click += (s, e) => MenuPreferences_Click(s, e);
 
             _btnRefresh = new ModernButton

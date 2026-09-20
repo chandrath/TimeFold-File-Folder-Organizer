@@ -86,6 +86,10 @@ namespace FileOrganizer
             {
                 _chkUseSourceAsOutput.ForeColor = palette.TextPrimary;
             }
+            if (_chkIncludeFolders != null)
+            {
+                _chkIncludeFolders.ForeColor = palette.TextPrimary;
+            }
             UpdateOutputFolder();
 
             if (_btnBrowseOutput != null)

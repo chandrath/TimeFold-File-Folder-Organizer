@@ -100,6 +100,14 @@ namespace FileOrganizer
             UpdateOutputFolder();
         }
 
+        private void ChkIncludeFolders_CheckedChanged(object? sender, EventArgs e)
+        {
+            if (_settings.IncludeTopLevelFolders == _chkIncludeFolders.Checked) return;
+            _settings.IncludeTopLevelFolders = _chkIncludeFolders.Checked;
+            _settings.SaveToFile();
+            LoadPreview();
+        }
+
         private void PnlSourceDrop_DragEnter(object? sender, DragEventArgs e)
         {
             var palette = AppTheme.GetPalette(_settings.DarkMode);
