@@ -57,11 +57,8 @@ namespace FileOrganizer
 
             if (dialog.ShowDialog() == DialogResult.OK)
             {
-                _txtOutputFolder.Text = dialog.SelectedPath;
-                if (_organizerService != null)
-                {
-                    _organizerService.OutputDirectory = dialog.SelectedPath;
-                }
+                _customOutputFolder = dialog.SelectedPath;
+                UpdateOutputFolder();
             }
         }
 
@@ -340,7 +337,7 @@ namespace FileOrganizer
                 return;
             }
 
-            string outputDir = _chkUseSourceAsOutput.Checked ? _txtSourceFolder.Text : _txtOutputFolder.Text;
+            string outputDir = GetBaseOutputFolder();
             if (string.IsNullOrEmpty(outputDir) || !Directory.Exists(outputDir))
             {
                 MessageBox.Show("Please select a valid output folder.", "Invalid Output", MessageBoxButtons.OK, MessageBoxIcon.Warning);
@@ -351,10 +348,11 @@ namespace FileOrganizer
                 ? "\n\n⚠ Warning: Almost all items share identical or similar timestamps (common with downloaded ZIPs or chat media) and will be organized into a single folder."
                 : "";
 
+            string previewOutputDir = AppConstants.GetSortedFolderPreviewPath(outputDir, _settings.Use24HourTimestamp);
             var result = MessageBox.Show(
                 $"You are about to organize {_filesToOrganize.Count} item(s) into date-based folders.\n\n" +
                 $"Source: {_txtSourceFolder.Text}\n" +
-                $"Output: {outputDir}" +
+                $"Output: {previewOutputDir}" +
                 warningExtra +
                 "\n\nThis will move files from the source location to a Sorted folder in the output location.\n\n" +
                 "Continue?",

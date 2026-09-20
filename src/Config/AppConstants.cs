@@ -125,6 +125,21 @@ namespace FileOrganizer.Config
             return folder;
         }
 
+        public static string GetSortedFolderPreviewPattern(bool use24Hour)
+        {
+            return use24Hour
+                ? $"{SortedFolderPrefix}YYYY-MM-DD_HH-mm"
+                : $"{SortedFolderPrefix}YYYY-MM-DD_hh-mmtt";
+        }
+
+        public static string GetSortedFolderPreviewPath(string outputDirectory, bool use24Hour)
+        {
+            if (string.IsNullOrWhiteSpace(outputDirectory))
+                return string.Empty;
+
+            return Path.Combine(outputDirectory, GetSortedFolderPreviewPattern(use24Hour));
+        }
+
         // Known Windows System Files and Protected Directories
         public static readonly HashSet<string> KnownSystemFilesAndDirs = new(StringComparer.OrdinalIgnoreCase)
         {

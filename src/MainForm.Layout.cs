@@ -178,7 +178,7 @@ namespace FileOrganizer
             var pnlOutputRow = new TableLayoutPanel { Dock = DockStyle.Top, ColumnCount = 2, Height = 34, Margin = new Padding(0, 0, 0, 4) };
             pnlOutputRow.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 100));
             pnlOutputRow.ColumnStyles.Add(new ColumnStyle(SizeType.Absolute, 96));
-            _txtOutputFolder = new TextBox { Dock = DockStyle.Fill, Height = 32, ReadOnly = true, BackColor = Color.FromArgb(241, 245, 249), BorderStyle = BorderStyle.FixedSingle, Enabled = false, Font = new Font("Segoe UI", 9.5F), Margin = new Padding(0, 1, 8, 1) };
+            _txtOutputFolder = new TextBox { Dock = DockStyle.Fill, Height = 32, ReadOnly = true, BackColor = Color.FromArgb(241, 245, 249), BorderStyle = BorderStyle.FixedSingle, Enabled = true, Font = new Font("Segoe UI", 9.5F), Margin = new Padding(0, 1, 8, 1) };
             _btnBrowseOutput = new ModernButton { Text = "📁 Browse", Dock = DockStyle.Fill, BackColor = Color.White, BorderColor = Color.FromArgb(209, 213, 219), ForeColor = Color.FromArgb(30, 41, 59), Enabled = false, BorderRadius = 6, Margin = Padding.Empty };
             _btnBrowseOutput.Click += BtnBrowseOutput_Click;
             pnlOutputRow.Controls.Add(_txtOutputFolder, 0, 0);

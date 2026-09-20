@@ -43,6 +43,7 @@ namespace FileOrganizer
         private CheckBox _chkUseSourceAsOutput = null!;
         private CheckBox _chkIncludeFolders = null!;
         private TextBox _txtOutputFolder = null!;
+        private string _customOutputFolder = "";
         private ModernButton _btnBrowseOutput = null!;
         private ListView _lstFiles = null!;
         private ContextMenuStrip _ctxFileMenu = null!;
@@ -99,10 +100,10 @@ namespace FileOrganizer
 
         private void InitializeOrganizer()
         {
+            SetupToolTips();
             ApplySettings();
             ApplyTheme(_settings.DarkMode);
             UpdateRecentMenus();
-            SetupToolTips();
             if (_settings.AutoLoadExeDirectoryOnStartup && Directory.Exists(_executableDirectory))
             {
                 SetSourceFolder(_executableDirectory);
@@ -148,6 +149,7 @@ namespace FileOrganizer
                 _chkIncludeFolders.Checked = _settings.IncludeTopLevelFolders;
             }
             UpdateFormatBadge();
+            UpdateOutputFolder();
         }
 
         private void UpdateFormatBadge()
@@ -225,36 +227,36 @@ namespace FileOrganizer
             items.Add(clearItem);
         }
 
+        private string GetBaseOutputFolder() =>
+            _chkUseSourceAsOutput.Checked ? _txtSourceFolder.Text.Trim() : _customOutputFolder.Trim();
+
         private void UpdateOutputFolder()
         {
             var palette = AppTheme.GetPalette(_settings.DarkMode);
-            if (_chkUseSourceAsOutput.Checked)
-            {
-                _txtOutputFolder.BackColor = palette.InputDisabledBg;
-                _txtOutputFolder.ForeColor = palette.TextMuted;
-                _txtOutputFolder.Enabled = false;
-                _btnBrowseOutput.Enabled = false;
+            bool useSource = _chkUseSourceAsOutput.Checked;
 
-                if (!string.IsNullOrEmpty(_txtSourceFolder.Text) && Directory.Exists(_txtSourceFolder.Text))
+            _txtOutputFolder.BackColor = useSource ? palette.InputDisabledBg : palette.InputBg;
+            _txtOutputFolder.ForeColor = useSource ? palette.TextMuted : palette.TextPrimary;
+            _txtOutputFolder.ReadOnly = true;
+            _btnBrowseOutput.Enabled = !useSource;
+
+            string baseDir = GetBaseOutputFolder();
+            if (!string.IsNullOrEmpty(baseDir) && Directory.Exists(baseDir))
+            {
+                string preview = AppConstants.GetSortedFolderPreviewPath(baseDir, _settings.Use24HourTimestamp);
+                _txtOutputFolder.Text = preview;
+                _txtOutputFolder.SelectionStart = _txtOutputFolder.Text.Length;
+                _txtOutputFolder.ScrollToCaret();
+                _toolTip?.SetToolTip(_txtOutputFolder, $"Output Destination (will create):\n{preview}");
+                if (_organizerService != null)
                 {
-                    _txtOutputFolder.Text = _txtSourceFolder.Text;
-                }
-                else
-                {
-                    _txtOutputFolder.Text = "";
+                    _organizerService.OutputDirectory = baseDir;
                 }
             }
             else
             {
-                _txtOutputFolder.BackColor = palette.InputBg;
-                _txtOutputFolder.ForeColor = palette.TextPrimary;
-                _txtOutputFolder.Enabled = true;
-                _btnBrowseOutput.Enabled = true;
-            }
-
-            if (_organizerService != null && !string.IsNullOrEmpty(_txtOutputFolder.Text))
-            {
-                _organizerService.OutputDirectory = _txtOutputFolder.Text;
+                _txtOutputFolder.Text = "";
+                _toolTip?.SetToolTip(_txtOutputFolder, "Selected destination folder for organized files");
             }
         }
 
@@ -283,6 +285,7 @@ namespace FileOrganizer
         private void ResetForm()
         {
             _txtSourceFolder.Text = "";
+            _customOutputFolder = "";
             _txtOutputFolder.Text = "";
             _chkUseSourceAsOutput.Checked = true;
             _filesToOrganize.Clear();
