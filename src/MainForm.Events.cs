@@ -152,7 +152,7 @@ namespace FileOrganizer
                 item.SubItems.Add(file.TypeDisplay);
                 item.SubItems.Add(file.MonthYear);
                 item.SubItems.Add(file.ModifiedDate.ToString("yyyy-MM-dd HH:mm"));
-                item.SubItems.Add(file.IsDirectory ? "<Folder>" : FormatFileSize(file.Size));
+                item.SubItems.Add(file.IsDirectory ? "—" : FormatFileSize(file.Size));
                 item.Tag = file;
                 _lstFiles.Items.Add(item);
             }
