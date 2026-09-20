@@ -24,9 +24,10 @@ namespace FileOrganizer.Models
             {
                 0 => string.Compare(f1.Name, f2.Name, StringComparison.CurrentCultureIgnoreCase),
                 1 => CompareType(f1, f2),
-                2 => string.Compare(f1.TargetFolder, f2.TargetFolder, StringComparison.CurrentCultureIgnoreCase),
-                3 => DateTime.Compare(f1.ModifiedDate, f2.ModifiedDate),
-                4 => CompareSize(f1, f2),
+                2 => DateTime.Compare(f1.ModifiedDate, f2.ModifiedDate),
+                3 => DateTime.Compare(f1.CreatedDate, f2.CreatedDate),
+                4 => string.Compare(f1.TargetFolder, f2.TargetFolder, StringComparison.CurrentCultureIgnoreCase),
+                5 => CompareSize(f1, f2),
                 _ => 0
             };
 

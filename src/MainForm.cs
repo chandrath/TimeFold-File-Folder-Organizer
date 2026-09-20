@@ -92,6 +92,7 @@ namespace FileOrganizer
         }
 
         private ToolTip _toolTip = null!;
+        private ToolTip _cellToolTip = null!;
 
         private void InitializeOrganizer()
         {
@@ -111,7 +112,7 @@ namespace FileOrganizer
 
         private void SetupToolTips()
         {
-            _toolTip = new ToolTip { InitialDelay = 400, AutoPopDelay = 8000, ReshowDelay = 200 };
+            _toolTip = new ToolTip { ShowAlways = true, InitialDelay = 300, AutoPopDelay = 8000, ReshowDelay = 150 };
             _toolTip.SetToolTip(_btnBrowseSource, "Browse your computer to select a folder to organize");
             _toolTip.SetToolTip(_btnRecentFolders, "Quickly select from your recently organized folders");
             _toolTip.SetToolTip(_btnUseCurrentFolder, "Use the folder where this application is currently located");
@@ -125,6 +126,10 @@ namespace FileOrganizer
             _toolTip.SetToolTip(_lblFormatBadge, "Current folder naming pattern. Click to customize in Preferences");
             _toolTip.SetToolTip(_btnRefresh, "Scan and refresh the organization plan (F5)");
             _toolTip.SetToolTip(_btnStart, "Move files & folders into their date-based timeline folders");
+
+            _cellToolTip = new ToolTip { ShowAlways = true, InitialDelay = 150, AutoPopDelay = 6000, ReshowDelay = 100 };
+            _lstFiles.MouseMove += LstFiles_MouseMove;
+            _lstFiles.MouseLeave += LstFiles_MouseLeave;
         }
 
         private void ApplySettings()
@@ -281,6 +286,71 @@ namespace FileOrganizer
                 len /= 1024;
             }
             return $"{len:0.##} {sizes[order]}";
+        }
+
+        private Font? _boldListFont;
+        private Font GetBoldListFont() => _boldListFont ??= new Font(_lstFiles.Font, FontStyle.Bold);
+        private string? _currentListToolTipText;
+        private (int ItemIndex, int SubIndex) _lastTooltipCell = (-1, -1);
+
+        private void LstFiles_MouseMove(object? sender, MouseEventArgs e)
+        {
+            var hit = _lstFiles.HitTest(e.Location);
+            if (hit.Item?.Tag is not FileItem file || hit.SubItem == null)
+            {
+                ClearListToolTip();
+                return;
+            }
+
+            int subIndex = hit.Item.SubItems.IndexOf(hit.SubItem);
+            int itemIndex = hit.Item.Index;
+
+            if (_lastTooltipCell == (itemIndex, subIndex)) return;
+            _lastTooltipCell = (itemIndex, subIndex);
+
+            string? newText = null;
+            if (subIndex == 2) // Modified Date
+            {
+                newText = !file.IsCreatedDateActive
+                    ? $"✔ Active Date (Modified)\nUsed to organize this item into target folder '{file.TargetFolder}'.\nTip: Change date source rules in Settings > Preferences (Ctrl+,)"
+                    : $"Inactive Date (Modified)\nOriginal file timestamp (not used for folder placement).\nTip: Change date source rules in Settings > Preferences (Ctrl+,)";
+            }
+            else if (subIndex == 3) // Created Date
+            {
+                newText = file.IsCreatedDateActive
+                    ? $"✔ Active Date (Created)\nUsed to organize this item into target folder '{file.TargetFolder}'.\nTip: Change date source rules in Settings > Preferences (Ctrl+,)"
+                    : $"Inactive Date (Created)\nOriginal file timestamp (not used for folder placement).\nTip: Change date source rules in Settings > Preferences (Ctrl+,)";
+            }
+
+            if (newText != null)
+            {
+                _currentListToolTipText = newText;
+                _cellToolTip.Show(newText, _lstFiles, e.Location.X + 16, e.Location.Y + 20, 5000);
+            }
+            else
+            {
+                ClearListToolTip();
+            }
+        }
+
+        private void LstFiles_MouseLeave(object? sender, EventArgs e) => ClearListToolTip();
+
+        private void ClearListToolTip()
+        {
+            if (_lastTooltipCell != (-1, -1) || _currentListToolTipText != null)
+            {
+                _lastTooltipCell = (-1, -1);
+                _currentListToolTipText = null;
+                _cellToolTip.Hide(_lstFiles);
+            }
+        }
+
+        protected override void OnFormClosed(FormClosedEventArgs e)
+        {
+            _boldListFont?.Dispose();
+            _cellToolTip?.Dispose();
+            _toolTip?.Dispose();
+            base.OnFormClosed(e);
         }
     }
 }

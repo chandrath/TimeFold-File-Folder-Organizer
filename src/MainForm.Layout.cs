@@ -261,11 +261,12 @@ namespace FileOrganizer
                 Font = new Font("Segoe UI", 9F),
                 Visible = false
             };
-            _lstFiles.Columns.Add("File Name", 320);
-            _lstFiles.Columns.Add("Type", 85);
-            _lstFiles.Columns.Add("Target Folder", 170);
-            _lstFiles.Columns.Add("Modified Date", 135);
-            _lstFiles.Columns.Add("Size", 85);
+            _lstFiles.Columns.Add("File Name", 260);
+            _lstFiles.Columns.Add("Type", 70);
+            _lstFiles.Columns.Add("Modified Date", 140);
+            _lstFiles.Columns.Add("Created Date", 140);
+            _lstFiles.Columns.Add("Target Folder", 160);
+            _lstFiles.Columns.Add("Size", 75);
             _lstFiles.ColumnClick += LstFiles_ColumnClick;
 
             // Empty State Card
@@ -445,10 +446,10 @@ namespace FileOrganizer
 
         private void UpdateMainLayout()
         {
-            if (_lstFiles != null && _lstFiles.Columns.Count >= 5)
+            if (_lstFiles != null && _lstFiles.Columns.Count >= 6)
             {
                 int scrollbarWidth = SystemInformation.VerticalScrollBarWidth;
-                int otherCols = 85 + 170 + 135 + 85 + scrollbarWidth + 6;
+                int otherCols = 70 + 140 + 140 + 160 + 75 + scrollbarWidth + 6;
                 int availableNameWidth = Math.Max(150, _lstFiles.ClientSize.Width - otherCols);
                 _lstFiles.Columns[0].Width = availableNameWidth;
             }

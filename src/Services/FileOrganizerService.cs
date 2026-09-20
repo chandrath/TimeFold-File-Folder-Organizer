@@ -102,31 +102,35 @@ namespace FileOrganizer.Services
                         if (isDirectory)
                         {
                             var dirInfo = new DirectoryInfo(itemPath);
-                            DateTime itemDate = ResolveItemDate(dirInfo.LastWriteTime, dirInfo.CreationTime, folderDateSource);
+                            var (itemDate, isCreatedActive) = ResolveItemDate(dirInfo.LastWriteTime, dirInfo.CreationTime, folderDateSource);
                             var fileItem = new FileItem
                             {
                                 FullPath = itemPath,
                                 Name = dirInfo.Name,
                                 IsDirectory = true,
-                                ModifiedDate = itemDate,
+                                ModifiedDate = dirInfo.LastWriteTime,
+                                CreatedDate = dirInfo.CreationTime,
+                                IsCreatedDateActive = isCreatedActive,
                                 Size = 0
                             };
-                            fileItem.TargetFolder = FormatTargetFolder(fileItem.ModifiedDate);
+                            fileItem.TargetFolder = FormatTargetFolder(itemDate);
                             files.Add(fileItem);
                         }
                         else if (File.Exists(itemPath))
                         {
                             var fileInfo = new FileInfo(itemPath);
-                            DateTime itemDate = ResolveItemDate(fileInfo.LastWriteTime, fileInfo.CreationTime, fileDateSource);
+                            var (itemDate, isCreatedActive) = ResolveItemDate(fileInfo.LastWriteTime, fileInfo.CreationTime, fileDateSource);
                             var fileItem = new FileItem
                             {
                                 FullPath = itemPath,
                                 Name = fileInfo.Name,
                                 IsDirectory = false,
-                                ModifiedDate = itemDate,
+                                ModifiedDate = fileInfo.LastWriteTime,
+                                CreatedDate = fileInfo.CreationTime,
+                                IsCreatedDateActive = isCreatedActive,
                                 Size = fileInfo.Length
                             };
-                            fileItem.TargetFolder = FormatTargetFolder(fileItem.ModifiedDate);
+                            fileItem.TargetFolder = FormatTargetFolder(itemDate);
                             files.Add(fileItem);
                         }
                     }
@@ -384,22 +388,22 @@ namespace FileOrganizer.Services
 
         public string FormatMonthYear(DateTime date) => FormatTargetFolder(date);
 
-        private static DateTime ResolveItemDate(DateTime modified, DateTime created, DateSource source)
+        private static (DateTime resolvedDate, bool isCreatedActive) ResolveItemDate(DateTime modified, DateTime created, DateSource source)
         {
             static bool IsValidDate(DateTime dt) => dt.Year >= 1980 && dt.Year <= DateTime.Now.Year + 10;
 
             bool validMod = IsValidDate(modified);
             bool validCre = IsValidDate(created);
 
-            if (!validMod && !validCre) return DateTime.Now;
-            if (!validMod) return created;
-            if (!validCre) return modified;
+            if (!validMod && !validCre) return (DateTime.Now, false);
+            if (!validMod) return (created, true);
+            if (!validCre) return (modified, false);
 
             return source switch
             {
-                DateSource.Created => created,
-                DateSource.Earliest => (modified < created) ? modified : created,
-                _ => modified
+                DateSource.Created => (created, true),
+                DateSource.Earliest => (created < modified) ? (created, true) : (modified, false),
+                _ => (modified, false)
             };
         }
     }

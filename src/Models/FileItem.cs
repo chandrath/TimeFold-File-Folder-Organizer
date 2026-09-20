@@ -10,6 +10,8 @@ namespace FileOrganizer.Models
         public string TargetFolder { get; set; } = string.Empty;
         public string MonthYear { get => TargetFolder; set => TargetFolder = value; }
         public DateTime ModifiedDate { get; set; }
+        public DateTime CreatedDate { get; set; }
+        public bool IsCreatedDateActive { get; set; }
         public long Size { get; set; }
         public bool IsDirectory { get; set; }
         public string DestinationPath { get; set; } = string.Empty;

@@ -14,15 +14,8 @@ namespace FileOrganizer
 {
     public partial class MainForm
     {
-        private void MenuFileNew_Click(object? sender, EventArgs e)
-        {
-            ResetForm();
-        }
-
-        private void MenuFileExit_Click(object? sender, EventArgs e)
-        {
-            this.Close();
-        }
+        private void MenuFileNew_Click(object? sender, EventArgs e) => ResetForm();
+        private void MenuFileExit_Click(object? sender, EventArgs e) => this.Close();
 
         private void MenuPreferences_Click(object? sender, EventArgs e)
         {
@@ -57,10 +50,7 @@ namespace FileOrganizer
             }
         }
 
-        private void BtnUseCurrentFolder_Click(object? sender, EventArgs e)
-        {
-            SetSourceFolder(_executableDirectory);
-        }
+        private void BtnUseCurrentFolder_Click(object? sender, EventArgs e) => SetSourceFolder(_executableDirectory);
 
         private void BtnRecentFolders_Click(object? sender, EventArgs e)
         {
@@ -95,10 +85,7 @@ namespace FileOrganizer
             }
         }
 
-        private void ChkUseSourceAsOutput_CheckedChanged(object? sender, EventArgs e)
-        {
-            UpdateOutputFolder();
-        }
+        private void ChkUseSourceAsOutput_CheckedChanged(object? sender, EventArgs e) => UpdateOutputFolder();
 
         private void ChkIncludeFolders_CheckedChanged(object? sender, EventArgs e)
         {
@@ -178,19 +165,34 @@ namespace FileOrganizer
 
         private int _sortColumn = -1;
         private bool _sortAscending = true;
-        private static readonly string[] ColumnBaseHeaders = { "File Name", "Type", "Target Folder", "Modified Date", "Size" };
+        private static readonly string[] ColumnBaseHeaders = { "File Name", "Type", "Modified Date", "Created Date", "Target Folder", "Size" };
 
         private void UpdateFileList()
         {
             _lstFiles.ListViewItemSorter = null;
             _lstFiles.Items.Clear();
 
+            Color activeColor = _settings.DarkMode ? Color.FromArgb(96, 165, 250) : Color.FromArgb(29, 78, 216);
+            Color mutedColor = _settings.DarkMode ? Color.FromArgb(148, 163, 184) : Color.FromArgb(100, 116, 139);
+            var boldFont = GetBoldListFont();
+
             foreach (var file in _filesToOrganize.Take(1000))
             {
-                var item = new ListViewItem(file.Name);
+                var item = new ListViewItem(file.Name) { UseItemStyleForSubItems = false };
                 item.SubItems.Add(file.TypeDisplay);
+
+                string modText = (file.IsCreatedDateActive ? "   " : "✔ ") + file.ModifiedDate.ToString("yyyy-MM-dd HH:mm");
+                string creText = (file.IsCreatedDateActive ? "✔ " : "   ") + file.CreatedDate.ToString("yyyy-MM-dd HH:mm");
+
+                var subMod = item.SubItems.Add(modText);
+                subMod.ForeColor = file.IsCreatedDateActive ? mutedColor : activeColor;
+                if (!file.IsCreatedDateActive) subMod.Font = boldFont;
+
+                var subCre = item.SubItems.Add(creText);
+                subCre.ForeColor = file.IsCreatedDateActive ? activeColor : mutedColor;
+                if (file.IsCreatedDateActive) subCre.Font = boldFont;
+
                 item.SubItems.Add(file.TargetFolder);
-                item.SubItems.Add(file.ModifiedDate.ToString("yyyy-MM-dd HH:mm"));
                 item.SubItems.Add(file.IsDirectory ? "—" : FormatFileSize(file.Size));
                 item.Tag = file;
                 _lstFiles.Items.Add(item);
@@ -479,9 +481,6 @@ namespace FileOrganizer
             MessageBox.Show("Output folder is not available yet.", "Folder Unavailable", MessageBoxButtons.OK, MessageBoxIcon.Information);
         }
 
-        private void BtnStartNewProject_Click(object? sender, EventArgs e)
-        {
-            ResetForm();
-        }
+        private void BtnStartNewProject_Click(object? sender, EventArgs e) => ResetForm();
     }
 }
