@@ -218,7 +218,6 @@ namespace FileOrganizer
                 Padding = new Padding(8, 0, 8, 0),
                 Cursor = Cursors.Hand
             };
-            new ToolTip().SetToolTip(_lblFormatBadge, "Preview of date folder format. Click to customize in Preferences.");
             _lblFormatBadge.Click += (s, e) => MenuPreferences_Click(s, e);
 
             _btnRefresh = new ModernButton
@@ -236,7 +235,6 @@ namespace FileOrganizer
                 Margin = new Padding(0, 0, 6, 0),
                 Cursor = Cursors.Hand
             };
-            new ToolTip().SetToolTip(_btnRefresh, "Refresh list (F5)");
             _btnRefresh.Click += (s, e) => LoadPreview();
 
             pnlPreviewHeader.Controls.Add(_btnRefresh);

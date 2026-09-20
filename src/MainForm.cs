@@ -91,11 +91,14 @@ namespace FileOrganizer
             InitializeOrganizer();
         }
 
+        private ToolTip _toolTip = null!;
+
         private void InitializeOrganizer()
         {
             ApplySettings();
             ApplyTheme(_settings.DarkMode);
             UpdateRecentMenus();
+            SetupToolTips();
             if (_settings.AutoLoadExeDirectoryOnStartup && Directory.Exists(_executableDirectory))
             {
                 SetSourceFolder(_executableDirectory);
@@ -104,6 +107,24 @@ namespace FileOrganizer
             {
                 UpdateOutputFolder();
             }
+        }
+
+        private void SetupToolTips()
+        {
+            _toolTip = new ToolTip { InitialDelay = 400, AutoPopDelay = 8000, ReshowDelay = 200 };
+            _toolTip.SetToolTip(_btnBrowseSource, "Browse your computer to select a folder to organize");
+            _toolTip.SetToolTip(_btnRecentFolders, "Quickly select from your recently organized folders");
+            _toolTip.SetToolTip(_btnUseCurrentFolder, "Use the folder where this application is currently located");
+            _toolTip.SetToolTip(_txtSourceFolder, "Selected source folder to organize");
+            _toolTip.SetToolTip(_pnlSourceDrop, "Drag and drop any folder or files here to inspect (or click Browse)");
+            _toolTip.SetToolTip(_lblDropHint, "Drag and drop any folder or files here to inspect (or click Browse)");
+            _toolTip.SetToolTip(_chkUseSourceAsOutput, "Create the sorted date folders directly inside the source folder");
+            _toolTip.SetToolTip(_btnBrowseOutput, "Choose a different destination folder for the sorted date folders");
+            _toolTip.SetToolTip(_txtOutputFolder, "Selected destination folder for organized files");
+            _toolTip.SetToolTip(_chkIncludeFolders, "When checked, moves whole folders as units. When unchecked, folders are skipped");
+            _toolTip.SetToolTip(_lblFormatBadge, "Current folder naming pattern. Click to customize in Preferences");
+            _toolTip.SetToolTip(_btnRefresh, "Scan and refresh the organization plan (F5)");
+            _toolTip.SetToolTip(_btnStart, "Move files & folders into their date-based timeline folders");
         }
 
         private void ApplySettings()
