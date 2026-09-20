@@ -19,7 +19,7 @@ namespace FileOrganizer
         private CancellationTokenSource? _cancellationTokenSource;
         private readonly string _executablePath;
         private readonly string _executableDirectory;
-        private AppSettings _settings = new AppSettings();
+        private AppSettings _settings = AppSettings.LoadFromFile();
         private OrganizationResult? _lastResult;
 
         // UI Controls - Menus

@@ -13,8 +13,8 @@ namespace FileOrganizer
         
         private void InitializeComponent()
         {
-            this.Text = $"About {Config.AppConstants.AppName}";
-            this.Size = new Size(500, 350);
+            this.Text = $"About {Config.AppConstants.ShortAppName}";
+            this.Size = new Size(520, 410);
             this.StartPosition = FormStartPosition.CenterParent;
             this.FormBorderStyle = FormBorderStyle.FixedDialog;
             this.MaximizeBox = false;
@@ -23,17 +23,18 @@ namespace FileOrganizer
             var lblTitle = new Label
             {
                 Text = Config.AppConstants.AppName,
-                Font = new Font("Segoe UI", 18, FontStyle.Bold),
-                ForeColor = Color.DarkBlue,
-                Location = new Point(20, 20),
+                Font = new Font("Segoe UI", 15, FontStyle.Bold),
+                ForeColor = Color.FromArgb(30, 58, 138),
+                Location = new Point(20, 18),
                 AutoSize = true
             };
             
             var lblVersion = new Label
             {
-                Text = $"Version {Config.AppConstants.AppVersion}",
-                Font = new Font("Segoe UI", 10),
-                Location = new Point(20, 60),
+                Text = $"Version {Config.AppConstants.AppVersion} (Build {Config.AppConstants.BuildNumber})",
+                Font = new Font("Segoe UI", 9.5F, FontStyle.Bold),
+                ForeColor = Color.FromArgb(75, 85, 99),
+                Location = new Point(20, 54),
                 AutoSize = true
             };
             
@@ -41,43 +42,60 @@ namespace FileOrganizer
             {
                 Text = Config.AppConstants.AppDescription,
                 Font = new Font("Segoe UI", 9),
-                Location = new Point(20, 90),
-                Size = new Size(440, 60),
+                ForeColor = Config.AppConstants.ColorTextDark,
+                Location = new Point(20, 84),
+                Size = new Size(460, 50),
                 AutoSize = false
             };
             
-            var lblCreatedBy = new Label
+            var lblDeveloperHeader = new Label
             {
-                Text = $"Created by: {Config.AppConstants.Author}",
-                Font = new Font("Segoe UI", 9),
-                Location = new Point(20, 160),
+                Text = "Developer:",
+                Font = new Font("Segoe UI", 9, FontStyle.Bold),
+                ForeColor = Color.FromArgb(55, 65, 81),
+                Location = new Point(20, 144),
+                AutoSize = true
+            };
+
+            var lblDeveloperName = new Label
+            {
+                Text = Config.AppConstants.Author,
+                Font = new Font("Segoe UI", 9.5F),
+                ForeColor = Config.AppConstants.ColorTextDark,
+                Location = new Point(20, 164),
                 AutoSize = true
             };
             
             var lblSourceCode = new Label
             {
-                Text = "Source Code:",
+                Text = "Project URL:",
                 Font = new Font("Segoe UI", 9, FontStyle.Bold),
-                Location = new Point(20, 190),
+                ForeColor = Color.FromArgb(55, 65, 81),
+                Location = new Point(20, 196),
                 AutoSize = true
             };
             
             var linkSource = new LinkLabel
             {
                 Text = Config.AppConstants.RepositoryUrl,
-                Location = new Point(20, 210),
+                Font = new Font("Segoe UI", 9),
+                Location = new Point(20, 216),
                 AutoSize = true,
-                ActiveLinkColor = Color.Blue,
-                LinkColor = Color.Blue,
-                VisitedLinkColor = Color.Blue
+                ActiveLinkColor = Color.FromArgb(37, 99, 235),
+                LinkColor = Color.FromArgb(37, 99, 235),
+                VisitedLinkColor = Color.FromArgb(37, 99, 235)
             };
             linkSource.LinkClicked += (s, e) =>
             {
-                System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo
+                try
                 {
-                    FileName = linkSource.Text,
-                    UseShellExecute = true
-                });
+                    System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo
+                    {
+                        FileName = linkSource.Text,
+                        UseShellExecute = true
+                    });
+                }
+                catch { }
             };
             
             var lblCopyright = new Label
@@ -85,26 +103,22 @@ namespace FileOrganizer
                 Text = Config.AppConstants.CopyrightText,
                 Font = new Font("Segoe UI", 8),
                 ForeColor = Color.Gray,
-                Location = new Point(20, 250),
+                Location = new Point(20, 260),
                 AutoSize = true
             };
             
             var btnClose = new Button
             {
                 Text = "Close",
-                Size = new Size(100, 30),
-                Location = new Point(380, 280),
+                Size = new Size(100, 32),
+                Location = new Point(380, 310),
                 DialogResult = DialogResult.OK
             };
             
-            this.Controls.Add(lblTitle);
-            this.Controls.Add(lblVersion);
-            this.Controls.Add(lblDescription);
-            this.Controls.Add(lblCreatedBy);
-            this.Controls.Add(lblSourceCode);
-            this.Controls.Add(linkSource);
-            this.Controls.Add(lblCopyright);
-            this.Controls.Add(btnClose);
+            this.Controls.AddRange([
+                lblTitle, lblVersion, lblDescription, lblDeveloperHeader,
+                lblDeveloperName, lblSourceCode, linkSource, lblCopyright, btnClose
+            ]);
         }
     }
 }

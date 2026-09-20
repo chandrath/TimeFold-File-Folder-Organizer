@@ -237,21 +237,20 @@ namespace FileOrganizer
 
             _chkShowOnTop = new CheckBox { Text = "Keep application window always on top", Location = new Point(leftMargin, currentY), AutoSize = true, Checked = _settings.ShowOnTop };
 
-            // Buttons
+            // Buttons: Left (Config Location), Right (Save / Cancel)
             int buttonY = this.ClientSize.Height - 52;
-            int totalBtnWidth = 100 + 12 + 100;
-            int btnStartX = (this.ClientSize.Width - totalBtnWidth) / 2;
+            var btnOpenConfig = new Button { Text = "📂 Config Location", Size = new Size(140, 32), Location = new Point(leftMargin, buttonY), Font = new Font("Segoe UI", 8.5F) };
+            btnOpenConfig.Click += (s, e) => AppConstants.OpenConfigLocation();
 
-            _btnOK = new Button { Text = "Save", Size = new Size(100, 32), Location = new Point(btnStartX, buttonY), DialogResult = DialogResult.OK };
+            _btnCancel = new Button { Text = "Cancel", Size = new Size(90, 32), Location = new Point(this.ClientSize.Width - leftMargin - 90, buttonY), DialogResult = DialogResult.Cancel };
+            _btnOK = new Button { Text = "Save", Size = new Size(90, 32), Location = new Point(this.ClientSize.Width - leftMargin - 90 - 10 - 90, buttonY), DialogResult = DialogResult.OK };
             _btnOK.Click += BtnOK_Click;
-
-            _btnCancel = new Button { Text = "Cancel", Size = new Size(100, 32), Location = new Point(btnStartX + 112, buttonY), DialogResult = DialogResult.Cancel };
 
             this.Controls.AddRange([
                 lblOrgHeader, _chkIncludeFolders, _chkIgnoreSystemFiles, lblNamingHeader, _cmbFormat,
                 _btnFlipOrder, _chkShortMonth, lblPrefix, lblSuffix, _txtPrefix, _txtSuffix,
                 pnlLivePreview, lblBehaviorHeader, _chkShowProgress, _chkGenerateCsvLog, _chkShowOnTop,
-                _btnOK, _btnCancel
+                btnOpenConfig, _btnOK, _btnCancel
             ]);
 
             this.AcceptButton = _btnOK;

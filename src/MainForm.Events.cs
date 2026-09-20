@@ -29,6 +29,7 @@ namespace FileOrganizer
             if (prefsForm.ShowDialog() == DialogResult.OK)
             {
                 _settings = prefsForm.Settings;
+                _settings.SaveToFile();
                 ApplySettings();
                 LoadPreview();
             }

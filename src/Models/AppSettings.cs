@@ -1,3 +1,7 @@
+using System;
+using System.IO;
+using System.Text.Json;
+
 namespace FileOrganizer.Models
 {
     public class AppSettings
@@ -10,6 +14,42 @@ namespace FileOrganizer.Models
         public FolderFormat FolderFormat { get; set; } = Config.AppConstants.DefaultFolderFormat;
         public string FolderPrefix { get; set; } = Config.AppConstants.DefaultFolderPrefix;
         public string FolderSuffix { get; set; } = Config.AppConstants.DefaultFolderSuffix;
+
+        public static AppSettings LoadFromFile()
+        {
+            try
+            {
+                string path = Config.AppConstants.GetConfigFilePath();
+                if (File.Exists(path))
+                {
+                    string json = File.ReadAllText(path);
+                    var settings = JsonSerializer.Deserialize<AppSettings>(json);
+                    if (settings != null) return settings;
+                }
+            }
+            catch
+            {
+                // Fail-safe: fallback to defaults if config file is invalid or missing
+            }
+            return new AppSettings();
+        }
+
+        public void SaveToFile()
+        {
+            try
+            {
+                string dir = Config.AppConstants.GetConfigDirectoryPath();
+                if (!Directory.Exists(dir)) Directory.CreateDirectory(dir);
+                string path = Config.AppConstants.GetConfigFilePath();
+                var options = new JsonSerializerOptions { WriteIndented = true };
+                string json = JsonSerializer.Serialize(this, options);
+                File.WriteAllText(path, json);
+            }
+            catch
+            {
+                // Fail-safe: ignore disk write errors to prevent application crash
+            }
+        }
     }
     
     public enum FolderFormat

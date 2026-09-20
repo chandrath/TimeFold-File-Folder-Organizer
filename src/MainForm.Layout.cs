@@ -106,7 +106,7 @@ namespace FileOrganizer
 
             _lblTitle = new Label
             {
-                Text = "File Organizer by Date",
+                Text = AppConstants.AppName,
                 Font = new Font("Segoe UI", 16F, FontStyle.Bold),
                 ForeColor = AppConstants.ColorTextDark,
                 AutoSize = true,

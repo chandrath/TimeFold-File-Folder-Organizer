@@ -12,13 +12,46 @@ namespace FileOrganizer.Config
     /// </summary>
     public static class AppConstants
     {
-        // Application Metadata
-        public const string AppName = "File Organizer by Date";
-        public const string AppVersion = "1.0.0";
-        public const string AppDescription = "A Windows application that automatically organizes files into month-year folders based on their Modified Date.";
-        public const string Author = "chandrath";
+        // Application Metadata (SSoT)
+        public const string AppName = "TimeFold: File & Folder Organizer";
+        public const string ShortAppName = "TimeFold";
+        public const string AppVersion = "1.0.0.0";
+        public const string BuildNumber = "20260920";
+        public const string AppDescription = "A modern Windows desktop utility to organize files and folders into custom date-based directory structures (Month, Day, Quarter, Half-Year, ISO 8601, and Year) based on their modified timestamps.";
+        public const string Author = "Shree";
         public const string RepositoryUrl = "https://github.com/chandrath/OrganizeFiles-ByDate";
         public const string CopyrightText = "© 2024-2026 - Free and Open Source Software";
+
+        // Configuration File Paths (SSoT)
+        public static string GetConfigDirectoryPath() =>
+            Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), ShortAppName);
+
+        public static string GetConfigFilePath() =>
+            Path.Combine(GetConfigDirectoryPath(), $"{ShortAppName}_V{AppVersion}_Config.json");
+
+        public static void OpenConfigLocation()
+        {
+            string dir = GetConfigDirectoryPath();
+            if (!Directory.Exists(dir)) Directory.CreateDirectory(dir);
+            string file = GetConfigFilePath();
+            if (File.Exists(file))
+            {
+                System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo
+                {
+                    FileName = "explorer.exe",
+                    Arguments = $"/select,\"{file}\"",
+                    UseShellExecute = true
+                });
+            }
+            else
+            {
+                System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo
+                {
+                    FileName = dir,
+                    UseShellExecute = true
+                });
+            }
+        }
 
         // Output & Logging Prefixes (SSoT)
         public const string SortedFolderPrefix = "Sorted_";
