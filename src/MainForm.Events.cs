@@ -137,13 +137,19 @@ namespace FileOrganizer
             }
         }
 
+        private int _sortColumn = -1;
+        private bool _sortAscending = true;
+        private static readonly string[] ColumnBaseHeaders = { "File Name", "Type", "Month Folder", "Modified Date", "Size" };
+
         private void UpdateFileList()
         {
+            _lstFiles.ListViewItemSorter = null;
             _lstFiles.Items.Clear();
 
             foreach (var file in _filesToOrganize.Take(1000))
             {
                 var item = new ListViewItem(file.Name);
+                item.SubItems.Add(file.TypeDisplay);
                 item.SubItems.Add(file.MonthYear);
                 item.SubItems.Add(file.ModifiedDate.ToString("yyyy-MM-dd HH:mm"));
                 item.SubItems.Add(file.IsDirectory ? "<Folder>" : FormatFileSize(file.Size));
@@ -158,6 +164,80 @@ namespace FileOrganizer
                     ForeColor = Color.Gray
                 };
                 _lstFiles.Items.Add(item);
+            }
+
+            if (_sortColumn >= 0)
+            {
+                _lstFiles.ListViewItemSorter = new FileItemComparer(_sortColumn, _sortAscending);
+                _lstFiles.Sort();
+            }
+        }
+
+        private void LstFiles_ColumnClick(object? sender, ColumnClickEventArgs e)
+        {
+            if (_sortColumn == e.Column)
+            {
+                _sortAscending = !_sortAscending;
+            }
+            else
+            {
+                _sortColumn = e.Column;
+                _sortAscending = true;
+            }
+
+            for (int i = 0; i < _lstFiles.Columns.Count && i < ColumnBaseHeaders.Length; i++)
+            {
+                _lstFiles.Columns[i].Text = (i == _sortColumn)
+                    ? $"{ColumnBaseHeaders[i]} {(_sortAscending ? "▲" : "▼")}"
+                    : ColumnBaseHeaders[i];
+            }
+
+            _lstFiles.ListViewItemSorter = new FileItemComparer(_sortColumn, _sortAscending);
+            _lstFiles.Sort();
+        }
+
+        private class FileItemComparer : System.Collections.IComparer
+        {
+            private readonly int _column;
+            private readonly bool _ascending;
+
+            public FileItemComparer(int column, bool ascending)
+            {
+                _column = column;
+                _ascending = ascending;
+            }
+
+            public int Compare(object? x, object? y)
+            {
+                if (x is not ListViewItem itemX || y is not ListViewItem itemY) return 0;
+                if (itemX.Tag is not FileItem f1 || itemY.Tag is not FileItem f2) return 0;
+
+                int result = _column switch
+                {
+                    0 => string.Compare(f1.Name, f2.Name, StringComparison.CurrentCultureIgnoreCase),
+                    1 => CompareType(f1, f2),
+                    2 => string.Compare(f1.MonthYear, f2.MonthYear, StringComparison.CurrentCultureIgnoreCase),
+                    3 => DateTime.Compare(f1.ModifiedDate, f2.ModifiedDate),
+                    4 => CompareSize(f1, f2),
+                    _ => 0
+                };
+
+                return _ascending ? result : -result;
+            }
+
+            private static int CompareType(FileItem f1, FileItem f2)
+            {
+                if (f1.IsDirectory != f2.IsDirectory)
+                    return f1.IsDirectory ? -1 : 1;
+                return string.Compare(f1.TypeDisplay, f2.TypeDisplay, StringComparison.CurrentCultureIgnoreCase);
+            }
+
+            private static int CompareSize(FileItem f1, FileItem f2)
+            {
+                if (f1.IsDirectory && f2.IsDirectory) return string.Compare(f1.Name, f2.Name, StringComparison.CurrentCultureIgnoreCase);
+                if (f1.IsDirectory) return -1;
+                if (f2.IsDirectory) return 1;
+                return f1.Size.CompareTo(f2.Size);
             }
         }
 

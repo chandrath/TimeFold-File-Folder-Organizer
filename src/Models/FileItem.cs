@@ -15,6 +15,8 @@ namespace FileOrganizer.Models
         public bool WasRenamed { get; set; }
         public string OriginalName { get; set; } = string.Empty;
         public string ErrorMessage { get; set; } = string.Empty;
+
+        public string TypeDisplay => IsDirectory ? "Folder" : (string.IsNullOrEmpty(Path.GetExtension(Name)) ? "File" : Path.GetExtension(Name).TrimStart('.').ToUpperInvariant());
     }
 }
 

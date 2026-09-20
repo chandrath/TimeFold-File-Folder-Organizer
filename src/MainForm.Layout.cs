@@ -173,10 +173,12 @@ namespace FileOrganizer
                 BackColor = Color.White,
                 Font = new Font("Segoe UI", 9F)
             };
-            _lstFiles.Columns.Add("File Name", 380);
-            _lstFiles.Columns.Add("Month Folder", 180);
-            _lstFiles.Columns.Add("Modified Date", 140);
-            _lstFiles.Columns.Add("Size", 90);
+            _lstFiles.Columns.Add("File Name", 320);
+            _lstFiles.Columns.Add("Type", 85);
+            _lstFiles.Columns.Add("Month Folder", 170);
+            _lstFiles.Columns.Add("Modified Date", 135);
+            _lstFiles.Columns.Add("Size", 85);
+            _lstFiles.ColumnClick += LstFiles_ColumnClick;
 
             _pnlCenterSection.Controls.Add(_lstFiles);
             _pnlCenterSection.Controls.Add(_pnlConflicts);
@@ -324,11 +326,11 @@ namespace FileOrganizer
 
         private void UpdateMainLayout()
         {
-            if (_lstFiles != null && _lstFiles.Columns.Count >= 4)
+            if (_lstFiles != null && _lstFiles.Columns.Count >= 5)
             {
                 int scrollbarWidth = SystemInformation.VerticalScrollBarWidth;
-                int otherCols = 180 + 140 + 90 + scrollbarWidth + 6;
-                int availableNameWidth = Math.Max(160, _lstFiles.ClientSize.Width - otherCols);
+                int otherCols = 85 + 170 + 135 + 85 + scrollbarWidth + 6;
+                int availableNameWidth = Math.Max(150, _lstFiles.ClientSize.Width - otherCols);
                 _lstFiles.Columns[0].Width = availableNameWidth;
             }
 
