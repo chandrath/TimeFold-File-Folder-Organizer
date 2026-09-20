@@ -22,8 +22,8 @@ namespace FileOrganizer.Services
                 foreach (var file in processedFiles)
                 {
                     var timestamp = DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss", CultureInfo.InvariantCulture);
-                    var action = string.IsNullOrEmpty(file.DestinationPath) ? "ERROR" : "MOVED";
-                    var errorMsg = result.ErrorMessages.FirstOrDefault(e => e.Contains(file.Name)) ?? "";
+                    var action = !string.IsNullOrEmpty(file.ErrorMessage) ? "ERROR" : (string.IsNullOrEmpty(file.DestinationPath) ? "CANCELLED" : "MOVED");
+                    var errorMsg = !string.IsNullOrEmpty(file.ErrorMessage) ? file.ErrorMessage : "";
                     var modifiedDate = file.ModifiedDate.ToString("yyyy-MM-dd HH:mm:ss", CultureInfo.InvariantCulture);
                     var wasRenamed = file.WasRenamed ? "Yes" : "No";
                     
@@ -41,7 +41,7 @@ namespace FileOrganizer.Services
             if (string.IsNullOrEmpty(value))
                 return "";
             
-            if (value.Contains(",") || value.Contains("\"") || value.Contains("\n"))
+            if (value.Contains(',') || value.Contains('\"') || value.Contains('\n') || value.Contains('\r'))
             {
                 return $"\"{value.Replace("\"", "\"\"")}\"";
             }

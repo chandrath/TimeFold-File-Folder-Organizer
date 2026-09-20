@@ -1,0 +1,542 @@
+using System;
+using System.Drawing;
+using System.Windows.Forms;
+using FileOrganizer.Config;
+using FileOrganizer.Controls;
+
+namespace FileOrganizer
+{
+    public partial class MainForm
+    {
+        private void InitializeComponent()
+        {
+            this.Text = AppConstants.AppName;
+            this.Size = new Size(950, 720);
+            this.MinimumSize = new Size(850, 600);
+            this.StartPosition = FormStartPosition.CenterScreen;
+            this.FormBorderStyle = FormBorderStyle.Sizable;
+            this.MaximizeBox = true;
+            this.MinimizeBox = true;
+            this.BackColor = AppConstants.ColorSurfaceBg;
+            this.Font = new Font("Segoe UI", 9F, FontStyle.Regular, GraphicsUnit.Point);
+
+            // Menu Bar
+            _menuStrip = new MenuStrip
+            {
+                BackColor = Color.White,
+                RenderMode = ToolStripRenderMode.System
+            };
+
+            // File Menu
+            _menuFile = new ToolStripMenuItem("File");
+            _menuFileNew = new ToolStripMenuItem("New", null, MenuFileNew_Click);
+            _menuFile.DropDownItems.Add(_menuFileNew);
+            _menuFile.DropDownItems.Add(new ToolStripSeparator());
+            _menuFileExit = new ToolStripMenuItem("Exit", null, MenuFileExit_Click);
+            _menuFile.DropDownItems.Add(_menuFileExit);
+
+            // Preferences Menu
+            _menuPreferences = new ToolStripMenuItem("Preferences");
+            _menuPreferences.Click += MenuPreferences_Click;
+
+            // Help Menu
+            _menuHelp = new ToolStripMenuItem("Help");
+            _menuAbout = new ToolStripMenuItem("About");
+            _menuAbout.Click += MenuAbout_Click;
+            _menuHelp.DropDownItems.Add(_menuAbout);
+
+            _menuStrip.Items.Add(_menuFile);
+            _menuStrip.Items.Add(_menuPreferences);
+            _menuStrip.Items.Add(_menuHelp);
+            this.MainMenuStrip = _menuStrip;
+            this.Controls.Add(_menuStrip);
+
+            // Main panel
+            _pnlMain = new Panel
+            {
+                Dock = DockStyle.Fill,
+                AutoScroll = true,
+                Padding = new Padding(AppConstants.DefaultPadding + 5)
+            };
+
+            // Title
+            _lblTitle = new Label
+            {
+                Text = "File Organizer",
+                Font = new Font("Segoe UI", 24, FontStyle.Bold),
+                ForeColor = AppConstants.ColorTextDark,
+                AutoSize = true,
+                Location = new Point(AppConstants.DefaultPadding, AppConstants.DefaultPadding + 10)
+            };
+
+            int currentY = _lblTitle.Bottom + 30;
+
+            // Source Folder Selection
+            var lblSourceFolderTitle = new Label
+            {
+                Text = "Source Folder",
+                Font = new Font("Segoe UI", 11, FontStyle.Bold),
+                ForeColor = Color.FromArgb(55, 65, 81),
+                Location = new Point(AppConstants.DefaultPadding, currentY),
+                AutoSize = true
+            };
+            currentY = lblSourceFolderTitle.Bottom + 10;
+
+            _txtSourceFolder = new TextBox
+            {
+                Location = new Point(AppConstants.DefaultPadding, currentY + 5),
+                Anchor = AnchorStyles.Top | AnchorStyles.Left | AnchorStyles.Right,
+                Width = this.ClientSize.Width - (AppConstants.DefaultPadding * 2) - 260,
+                Height = 30,
+                ReadOnly = true,
+                BackColor = Color.White,
+                BorderStyle = BorderStyle.FixedSingle,
+                Font = new Font("Segoe UI", 10)
+            };
+
+            _btnBrowseSource = new ModernButton
+            {
+                Text = "Browse",
+                Size = new Size(100, 35),
+                Location = new Point(_txtSourceFolder.Right + 10, currentY),
+                Anchor = AnchorStyles.Top | AnchorStyles.Right,
+                BackColor = AppConstants.ColorBorder,
+                ForeColor = Color.Black,
+                BorderRadius = 8
+            };
+            _btnBrowseSource.Click += BtnBrowseSource_Click;
+
+            _btnUseCurrentFolder = new ModernButton
+            {
+                Text = "Use Current",
+                Size = new Size(130, 35),
+                Location = new Point(_btnBrowseSource.Right + 10, currentY),
+                Anchor = AnchorStyles.Top | AnchorStyles.Right,
+                BackColor = Color.FromArgb(59, 130, 246),
+                ForeColor = Color.White,
+                BorderRadius = 8
+            };
+            _btnUseCurrentFolder.Click += BtnUseCurrentFolder_Click;
+            currentY += 45;
+
+            // Drag & Drop Panel for Source
+            _pnlSourceDrop = new Panel
+            {
+                Location = new Point(AppConstants.DefaultPadding, currentY),
+                Anchor = AnchorStyles.Top | AnchorStyles.Left | AnchorStyles.Right,
+                Width = this.ClientSize.Width - (AppConstants.DefaultPadding * 2),
+                Height = 60,
+                BorderStyle = BorderStyle.FixedSingle,
+                BackColor = Color.White,
+                AllowDrop = true
+            };
+
+            var lblDropHint = new Label
+            {
+                Text = "Drag and drop a folder here",
+                Font = new Font("Segoe UI", 10, FontStyle.Italic),
+                ForeColor = Color.Gray,
+                AutoSize = false,
+                TextAlign = ContentAlignment.MiddleCenter,
+                Dock = DockStyle.Fill
+            };
+            _pnlSourceDrop.Controls.Add(lblDropHint);
+            _pnlSourceDrop.DragEnter += PnlSourceDrop_DragEnter;
+            _pnlSourceDrop.DragDrop += PnlSourceDrop_DragDrop;
+            currentY += 75;
+
+            // Output Folder Selection
+            var lblOutputFolderTitle = new Label
+            {
+                Text = "Output Folder",
+                Font = new Font("Segoe UI", 11, FontStyle.Bold),
+                ForeColor = Color.FromArgb(55, 65, 81),
+                Location = new Point(AppConstants.DefaultPadding, currentY),
+                AutoSize = true
+            };
+            currentY += 25;
+
+            _chkUseSourceAsOutput = new CheckBox
+            {
+                Text = "Use source folder as output (default)",
+                Font = new Font("Segoe UI", 10),
+                Location = new Point(AppConstants.DefaultPadding, currentY),
+                AutoSize = true,
+                Checked = true
+            };
+            _chkUseSourceAsOutput.CheckedChanged += ChkUseSourceAsOutput_CheckedChanged;
+            currentY += 30;
+
+            _txtOutputFolder = new TextBox
+            {
+                Location = new Point(AppConstants.DefaultPadding, currentY + 5),
+                Anchor = AnchorStyles.Top | AnchorStyles.Left | AnchorStyles.Right,
+                Width = this.ClientSize.Width - (AppConstants.DefaultPadding * 2) - 120,
+                Height = 30,
+                ReadOnly = true,
+                BackColor = Color.FromArgb(243, 244, 246),
+                BorderStyle = BorderStyle.FixedSingle,
+                Enabled = false,
+                Font = new Font("Segoe UI", 10)
+            };
+
+            _btnBrowseOutput = new ModernButton
+            {
+                Text = "Browse",
+                Size = new Size(100, 35),
+                Location = new Point(_txtOutputFolder.Right + 10, currentY),
+                Anchor = AnchorStyles.Top | AnchorStyles.Right,
+                BackColor = AppConstants.ColorBorder,
+                ForeColor = Color.Black,
+                Enabled = false,
+                BorderRadius = 8
+            };
+            _btnBrowseOutput.Click += BtnBrowseOutput_Click;
+            currentY += 50;
+
+            // Files list
+            var lblFiles = new Label
+            {
+                Text = "Preview",
+                Font = new Font("Segoe UI", 11, FontStyle.Bold),
+                ForeColor = Color.FromArgb(55, 65, 81),
+                Location = new Point(AppConstants.DefaultPadding, currentY),
+                AutoSize = true
+            };
+            currentY += 25;
+
+            _lstFiles = new ListView
+            {
+                Location = new Point(AppConstants.DefaultPadding, currentY),
+                Anchor = AnchorStyles.Top | AnchorStyles.Left | AnchorStyles.Right,
+                Width = this.ClientSize.Width - (AppConstants.DefaultPadding * 2),
+                Height = 200,
+                View = View.Details,
+                FullRowSelect = true,
+                GridLines = false,
+                MultiSelect = false,
+                BorderStyle = BorderStyle.None,
+                BackColor = Color.White,
+                Font = new Font("Segoe UI", 9)
+            };
+
+            _lstFiles.Columns.Add("File Name", 400);
+            _lstFiles.Columns.Add("Month Folder", 200);
+            _lstFiles.Columns.Add("Modified Date", 150);
+            _lstFiles.Columns.Add("Size", 120);
+            currentY += 215;
+
+            // Summary label
+            _lblSummary = new Label
+            {
+                Text = "",
+                Font = new Font("Segoe UI", 9),
+                ForeColor = AppConstants.ColorTextMuted,
+                Location = new Point(AppConstants.DefaultPadding, currentY),
+                Anchor = AnchorStyles.Top | AnchorStyles.Left | AnchorStyles.Right,
+                Width = this.ClientSize.Width - (AppConstants.DefaultPadding * 2),
+                AutoSize = false
+            };
+            currentY += 30;
+
+            // Conflicts panel
+            _pnlConflicts = new Panel
+            {
+                Location = new Point(AppConstants.DefaultPadding, currentY),
+                Anchor = AnchorStyles.Top | AnchorStyles.Left | AnchorStyles.Right,
+                Width = this.ClientSize.Width - (AppConstants.DefaultPadding * 2),
+                Height = 60,
+                BorderStyle = BorderStyle.FixedSingle,
+                BackColor = AppConstants.ColorDangerBg,
+                Visible = false
+            };
+
+            _lblConflicts = new Label
+            {
+                Text = "⚠ Conflicts Detected:",
+                Font = new Font("Segoe UI", 9, FontStyle.Bold),
+                ForeColor = AppConstants.ColorDanger,
+                Location = new Point(10, 10),
+                Size = new Size(_pnlConflicts.Width - 20, 40),
+                AutoSize = false
+            };
+
+            _pnlConflicts.Controls.Add(_lblConflicts);
+            currentY += 80;
+
+            // Action Button
+            currentY += 25;
+            _btnStart = new ModernButton
+            {
+                Text = "Start Organization",
+                Size = new Size(250, 50),
+                Location = new Point(AppConstants.DefaultPadding, currentY),
+                Anchor = AnchorStyles.Top,
+                BackColor = AppConstants.ColorPrimary,
+                ForeColor = Color.White,
+                Font = new Font("Segoe UI", 12, FontStyle.Bold),
+                TabIndex = 0,
+                BorderRadius = 25
+            };
+            _btnStart.Click += BtnStart_Click;
+
+            this.Load += MainForm_Load;
+
+            _pnlMain.Controls.Add(_lblTitle);
+            _pnlMain.Controls.Add(lblSourceFolderTitle);
+            _pnlMain.Controls.Add(_txtSourceFolder);
+            _pnlMain.Controls.Add(_btnBrowseSource);
+            _pnlMain.Controls.Add(_btnUseCurrentFolder);
+            _pnlMain.Controls.Add(_pnlSourceDrop);
+            _pnlMain.Controls.Add(lblOutputFolderTitle);
+            _pnlMain.Controls.Add(_chkUseSourceAsOutput);
+            _pnlMain.Controls.Add(_txtOutputFolder);
+            _pnlMain.Controls.Add(_btnBrowseOutput);
+            _pnlMain.Controls.Add(lblFiles);
+            _pnlMain.Controls.Add(_lstFiles);
+            _pnlMain.Controls.Add(_lblSummary);
+            _pnlMain.Controls.Add(_pnlConflicts);
+            _pnlMain.Controls.Add(_btnStart);
+
+            // Progress panel
+            _pnlProgress = new Panel
+            {
+                Dock = DockStyle.Fill,
+                Visible = false,
+                Padding = new Padding(AppConstants.DefaultPadding + 20)
+            };
+
+            var lblProgressTitle = new Label
+            {
+                Text = "Organizing Files...",
+                Font = new Font("Segoe UI", 18, FontStyle.Bold),
+                ForeColor = AppConstants.ColorTextDark,
+                Location = new Point(0, 25),
+                AutoSize = true
+            };
+
+            _progressBar = new ProgressBar
+            {
+                Location = new Point(0, lblProgressTitle.Bottom + 30),
+                Anchor = AnchorStyles.Top | AnchorStyles.Left | AnchorStyles.Right,
+                Width = _pnlProgress.ClientSize.Width - (_pnlProgress.Padding.Left + _pnlProgress.Padding.Right),
+                Height = 20,
+                Style = ProgressBarStyle.Continuous
+            };
+
+            _lblProgress = new Label
+            {
+                Text = "Initializing...",
+                Font = new Font("Segoe UI", 10),
+                Location = new Point(0, _progressBar.Bottom + 15),
+                AutoSize = true
+            };
+
+            _txtStatus = new TextBox
+            {
+                Location = new Point(0, _lblProgress.Bottom + 20),
+                Anchor = AnchorStyles.Top | AnchorStyles.Left | AnchorStyles.Right | AnchorStyles.Bottom,
+                Width = _pnlProgress.ClientSize.Width - (_pnlProgress.Padding.Left + _pnlProgress.Padding.Right),
+                Height = this.ClientSize.Height - _lblProgress.Bottom - 100,
+                Multiline = true,
+                ReadOnly = true,
+                ScrollBars = ScrollBars.Vertical,
+                Font = new Font("Consolas", 9),
+                BorderStyle = BorderStyle.FixedSingle,
+                BackColor = Color.White
+            };
+
+            _btnCancel = new ModernButton
+            {
+                Text = "Cancel",
+                Size = new Size(120, 40),
+                Location = new Point(this.ClientSize.Width - 140, this.ClientSize.Height - 60),
+                Anchor = AnchorStyles.Bottom | AnchorStyles.Right,
+                BackColor = AppConstants.ColorDanger,
+                ForeColor = Color.White,
+                BorderRadius = 8
+            };
+            _btnCancel.Click += BtnCancel_Click;
+
+            _pnlProgress.Controls.Add(lblProgressTitle);
+            _pnlProgress.Controls.Add(_progressBar);
+            _pnlProgress.Controls.Add(_lblProgress);
+            _pnlProgress.Controls.Add(_txtStatus);
+            _pnlProgress.Controls.Add(_btnCancel);
+
+            // Complete panel
+            _pnlComplete = new Panel
+            {
+                Dock = DockStyle.Fill,
+                Visible = false,
+                Padding = new Padding(AppConstants.DefaultPadding + 20)
+            };
+
+            var lblCompleteTitle = new Label
+            {
+                Text = "Organization Complete!",
+                Font = new Font("Segoe UI", 20, FontStyle.Bold),
+                ForeColor = AppConstants.ColorSuccess,
+                AutoSize = true,
+                Dock = DockStyle.Top,
+                Margin = new Padding(0, 20, 0, 20)
+            };
+
+            _lblCompleteSummary = new Label
+            {
+                Text = "",
+                Font = new Font("Segoe UI", 11),
+                AutoSize = true,
+                MaximumSize = new Size(this.ClientSize.Width - (AppConstants.DefaultPadding * 2), 0),
+                Margin = new Padding(0, 20, 0, 0),
+                Dock = DockStyle.Top
+            };
+
+            _pnlCompleteActions = new Panel
+            {
+                Dock = DockStyle.Top,
+                Height = 200,
+                Padding = new Padding(0, 40, 0, 0)
+            };
+
+            _btnOpenFolder = new ModernButton
+            {
+                Text = "Open Output Folder",
+                Size = new Size(280, 60),
+                Location = new Point(0, 0),
+                BackColor = AppConstants.ColorPrimary,
+                ForeColor = Color.White,
+                Font = new Font("Segoe UI", 12, FontStyle.Bold),
+                BorderRadius = 10
+            };
+            _btnOpenFolder.Click += BtnOpenFolder_Click;
+
+            _btnStartNewProject = new ModernButton
+            {
+                Text = "New Operation",
+                Size = new Size(280, 60),
+                Location = new Point(0, _btnOpenFolder.Bottom + 20),
+                BackColor = AppConstants.ColorSuccess,
+                ForeColor = Color.White,
+                Font = new Font("Segoe UI", 12, FontStyle.Bold),
+                BorderRadius = 10
+            };
+            _btnStartNewProject.Click += BtnStartNewProject_Click;
+
+            _pnlCompleteActions.Resize += (s, e) => CenterCompletionButtons();
+            _pnlCompleteActions.Controls.Add(_btnOpenFolder);
+            _pnlCompleteActions.Controls.Add(_btnStartNewProject);
+
+            var completionLayout = new TableLayoutPanel
+            {
+                Dock = DockStyle.Fill,
+                ColumnCount = 1,
+                AutoScroll = true,
+                Padding = new Padding(20, 40, 20, 20)
+            };
+            completionLayout.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 100));
+            completionLayout.RowStyles.Add(new RowStyle(SizeType.AutoSize));
+            completionLayout.RowStyles.Add(new RowStyle(SizeType.AutoSize));
+            completionLayout.RowStyles.Add(new RowStyle(SizeType.AutoSize));
+
+            completionLayout.Controls.Add(lblCompleteTitle, 0, 0);
+            completionLayout.Controls.Add(_lblCompleteSummary, 0, 1);
+            completionLayout.Controls.Add(_pnlCompleteActions, 0, 2);
+
+            _pnlComplete.Controls.Add(completionLayout);
+
+            this.Controls.Add(_pnlMain);
+            this.Controls.Add(_pnlProgress);
+            this.Controls.Add(_pnlComplete);
+
+            this.Resize += MainForm_Resize;
+        }
+
+        private void MainForm_Load(object? sender, EventArgs e)
+        {
+            UpdateMainLayout();
+        }
+
+        private void UpdateMainLayout()
+        {
+            if (_pnlMain != null && _pnlMain.Visible)
+            {
+                int innerWidth = Math.Max(300, _pnlMain.ClientSize.Width - (_pnlMain.Padding.Left + _pnlMain.Padding.Right));
+
+                if (_txtSourceFolder != null)
+                    _txtSourceFolder.Width = Math.Max(300, innerWidth - 240);
+
+                if (_btnBrowseSource != null && _txtSourceFolder != null)
+                    _btnBrowseSource.Left = _txtSourceFolder.Right + 8;
+
+                if (_btnUseCurrentFolder != null && _btnBrowseSource != null)
+                    _btnUseCurrentFolder.Left = _btnBrowseSource.Right + 8;
+
+                if (_txtOutputFolder != null)
+                    _txtOutputFolder.Width = Math.Max(300, innerWidth - 95);
+
+                if (_btnBrowseOutput != null && _txtOutputFolder != null)
+                    _btnBrowseOutput.Left = _txtOutputFolder.Right + 8;
+
+                if (_pnlSourceDrop != null)
+                    _pnlSourceDrop.Width = innerWidth;
+
+                if (_lstFiles != null)
+                    _lstFiles.Width = innerWidth;
+
+                if (_pnlConflicts != null)
+                    _pnlConflicts.Width = innerWidth;
+
+                if (_lblConflicts != null && _pnlConflicts != null)
+                    _lblConflicts.Width = Math.Max(0, _pnlConflicts.Width - 20);
+
+                if (_lblSummary != null)
+                    _lblSummary.Width = innerWidth;
+
+                CenterStartButton();
+            }
+
+            if (_pnlComplete != null && _pnlComplete.Visible)
+            {
+                int completeWidth = Math.Max(300, _pnlComplete.ClientSize.Width - (_pnlComplete.Padding.Left + _pnlComplete.Padding.Right));
+                if (_lblCompleteSummary != null)
+                {
+                    _lblCompleteSummary.MaximumSize = new Size(completeWidth, 0);
+                }
+                CenterCompletionButtons();
+            }
+        }
+
+        private void CenterStartButton()
+        {
+            if (_btnStart != null && _pnlMain.Visible)
+            {
+                var availableWidth = _pnlMain.ClientSize.Width - (_pnlMain.Padding.Left + _pnlMain.Padding.Right);
+                var centeredLeft = _pnlMain.Padding.Left + Math.Max(0, (availableWidth - _btnStart.Width) / 2);
+                _btnStart.Left = Math.Max(AppConstants.DefaultPadding, centeredLeft);
+            }
+        }
+
+        private void CenterCompletionButtons()
+        {
+            if (_pnlCompleteActions == null || _btnOpenFolder == null || _btnStartNewProject == null)
+                return;
+
+            int availableWidth = _pnlCompleteActions.ClientSize.Width;
+            if (availableWidth <= 0)
+                return;
+            int left = Math.Max(0, (availableWidth - _btnOpenFolder.Width) / 2);
+
+            _btnOpenFolder.Top = 0;
+            _btnOpenFolder.Left = left;
+
+            _btnStartNewProject.Left = left;
+            _btnStartNewProject.Top = _btnOpenFolder.Bottom + 15;
+        }
+
+        private void MainForm_Resize(object? sender, EventArgs e)
+        {
+            UpdateMainLayout();
+        }
+    }
+}

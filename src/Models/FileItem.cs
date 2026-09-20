@@ -14,6 +14,7 @@ namespace FileOrganizer.Models
         public string DestinationPath { get; set; } = string.Empty;
         public bool WasRenamed { get; set; }
         public string OriginalName { get; set; } = string.Empty;
+        public string ErrorMessage { get; set; } = string.Empty;
     }
 }
 

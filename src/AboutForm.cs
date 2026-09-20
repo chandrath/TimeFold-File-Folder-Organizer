@@ -13,7 +13,7 @@ namespace FileOrganizer
         
         private void InitializeComponent()
         {
-            this.Text = "About File Organizer by Date";
+            this.Text = $"About {Config.AppConstants.AppName}";
             this.Size = new Size(500, 350);
             this.StartPosition = FormStartPosition.CenterParent;
             this.FormBorderStyle = FormBorderStyle.FixedDialog;
@@ -22,7 +22,7 @@ namespace FileOrganizer
             
             var lblTitle = new Label
             {
-                Text = "File Organizer by Date",
+                Text = Config.AppConstants.AppName,
                 Font = new Font("Segoe UI", 18, FontStyle.Bold),
                 ForeColor = Color.DarkBlue,
                 Location = new Point(20, 20),
@@ -31,7 +31,7 @@ namespace FileOrganizer
             
             var lblVersion = new Label
             {
-                Text = "Version 1.0.0",
+                Text = $"Version {Config.AppConstants.AppVersion}",
                 Font = new Font("Segoe UI", 10),
                 Location = new Point(20, 60),
                 AutoSize = true
@@ -39,7 +39,7 @@ namespace FileOrganizer
             
             var lblDescription = new Label
             {
-                Text = "A Windows application that automatically organizes files into month-year folders based on their Modified Date.",
+                Text = Config.AppConstants.AppDescription,
                 Font = new Font("Segoe UI", 9),
                 Location = new Point(20, 90),
                 Size = new Size(440, 60),
@@ -48,7 +48,7 @@ namespace FileOrganizer
             
             var lblCreatedBy = new Label
             {
-                Text = "Created by: [Your Name]",
+                Text = $"Created by: {Config.AppConstants.Author}",
                 Font = new Font("Segoe UI", 9),
                 Location = new Point(20, 160),
                 AutoSize = true
@@ -64,7 +64,7 @@ namespace FileOrganizer
             
             var linkSource = new LinkLabel
             {
-                Text = "https://github.com/yourusername/file-organizer",
+                Text = Config.AppConstants.RepositoryUrl,
                 Location = new Point(20, 210),
                 AutoSize = true,
                 ActiveLinkColor = Color.Blue,
@@ -82,7 +82,7 @@ namespace FileOrganizer
             
             var lblCopyright = new Label
             {
-                Text = "© 2024 - Free and Open Source Software",
+                Text = Config.AppConstants.CopyrightText,
                 Font = new Font("Segoe UI", 8),
                 ForeColor = Color.Gray,
                 Location = new Point(20, 250),
