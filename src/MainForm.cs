@@ -55,6 +55,9 @@ namespace FileOrganizer
         private Panel _pnlTimestampWarning = null!;
         private Label _lblTimestampWarning = null!;
         private ModernButton _btnStart = null!;
+        private Panel _pnlLoadMore = null!;
+        private ModernButton _btnLoadMore = null!;
+        private int _currentPreviewLimit;
 
         // UI Controls - Progress Panel
         private Panel _pnlProgress = null!;
@@ -255,6 +258,28 @@ namespace FileOrganizer
             }
         }
 
+        private void MenuFileNew_Click(object? sender, EventArgs e) => ResetForm();
+        private void MenuFileExit_Click(object? sender, EventArgs e) => this.Close();
+
+        private void MenuPreferences_Click(object? sender, EventArgs e)
+        {
+            using var prefsForm = new PreferencesForm(_settings);
+            if (prefsForm.ShowDialog() == DialogResult.OK)
+            {
+                _settings = prefsForm.Settings;
+                _settings.SaveToFile();
+                ApplySettings();
+                ApplyTheme(_settings.DarkMode);
+                LoadPreview();
+            }
+        }
+
+        private void MenuAbout_Click(object? sender, EventArgs e)
+        {
+            using var aboutForm = new AboutForm(_settings.DarkMode);
+            aboutForm.ShowDialog();
+        }
+
         private void ResetForm()
         {
             _txtSourceFolder.Text = "";
@@ -272,7 +297,47 @@ namespace FileOrganizer
             _pnlProgress.Visible = false;
             _pnlComplete.Visible = false;
             _lastResult = null;
+            _currentPreviewLimit = 0;
+            if (_pnlLoadMore != null) _pnlLoadMore.Visible = false;
+            UpdatePreviewHeaderCount(0, 0);
             UpdateMainLayout();
+        }
+
+        private void BtnLoadMore_Click(object? sender, EventArgs e)
+        {
+            int current = _currentPreviewLimit > 0 ? _currentPreviewLimit : (_settings.MaxPreviewItems > 0 ? _settings.MaxPreviewItems : AppConstants.DefaultMaxPreviewItems);
+            _currentPreviewLimit = current + 1000;
+            UpdateFileList();
+        }
+
+        private void LstFiles_Click(object? sender, EventArgs e)
+        {
+            if (_lstFiles.SelectedItems.Count > 0 && _lstFiles.SelectedItems[0].Tag is "LOAD_MORE")
+            {
+                BtnLoadMore_Click(sender, e);
+            }
+        }
+
+        private void UpdatePreviewHeaderCount(int displayed, int total)
+        {
+            if (_lblPreviewHeader == null) return;
+            if (total == 0)
+            {
+                _lblPreviewHeader.Text = "Organization Plan";
+                _toolTip?.SetToolTip(_lblPreviewHeader, null);
+                return;
+            }
+
+            if (displayed < total)
+            {
+                _lblPreviewHeader.Text = $"Organization Plan (Showing {displayed:N0} of {total:N0} items)";
+                _toolTip?.SetToolTip(_lblPreviewHeader, $"Showing {displayed:N0} of {total:N0} items.\nTip: Change default preview limit in Settings > Preferences");
+            }
+            else
+            {
+                _lblPreviewHeader.Text = $"Organization Plan ({total:N0} items)";
+                _toolTip?.SetToolTip(_lblPreviewHeader, $"All {total:N0} items loaded.\nTip: Change default preview limit in Settings > Preferences");
+            }
         }
 
         private static string FormatFileSize(long bytes)

@@ -120,6 +120,13 @@ namespace FileOrganizer
                 _lstFiles.ForeColor = palette.ListText;
             }
 
+            if (_btnLoadMore != null)
+            {
+                _btnLoadMore.BackColor = isDark ? Color.FromArgb(30, 41, 59) : Color.FromArgb(241, 245, 249);
+                _btnLoadMore.ForeColor = isDark ? Color.FromArgb(147, 197, 253) : Color.FromArgb(37, 99, 235);
+                _btnLoadMore.BorderColor = isDark ? Color.FromArgb(51, 65, 85) : Color.FromArgb(203, 213, 225);
+            }
+
             if (_ctxFileMenu != null)
             {
                 _ctxFileMenu.Renderer = isDark ? AppTheme.DarkMenuRenderer : new ToolStripProfessionalRenderer();

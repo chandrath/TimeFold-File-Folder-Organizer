@@ -14,27 +14,7 @@ namespace FileOrganizer
 {
     public partial class MainForm
     {
-        private void MenuFileNew_Click(object? sender, EventArgs e) => ResetForm();
-        private void MenuFileExit_Click(object? sender, EventArgs e) => this.Close();
 
-        private void MenuPreferences_Click(object? sender, EventArgs e)
-        {
-            using var prefsForm = new PreferencesForm(_settings);
-            if (prefsForm.ShowDialog() == DialogResult.OK)
-            {
-                _settings = prefsForm.Settings;
-                _settings.SaveToFile();
-                ApplySettings();
-                ApplyTheme(_settings.DarkMode);
-                LoadPreview();
-            }
-        }
-
-        private void MenuAbout_Click(object? sender, EventArgs e)
-        {
-            using var aboutForm = new AboutForm(_settings.DarkMode);
-            aboutForm.ShowDialog();
-        }
 
         private void BtnBrowseSource_Click(object? sender, EventArgs e)
         {
@@ -151,6 +131,7 @@ namespace FileOrganizer
 
             try
             {
+                _currentPreviewLimit = _settings.MaxPreviewItems > 0 ? _settings.MaxPreviewItems : AppConstants.DefaultMaxPreviewItems;
                 _filesToOrganize = _organizerService.ScanFiles(_settings.IncludeTopLevelFolders, _settings.IgnoreSystemFiles, _settings.FileDateSource, _settings.FolderDateSource);
                 UpdateFileList();
                 UpdateSummary();
@@ -176,9 +157,10 @@ namespace FileOrganizer
             Color mutedColor = _settings.DarkMode ? Color.FromArgb(148, 163, 184) : Color.FromArgb(100, 116, 139);
             var boldFont = GetBoldListFont();
 
-            int maxPreview = _settings.MaxPreviewItems > 0 ? _settings.MaxPreviewItems : AppConstants.DefaultMaxPreviewItems;
+            int maxPreview = _currentPreviewLimit > 0 ? _currentPreviewLimit : (_settings.MaxPreviewItems > 0 ? _settings.MaxPreviewItems : AppConstants.DefaultMaxPreviewItems);
+            var displayedFiles = _filesToOrganize.Take(maxPreview).ToList();
 
-            foreach (var file in _filesToOrganize.Take(maxPreview))
+            foreach (var file in displayedFiles)
             {
                 var item = new ListViewItem(file.Name) { UseItemStyleForSubItems = false };
                 item.SubItems.Add(file.TypeDisplay);
@@ -200,14 +182,30 @@ namespace FileOrganizer
                 _lstFiles.Items.Add(item);
             }
 
-            if (_filesToOrganize.Count > maxPreview)
+            int total = _filesToOrganize.Count;
+            int remaining = total - displayedFiles.Count;
+
+            if (remaining > 0)
             {
-                var item = new ListViewItem($"... and {(_filesToOrganize.Count - maxPreview):N0} more files")
+                var item = new ListViewItem($"➕ Load 1,000 more files... ({remaining:N0} remaining)")
                 {
-                    ForeColor = Color.Gray
+                    ForeColor = _settings.DarkMode ? Color.FromArgb(147, 197, 253) : Color.FromArgb(37, 99, 235)
                 };
+                item.Tag = "LOAD_MORE";
                 _lstFiles.Items.Add(item);
+
+                if (_btnLoadMore != null)
+                {
+                    _btnLoadMore.Text = $"➕ Load 1,000 More ({remaining:N0} remaining)";
+                    _pnlLoadMore.Visible = true;
+                }
             }
+            else if (_pnlLoadMore != null)
+            {
+                _pnlLoadMore.Visible = false;
+            }
+
+            UpdatePreviewHeaderCount(displayedFiles.Count, total);
 
             if (_sortColumn >= 0)
             {

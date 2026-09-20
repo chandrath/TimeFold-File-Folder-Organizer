@@ -268,6 +268,12 @@ namespace FileOrganizer
             _lstFiles.Columns.Add("Target Folder", 160);
             _lstFiles.Columns.Add("Size", 75);
             _lstFiles.ColumnClick += LstFiles_ColumnClick;
+            _lstFiles.Click += LstFiles_Click;
+
+            _pnlLoadMore = new Panel { Dock = DockStyle.Bottom, Height = 34, Visible = false, Padding = new Padding(0, 4, 0, 0) };
+            _btnLoadMore = new ModernButton { Text = "➕ Load 1,000 More", Dock = DockStyle.Fill, BorderRadius = 6, Cursor = Cursors.Hand };
+            _btnLoadMore.Click += BtnLoadMore_Click;
+            _pnlLoadMore.Controls.Add(_btnLoadMore);
 
             // Empty State Card
             _pnlEmptyState = new Panel { Dock = DockStyle.Fill, BackColor = Color.White, BorderStyle = BorderStyle.FixedSingle, Visible = true };
@@ -275,9 +281,7 @@ namespace FileOrganizer
             _lblEmptyIcon = new Label { Text = "📂", Font = new Font("Segoe UI Emoji", 26F), ForeColor = Color.FromArgb(148, 163, 184), Dock = DockStyle.Top, Height = 48, TextAlign = ContentAlignment.BottomCenter };
             _lblEmptyTitle = new Label { Text = "No Files Loaded Yet", Font = new Font("Segoe UI", 11.5F, FontStyle.Bold), ForeColor = Color.FromArgb(51, 65, 85), Dock = DockStyle.Top, Height = 28, TextAlign = ContentAlignment.MiddleCenter };
             _lblEmptyDesc = new Label { Text = "Choose a source folder above or drag and drop a folder to preview file organization.", Font = new Font("Segoe UI", 9F), ForeColor = Color.FromArgb(100, 116, 139), Dock = DockStyle.Top, Height = 24, TextAlign = ContentAlignment.TopCenter };
-            pnlEmptyCenter.Controls.Add(_lblEmptyDesc);
-            pnlEmptyCenter.Controls.Add(_lblEmptyTitle);
-            pnlEmptyCenter.Controls.Add(_lblEmptyIcon);
+            pnlEmptyCenter.Controls.AddRange([_lblEmptyDesc, _lblEmptyTitle, _lblEmptyIcon]);
             _pnlEmptyState.Controls.Add(pnlEmptyCenter);
             _pnlEmptyState.Resize += (s, e) =>
             {
@@ -289,6 +293,7 @@ namespace FileOrganizer
 
             _pnlCenterSection.Controls.Add(_pnlEmptyState);
             _pnlCenterSection.Controls.Add(_lstFiles);
+            _pnlCenterSection.Controls.Add(_pnlLoadMore);
             _pnlCenterSection.Controls.Add(_pnlTimestampWarning);
             _pnlCenterSection.Controls.Add(_pnlConflicts);
             _pnlCenterSection.Controls.Add(pnlPreviewHeader);
