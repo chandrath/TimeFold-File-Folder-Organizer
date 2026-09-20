@@ -254,8 +254,11 @@ namespace FileOrganizer
             var grouped = _organizerService?.GroupByMonthYear(_filesToOrganize) ?? new Dictionary<string, List<FileItem>>();
             var fileCount = _filesToOrganize.Count(f => !f.IsDirectory);
             var folderCount = _filesToOrganize.Count(f => f.IsDirectory);
+            int total = _filesToOrganize.Count;
 
-            _lblSummary.Text = $"Ready: {fileCount} file(s), {folderCount} folder(s) → {grouped.Count} target date folder(s)";
+            _lblSummary.Text = folderCount > 0
+                ? $"Ready: {total:N0} items ({fileCount:N0} files, {folderCount:N0} folders) → {grouped.Count} target date folder(s)"
+                : $"Ready: {fileCount:N0} file(s) → {grouped.Count} target date folder(s)";
             _btnStart.Enabled = true;
         }
 
