@@ -156,7 +156,48 @@ namespace FileOrganizer
 
             // 3. Center Elastic Preview Table
             _pnlCenterSection = new Panel { Dock = DockStyle.Fill, Padding = new Padding(AppConstants.DefaultPadding + 6, 4, AppConstants.DefaultPadding + 6, 8), BackColor = Color.Transparent };
-            var lblPreviewHeader = new Label { Text = "File Preview", Font = new Font("Segoe UI", 10F, FontStyle.Bold), ForeColor = Color.FromArgb(55, 65, 81), Dock = DockStyle.Top, Height = 22 };
+            
+            var pnlPreviewHeader = new Panel { Dock = DockStyle.Top, Height = 28, Margin = new Padding(0, 0, 0, 4) };
+            var lblPreviewHeader = new Label
+            {
+                Text = "File Preview",
+                Font = new Font("Segoe UI", 10F, FontStyle.Bold),
+                ForeColor = Color.FromArgb(55, 65, 81),
+                Dock = DockStyle.Left,
+                AutoSize = true,
+                TextAlign = ContentAlignment.MiddleLeft
+            };
+
+            _lnkChangeFormat = new LinkLabel
+            {
+                Text = "Change format in Preferences",
+                Font = new Font("Segoe UI", 8.5F),
+                LinkColor = AppConstants.ColorPrimary,
+                Dock = DockStyle.Right,
+                AutoSize = true,
+                TextAlign = ContentAlignment.MiddleRight,
+                Cursor = Cursors.Hand,
+                Padding = new Padding(4, 4, 0, 0)
+            };
+            _lnkChangeFormat.LinkClicked += (s, e) => MenuPreferences_Click(s, e);
+
+            _lblFormatBadge = new Label
+            {
+                Text = "",
+                Font = new Font("Segoe UI", 8.5F, FontStyle.Bold),
+                ForeColor = AppConstants.ColorPrimary,
+                BackColor = Color.FromArgb(238, 242, 255),
+                BorderStyle = BorderStyle.FixedSingle,
+                Dock = DockStyle.Right,
+                AutoSize = true,
+                TextAlign = ContentAlignment.MiddleCenter,
+                Padding = new Padding(6, 2, 6, 2),
+                Margin = new Padding(0, 0, 8, 0)
+            };
+
+            pnlPreviewHeader.Controls.Add(_lblFormatBadge);
+            pnlPreviewHeader.Controls.Add(_lnkChangeFormat);
+            pnlPreviewHeader.Controls.Add(lblPreviewHeader);
 
             _pnlConflicts = new Panel { Dock = DockStyle.Top, Height = 42, BorderStyle = BorderStyle.FixedSingle, BackColor = AppConstants.ColorDangerBg, Visible = false, Padding = new Padding(8, 4, 8, 4), Margin = new Padding(0, 2, 0, 6) };
             _lblConflicts = new Label { Text = "⚠ Conflicts Detected:", Font = new Font("Segoe UI", 9F, FontStyle.Bold), ForeColor = AppConstants.ColorDanger, Dock = DockStyle.Fill, TextAlign = ContentAlignment.MiddleLeft };
@@ -175,14 +216,14 @@ namespace FileOrganizer
             };
             _lstFiles.Columns.Add("File Name", 320);
             _lstFiles.Columns.Add("Type", 85);
-            _lstFiles.Columns.Add("Month Folder", 170);
+            _lstFiles.Columns.Add("Target Folder", 170);
             _lstFiles.Columns.Add("Modified Date", 135);
             _lstFiles.Columns.Add("Size", 85);
             _lstFiles.ColumnClick += LstFiles_ColumnClick;
 
             _pnlCenterSection.Controls.Add(_lstFiles);
             _pnlCenterSection.Controls.Add(_pnlConflicts);
-            _pnlCenterSection.Controls.Add(lblPreviewHeader);
+            _pnlCenterSection.Controls.Add(pnlPreviewHeader);
 
             _pnlMain.Controls.Add(_pnlCenterSection);
             _pnlMain.Controls.Add(_pnlTopSection);
@@ -236,7 +277,7 @@ namespace FileOrganizer
 
             var lblCompleteSubtitle = new Label
             {
-                Text = "All selected files and folders have been categorized into their respective month-year folders.",
+                Text = "All selected files and folders have been categorized into their respective date-based folders.",
                 Font = new Font("Segoe UI", 10F),
                 ForeColor = AppConstants.ColorTextMuted,
                 AutoSize = true,

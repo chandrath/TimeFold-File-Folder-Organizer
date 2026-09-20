@@ -7,7 +7,8 @@ namespace FileOrganizer.Models
     {
         public string FullPath { get; set; } = string.Empty;
         public string Name { get; set; } = string.Empty;
-        public string MonthYear { get; set; } = string.Empty;
+        public string TargetFolder { get; set; } = string.Empty;
+        public string MonthYear { get => TargetFolder; set => TargetFolder = value; }
         public DateTime ModifiedDate { get; set; }
         public long Size { get; set; }
         public bool IsDirectory { get; set; }
@@ -19,4 +20,3 @@ namespace FileOrganizer.Models
         public string TypeDisplay => IsDirectory ? "Folder" : (string.IsNullOrEmpty(Path.GetExtension(Name)) ? "File" : Path.GetExtension(Name).TrimStart('.').ToUpperInvariant());
     }
 }
-

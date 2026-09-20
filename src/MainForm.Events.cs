@@ -139,7 +139,7 @@ namespace FileOrganizer
 
         private int _sortColumn = -1;
         private bool _sortAscending = true;
-        private static readonly string[] ColumnBaseHeaders = { "File Name", "Type", "Month Folder", "Modified Date", "Size" };
+        private static readonly string[] ColumnBaseHeaders = { "File Name", "Type", "Target Folder", "Modified Date", "Size" };
 
         private void UpdateFileList()
         {
@@ -150,7 +150,7 @@ namespace FileOrganizer
             {
                 var item = new ListViewItem(file.Name);
                 item.SubItems.Add(file.TypeDisplay);
-                item.SubItems.Add(file.MonthYear);
+                item.SubItems.Add(file.TargetFolder);
                 item.SubItems.Add(file.ModifiedDate.ToString("yyyy-MM-dd HH:mm"));
                 item.SubItems.Add(file.IsDirectory ? "—" : FormatFileSize(file.Size));
                 item.Tag = file;
@@ -196,51 +196,6 @@ namespace FileOrganizer
             _lstFiles.Sort();
         }
 
-        private class FileItemComparer : System.Collections.IComparer
-        {
-            private readonly int _column;
-            private readonly bool _ascending;
-
-            public FileItemComparer(int column, bool ascending)
-            {
-                _column = column;
-                _ascending = ascending;
-            }
-
-            public int Compare(object? x, object? y)
-            {
-                if (x is not ListViewItem itemX || y is not ListViewItem itemY) return 0;
-                if (itemX.Tag is not FileItem f1 || itemY.Tag is not FileItem f2) return 0;
-
-                int result = _column switch
-                {
-                    0 => string.Compare(f1.Name, f2.Name, StringComparison.CurrentCultureIgnoreCase),
-                    1 => CompareType(f1, f2),
-                    2 => string.Compare(f1.MonthYear, f2.MonthYear, StringComparison.CurrentCultureIgnoreCase),
-                    3 => DateTime.Compare(f1.ModifiedDate, f2.ModifiedDate),
-                    4 => CompareSize(f1, f2),
-                    _ => 0
-                };
-
-                return _ascending ? result : -result;
-            }
-
-            private static int CompareType(FileItem f1, FileItem f2)
-            {
-                if (f1.IsDirectory != f2.IsDirectory)
-                    return f1.IsDirectory ? -1 : 1;
-                return string.Compare(f1.TypeDisplay, f2.TypeDisplay, StringComparison.CurrentCultureIgnoreCase);
-            }
-
-            private static int CompareSize(FileItem f1, FileItem f2)
-            {
-                if (f1.IsDirectory && f2.IsDirectory) return string.Compare(f1.Name, f2.Name, StringComparison.CurrentCultureIgnoreCase);
-                if (f1.IsDirectory) return -1;
-                if (f2.IsDirectory) return 1;
-                return f1.Size.CompareTo(f2.Size);
-            }
-        }
-
         private void UpdateSummary()
         {
             if (_filesToOrganize.Count == 0)
@@ -256,7 +211,7 @@ namespace FileOrganizer
 
             _lblSummary.Text = $"Summary: • Total Items: {_filesToOrganize.Count} " +
                               $"(Files: {fileCount}, Folders: {folderCount}) • " +
-                              $"Month Folders: {grouped.Count}";
+                              $"Folders: {grouped.Count}";
             _btnStart.Enabled = true;
         }
 
@@ -312,7 +267,7 @@ namespace FileOrganizer
             }
 
             var result = MessageBox.Show(
-                $"You are about to organize {_filesToOrganize.Count} item(s) into month-year folders.\n\n" +
+                $"You are about to organize {_filesToOrganize.Count} item(s) into date-based folders.\n\n" +
                 $"Source: {_txtSourceFolder.Text}\n" +
                 $"Output: {outputDir}\n\n" +
                 "This will move files from the source location to a Sorted folder in the output location.\n\n" +
@@ -401,7 +356,7 @@ namespace FileOrganizer
             var summaryBuilder = new StringBuilder();
             summaryBuilder.AppendLine("PERFORMANCE SUMMARY");
             summaryBuilder.AppendLine($"  • Files Moved:             {result.FilesMoved} of {result.TotalFiles}");
-            summaryBuilder.AppendLine($"  • Month Folders Created:   {result.MonthFoldersCreated}");
+            summaryBuilder.AppendLine($"  • Folders Created:         {result.MonthFoldersCreated}");
             summaryBuilder.AppendLine($"  • Name Conflicts Renamed:  {result.ConflictsResolved}");
 
             if (result.Errors > 0)

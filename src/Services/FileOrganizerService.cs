@@ -15,6 +15,8 @@ namespace FileOrganizer.Services
         private readonly string _executablePath;
         private string _outputDirectory;
         private FolderFormat _folderFormat = AppConstants.DefaultFolderFormat;
+        private string _folderPrefix = AppConstants.DefaultFolderPrefix;
+        private string _folderSuffix = AppConstants.DefaultFolderSuffix;
 
         public FileOrganizerService(string executablePath, string? workingDirectory = null, string? outputDirectory = null)
         {
@@ -106,7 +108,7 @@ namespace FileOrganizer.Services
                                 ModifiedDate = dirInfo.LastWriteTime,
                                 Size = 0
                             };
-                            fileItem.MonthYear = FormatMonthYear(fileItem.ModifiedDate);
+                            fileItem.TargetFolder = FormatTargetFolder(fileItem.ModifiedDate);
                             files.Add(fileItem);
                         }
                         else if (File.Exists(itemPath))
@@ -120,7 +122,7 @@ namespace FileOrganizer.Services
                                 ModifiedDate = fileInfo.LastWriteTime,
                                 Size = fileInfo.Length
                             };
-                            fileItem.MonthYear = FormatMonthYear(fileItem.ModifiedDate);
+                            fileItem.TargetFolder = FormatTargetFolder(fileItem.ModifiedDate);
                             files.Add(fileItem);
                         }
                     }
@@ -141,7 +143,7 @@ namespace FileOrganizer.Services
 
         public Dictionary<string, List<FileItem>> GroupByMonthYear(List<FileItem> files)
         {
-            return files.GroupBy(f => f.MonthYear)
+            return files.GroupBy(f => f.TargetFolder)
                         .ToDictionary(g => g.Key, g => g.ToList());
         }
 
@@ -156,7 +158,7 @@ namespace FileOrganizer.Services
                 {
                     if (nameGroup.Count() > 1)
                     {
-                        conflicts.Add($"{nameGroup.Key} (appears {nameGroup.Count()} times in {group.First().MonthYear})");
+                        conflicts.Add($"{nameGroup.Key} (appears {nameGroup.Count()} times in {group.First().TargetFolder})");
                     }
                 }
             }
@@ -348,11 +350,30 @@ namespace FileOrganizer.Services
             set => _folderFormat = value;
         }
 
-        private string FormatMonthYear(DateTime date)
+        public string FolderPrefix
         {
-            return _folderFormat == FolderFormat.MonthYear
-                ? date.ToString("MMMM yyyy", System.Globalization.CultureInfo.InvariantCulture)
-                : date.ToString("yyyy MMMM", System.Globalization.CultureInfo.InvariantCulture);
+            get => _folderPrefix;
+            set => _folderPrefix = value ?? string.Empty;
         }
+
+        public string FolderSuffix
+        {
+            get => _folderSuffix;
+            set => _folderSuffix = value ?? string.Empty;
+        }
+
+        public void ApplyNamingSettings(FolderFormat format, string prefix, string suffix)
+        {
+            _folderFormat = format;
+            _folderPrefix = prefix ?? string.Empty;
+            _folderSuffix = suffix ?? string.Empty;
+        }
+
+        public string FormatTargetFolder(DateTime date)
+        {
+            return AppConstants.FormatFolderDate(date, _folderFormat, _folderPrefix, _folderSuffix);
+        }
+
+        public string FormatMonthYear(DateTime date) => FormatTargetFolder(date);
     }
 }

@@ -42,6 +42,8 @@ namespace FileOrganizer
         private TextBox _txtOutputFolder = null!;
         private ModernButton _btnBrowseOutput = null!;
         private ListView _lstFiles = null!;
+        private Label _lblFormatBadge = null!;
+        private LinkLabel _lnkChangeFormat = null!;
         private Label _lblSummary = null!;
         private Panel _pnlConflicts = null!;
         private Label _lblConflicts = null!;
@@ -67,7 +69,6 @@ namespace FileOrganizer
             _executableDirectory = Path.GetDirectoryName(_executablePath) ?? Environment.CurrentDirectory;
             InitializeComponent();
             InitializeOrganizer();
-            LoadPreview();
         }
 
         private void InitializeOrganizer()
@@ -83,7 +84,17 @@ namespace FileOrganizer
 
             if (_organizerService != null)
             {
-                _organizerService.FolderFormat = _settings.FolderFormat;
+                _organizerService.ApplyNamingSettings(_settings.FolderFormat, _settings.FolderPrefix, _settings.FolderSuffix);
+            }
+            UpdateFormatBadge();
+        }
+
+        private void UpdateFormatBadge()
+        {
+            if (_lblFormatBadge != null)
+            {
+                string sample = AppConstants.FormatFolderDate(DateTime.Now, _settings.FolderFormat, _settings.FolderPrefix, _settings.FolderSuffix);
+                _lblFormatBadge.Text = $"Format: {sample}";
             }
         }
 
@@ -93,7 +104,7 @@ namespace FileOrganizer
             {
                 _txtSourceFolder.Text = folder;
                 _organizerService = new FileOrganizerService(_executablePath, folder);
-                _organizerService.FolderFormat = _settings.FolderFormat;
+                _organizerService.ApplyNamingSettings(_settings.FolderFormat, _settings.FolderPrefix, _settings.FolderSuffix);
                 UpdateOutputFolder();
                 LoadPreview();
             }
