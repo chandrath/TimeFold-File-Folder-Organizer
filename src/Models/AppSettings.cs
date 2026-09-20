@@ -18,6 +18,8 @@ namespace FileOrganizer.Models
         public FolderFormat FolderFormat { get; set; } = Config.AppConstants.DefaultFolderFormat;
         public string FolderPrefix { get; set; } = Config.AppConstants.DefaultFolderPrefix;
         public string FolderSuffix { get; set; } = Config.AppConstants.DefaultFolderSuffix;
+        public DateSource FileDateSource { get; set; } = Config.AppConstants.DefaultFileDateSource;
+        public DateSource FolderDateSource { get; set; } = Config.AppConstants.DefaultFolderDateSource;
 
         public static AppSettings LoadFromFile()
         {
@@ -111,5 +113,12 @@ namespace FileOrganizer.Models
         YearHalf,               // "2026 H1"
         HalfYear,               // "H1 2026"
         YearOnly                // "2026"
+    }
+
+    public enum DateSource
+    {
+        Modified, // Date Modified (Default)
+        Created,  // Date Created
+        Earliest  // Earliest / Oldest Date
     }
 }

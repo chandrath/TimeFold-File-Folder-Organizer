@@ -17,6 +17,8 @@ namespace FileOrganizer
         private CheckBox _chkUse24Hour = null!;
         private CheckBox _chkAutoLoadExeDir = null!;
         private CheckBox _chkDarkMode = null!;
+        private ComboBox _cmbFileDateSource = null!;
+        private ComboBox _cmbFolderDateSource = null!;
 
         // Folder Naming Controls
         private ComboBox _cmbFormat = null!;
@@ -82,6 +84,8 @@ namespace FileOrganizer
                 FolderFormat = currentSettings.FolderFormat,
                 FolderPrefix = currentSettings.FolderPrefix,
                 FolderSuffix = currentSettings.FolderSuffix,
+                FileDateSource = currentSettings.FileDateSource,
+                FolderDateSource = currentSettings.FolderDateSource,
                 DarkMode = currentSettings.DarkMode
             };
             InitializeComponent();
@@ -91,7 +95,7 @@ namespace FileOrganizer
         {
             this.Text = "Preferences";
             if (AppConstants.AppIcon != null) this.Icon = AppConstants.AppIcon;
-            this.Size = new Size(580, 785);
+            this.Size = new Size(580, 840);
             this.StartPosition = FormStartPosition.CenterParent;
             this.FormBorderStyle = FormBorderStyle.FixedDialog;
             this.MaximizeBox = false;
@@ -102,10 +106,25 @@ namespace FileOrganizer
             const int spacing = 26;
             const int leftMargin = 20;
             int contentWidth = this.ClientSize.Width - (leftMargin * 2);
+            int halfWidth = (contentWidth / 2) - 8;
 
             // 1. File Organization Options
             var lblOrgHeader = new Label { Text = "File & Folder Rules:", UseMnemonic = false, Font = new Font("Segoe UI", 10F, FontStyle.Bold), Location = new Point(leftMargin, currentY), AutoSize = true };
             currentY += 24;
+
+            // Date Source Row: Files & Folders
+            var lblFileDate = new Label { Text = "File Date Source:", Location = new Point(leftMargin, currentY), AutoSize = true, Font = new Font("Segoe UI", 8.5F) };
+            var lblFolderDate = new Label { Text = "Folder Date Source:", Location = new Point(leftMargin + halfWidth + 16, currentY), AutoSize = true, Font = new Font("Segoe UI", 8.5F) };
+            currentY += 18;
+
+            _cmbFileDateSource = new ComboBox { Location = new Point(leftMargin, currentY), Width = halfWidth, DropDownStyle = ComboBoxStyle.DropDownList, Font = new Font("Segoe UI", 9F) };
+            _cmbFileDateSource.Items.AddRange(["Date Modified (Default)", "Date Created", "Earliest Date (Oldest)"]);
+            _cmbFileDateSource.SelectedIndex = (int)_settings.FileDateSource;
+
+            _cmbFolderDateSource = new ComboBox { Location = new Point(leftMargin + halfWidth + 16, currentY), Width = halfWidth, DropDownStyle = ComboBoxStyle.DropDownList, Font = new Font("Segoe UI", 9F) };
+            _cmbFolderDateSource.Items.AddRange(["Date Modified (Default)", "Date Created", "Earliest Date (Oldest)"]);
+            _cmbFolderDateSource.SelectedIndex = (int)_settings.FolderDateSource;
+            currentY += 30;
 
             _chkIncludeFolders = new CheckBox { Text = "Include Folders (Move whole folders alongside files)", Location = new Point(leftMargin, currentY), Size = new Size(contentWidth, 24), Checked = _settings.IncludeTopLevelFolders };
             currentY += spacing;
@@ -220,10 +239,9 @@ namespace FileOrganizer
 
             // Custom Prefix & Suffix
             var lblPrefix = new Label { Text = "Custom Prefix (Optional):", Location = new Point(leftMargin, currentY), AutoSize = true, Font = new Font("Segoe UI", 8.5F) };
-            var lblSuffix = new Label { Text = "Custom Suffix (Optional):", Location = new Point(leftMargin + (contentWidth / 2) + 6, currentY), AutoSize = true, Font = new Font("Segoe UI", 8.5F) };
+            var lblSuffix = new Label { Text = "Custom Suffix (Optional):", Location = new Point(leftMargin + halfWidth + 16, currentY), AutoSize = true, Font = new Font("Segoe UI", 8.5F) };
             currentY += 18;
 
-            int halfWidth = (contentWidth / 2) - 8;
             _txtPrefix = new TextBox { Location = new Point(leftMargin, currentY), Width = halfWidth, Text = _settings.FolderPrefix, Font = new Font("Segoe UI", 9.5F) };
             _txtPrefix.TextChanged += (s, e) => UpdateLivePreview();
 
@@ -277,8 +295,8 @@ namespace FileOrganizer
             _btnOK.Click += BtnOK_Click;
 
             this.Controls.AddRange([
-                lblOrgHeader, _chkIncludeFolders, _chkIgnoreSystemFiles, lblNamingHeader, _cmbFormat,
-                _btnFlipOrder, _chkShortMonth, lblPrefix, lblSuffix, _txtPrefix, _txtSuffix,
+                lblOrgHeader, _chkIncludeFolders, _chkIgnoreSystemFiles, lblFileDate, lblFolderDate, _cmbFileDateSource, _cmbFolderDateSource,
+                lblNamingHeader, _cmbFormat, _btnFlipOrder, _chkShortMonth, lblPrefix, lblSuffix, _txtPrefix, _txtSuffix,
                 _pnlLivePreview, lblBehaviorHeader, _chkShowProgress, _chkGenerateCsvLog, _chkShowOnTop, _chkUse24Hour, _chkAutoLoadExeDir, _chkDarkMode,
                 _btnOpenConfig, _btnDefaults, _btnOK, _btnCancel
             ]);
@@ -382,6 +400,8 @@ namespace FileOrganizer
             _chkAutoLoadExeDir.Checked = AppConstants.DefaultAutoLoadExeDirectoryOnStartup;
             _chkDarkMode.Checked = AppConstants.DefaultDarkMode;
 
+            _cmbFileDateSource.SelectedIndex = (int)AppConstants.DefaultFileDateSource;
+            _cmbFolderDateSource.SelectedIndex = (int)AppConstants.DefaultFolderDateSource;
             _txtPrefix.Text = AppConstants.DefaultFolderPrefix;
             _txtSuffix.Text = AppConstants.DefaultFolderSuffix;
 
@@ -406,6 +426,8 @@ namespace FileOrganizer
         {
             _settings.IncludeTopLevelFolders = _chkIncludeFolders.Checked;
             _settings.IgnoreSystemFiles = _chkIgnoreSystemFiles.Checked;
+            _settings.FileDateSource = (DateSource)_cmbFileDateSource.SelectedIndex;
+            _settings.FolderDateSource = (DateSource)_cmbFolderDateSource.SelectedIndex;
             _settings.ShowDetailedProgress = _chkShowProgress.Checked;
             _settings.ShowOnTop = _chkShowOnTop.Checked;
             _settings.GenerateCsvLog = _chkGenerateCsvLog.Checked;
@@ -450,10 +472,9 @@ namespace FileOrganizer
                 _lblSample4.ForeColor = palette.TextPrimary;
             }
 
-            if (_cmbFormat != null)
+            foreach (var cmb in new[] { _cmbFormat, _cmbFileDateSource, _cmbFolderDateSource })
             {
-                _cmbFormat.BackColor = palette.InputBg;
-                _cmbFormat.ForeColor = palette.TextPrimary;
+                if (cmb != null) { cmb.BackColor = palette.InputBg; cmb.ForeColor = palette.TextPrimary; }
             }
             if (_btnOK != null)
             {

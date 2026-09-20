@@ -33,7 +33,7 @@ namespace FileOrganizer.Services
             set => _outputDirectory = value;
         }
 
-        public List<FileItem> ScanFiles(bool includeTopLevelFolders, bool ignoreSystemFiles = true)
+        public List<FileItem> ScanFiles(bool includeTopLevelFolders, bool ignoreSystemFiles = true, DateSource fileDateSource = DateSource.Modified, DateSource folderDateSource = DateSource.Modified)
         {
             var files = new List<FileItem>();
             var executableName = Path.GetFileName(_executablePath);
@@ -102,12 +102,13 @@ namespace FileOrganizer.Services
                         if (isDirectory)
                         {
                             var dirInfo = new DirectoryInfo(itemPath);
+                            DateTime itemDate = ResolveItemDate(dirInfo.LastWriteTime, dirInfo.CreationTime, folderDateSource);
                             var fileItem = new FileItem
                             {
                                 FullPath = itemPath,
                                 Name = dirInfo.Name,
                                 IsDirectory = true,
-                                ModifiedDate = dirInfo.LastWriteTime,
+                                ModifiedDate = itemDate,
                                 Size = 0
                             };
                             fileItem.TargetFolder = FormatTargetFolder(fileItem.ModifiedDate);
@@ -116,12 +117,13 @@ namespace FileOrganizer.Services
                         else if (File.Exists(itemPath))
                         {
                             var fileInfo = new FileInfo(itemPath);
+                            DateTime itemDate = ResolveItemDate(fileInfo.LastWriteTime, fileInfo.CreationTime, fileDateSource);
                             var fileItem = new FileItem
                             {
                                 FullPath = itemPath,
                                 Name = fileInfo.Name,
                                 IsDirectory = false,
-                                ModifiedDate = fileInfo.LastWriteTime,
+                                ModifiedDate = itemDate,
                                 Size = fileInfo.Length
                             };
                             fileItem.TargetFolder = FormatTargetFolder(fileItem.ModifiedDate);
@@ -381,5 +383,24 @@ namespace FileOrganizer.Services
         }
 
         public string FormatMonthYear(DateTime date) => FormatTargetFolder(date);
+
+        private static DateTime ResolveItemDate(DateTime modified, DateTime created, DateSource source)
+        {
+            static bool IsValidDate(DateTime dt) => dt.Year >= 1980 && dt.Year <= DateTime.Now.Year + 10;
+
+            bool validMod = IsValidDate(modified);
+            bool validCre = IsValidDate(created);
+
+            if (!validMod && !validCre) return DateTime.Now;
+            if (!validMod) return created;
+            if (!validCre) return modified;
+
+            return source switch
+            {
+                DateSource.Created => created,
+                DateSource.Earliest => (modified < created) ? modified : created,
+                _ => modified
+            };
+        }
     }
 }

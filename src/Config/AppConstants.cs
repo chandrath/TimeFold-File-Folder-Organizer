@@ -99,6 +99,8 @@ namespace FileOrganizer.Config
         public const FolderFormat DefaultFolderFormat = FolderFormat.YearMonth;
         public const string DefaultFolderPrefix = "";
         public const string DefaultFolderSuffix = "";
+        public const DateSource DefaultFileDateSource = DateSource.Modified;
+        public const DateSource DefaultFolderDateSource = DateSource.Modified;
 
         // Detection Thresholds
         public const double TimestampSimilarityThreshold = 0.85; // 85%

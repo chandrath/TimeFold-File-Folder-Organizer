@@ -164,7 +164,7 @@ namespace FileOrganizer
 
             try
             {
-                _filesToOrganize = _organizerService.ScanFiles(_settings.IncludeTopLevelFolders, _settings.IgnoreSystemFiles);
+                _filesToOrganize = _organizerService.ScanFiles(_settings.IncludeTopLevelFolders, _settings.IgnoreSystemFiles, _settings.FileDateSource, _settings.FolderDateSource);
                 UpdateFileList();
                 UpdateSummary();
                 CheckConflicts();
