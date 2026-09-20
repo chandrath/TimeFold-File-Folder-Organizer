@@ -44,8 +44,8 @@ namespace FileOrganizer
         private TextBox _txtOutputFolder = null!;
         private ModernButton _btnBrowseOutput = null!;
         private ListView _lstFiles = null!;
-        private Label _lblFormatBadge = null!;
-        private LinkLabel _lnkChangeFormat = null!;
+        private ModernButton _lblFormatBadge = null!;
+        private Panel _pnlEmptyState = null!;
         private Label _lblSummary = null!;
         private Panel _pnlConflicts = null!;
         private Label _lblConflicts = null!;
@@ -67,6 +67,19 @@ namespace FileOrganizer
         private ModernButton _btnOpenFolder = null!;
         private ModernButton _btnStartNewProject = null!;
 
+        // Theme-responsive Labels & Panels
+        private Label _lblSubtitle = null!;
+        private Label _lblSourceTitle = null!;
+        private Label _lblDropHint = null!;
+        private Label _lblPreviewHeader = null!;
+        private Label _lblEmptyIcon = null!;
+        private Label _lblEmptyTitle = null!;
+        private Label _lblEmptyDesc = null!;
+        private Label _lblProgressTitle = null!;
+        private Label _lblCompleteTitle = null!;
+        private Label _lblCompleteSubtitle = null!;
+        private Panel _pnlDetailsCard = null!;
+
         public MainForm()
         {
             _executablePath = Application.ExecutablePath;
@@ -78,6 +91,7 @@ namespace FileOrganizer
         private void InitializeOrganizer()
         {
             ApplySettings();
+            ApplyTheme(_settings.DarkMode);
             UpdateRecentMenus();
             if (_settings.AutoLoadExeDirectoryOnStartup && Directory.Exists(_executableDirectory))
             {
@@ -105,7 +119,7 @@ namespace FileOrganizer
             if (_lblFormatBadge != null)
             {
                 string sample = AppConstants.FormatFolderDate(DateTime.Now, _settings.FolderFormat, _settings.FolderPrefix, _settings.FolderSuffix);
-                _lblFormatBadge.Text = $"Format: {sample}";
+                _lblFormatBadge.Text = $"📅 {sample}  ⚙";
             }
         }
 
@@ -177,19 +191,27 @@ namespace FileOrganizer
 
         private void UpdateOutputFolder()
         {
+            var palette = AppTheme.GetPalette(_settings.DarkMode);
             if (_chkUseSourceAsOutput.Checked)
             {
+                _txtOutputFolder.BackColor = palette.InputDisabledBg;
+                _txtOutputFolder.ForeColor = palette.TextMuted;
+                _txtOutputFolder.Enabled = false;
+                _btnBrowseOutput.Enabled = false;
+
                 if (!string.IsNullOrEmpty(_txtSourceFolder.Text) && Directory.Exists(_txtSourceFolder.Text))
                 {
                     _txtOutputFolder.Text = _txtSourceFolder.Text;
-                    _txtOutputFolder.BackColor = Color.FromArgb(240, 240, 240);
-                    _txtOutputFolder.Enabled = false;
-                    _btnBrowseOutput.Enabled = false;
+                }
+                else
+                {
+                    _txtOutputFolder.Text = "";
                 }
             }
             else
             {
-                _txtOutputFolder.BackColor = Color.White;
+                _txtOutputFolder.BackColor = palette.InputBg;
+                _txtOutputFolder.ForeColor = palette.TextPrimary;
                 _txtOutputFolder.Enabled = true;
                 _btnBrowseOutput.Enabled = true;
             }
@@ -207,7 +229,9 @@ namespace FileOrganizer
             _chkUseSourceAsOutput.Checked = true;
             _filesToOrganize.Clear();
             _lstFiles.Items.Clear();
-            _lblSummary.Text = "";
+            _lstFiles.Visible = false;
+            if (_pnlEmptyState != null) _pnlEmptyState.Visible = true;
+            _lblSummary.Text = "Select a source folder to preview files.";
             _pnlConflicts.Visible = false;
             _pnlTimestampWarning.Visible = false;
             _organizerService = null;

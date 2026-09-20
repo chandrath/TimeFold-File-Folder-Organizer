@@ -93,6 +93,7 @@ namespace FileOrganizer.Config
         public const bool DefaultGenerateCsvLog = true;
         public const bool DefaultUse24HourTimestamp = false;
         public const bool DefaultAutoLoadExeDirectoryOnStartup = false;
+        public const bool DefaultDarkMode = false;
         public const int MaxRecentFolders = 5;
         public const FolderFormat DefaultFolderFormat = FolderFormat.YearMonth;
         public const string DefaultFolderPrefix = "";
@@ -129,17 +130,24 @@ namespace FileOrganizer.Config
             "system volume information"
         };
 
-        // UI Theme & Metrics
+        // UI Theme & Metrics (SSoT)
         public const int DefaultPadding = 12;
-        public static readonly Color ColorPrimary = Color.FromArgb(37, 99, 235);
-        public static readonly Color ColorPrimaryHover = Color.FromArgb(29, 78, 216);
-        public static readonly Color ColorSuccess = Color.FromArgb(16, 185, 129);
-        public static readonly Color ColorDanger = Color.FromArgb(220, 38, 38);
-        public static readonly Color ColorDangerBg = Color.FromArgb(254, 242, 242);
-        public static readonly Color ColorSurfaceBg = Color.FromArgb(245, 247, 250);
-        public static readonly Color ColorTextDark = Color.FromArgb(31, 41, 55);
-        public static readonly Color ColorTextMuted = Color.FromArgb(75, 85, 99);
-        public static readonly Color ColorBorder = Color.FromArgb(229, 231, 235);
+        public static readonly Color ColorPrimary = Color.FromArgb(37, 99, 235);          // #2563EB Vibrant Blue
+        public static readonly Color ColorPrimaryHover = Color.FromArgb(29, 78, 216);     // #1D4ED8
+        public static readonly Color ColorSecondary = Color.FromArgb(255, 255, 255);      // #FFFFFF Crisp White
+        public static readonly Color ColorSecondaryBorder = Color.FromArgb(209, 213, 219); // #D1D5DB
+        public static readonly Color ColorSecondaryText = Color.FromArgb(30, 41, 59);     // #1E293B Slate 800
+        public static readonly Color ColorBadgeBg = Color.FromArgb(238, 242, 255);        // #EEF2FF Soft Indigo
+        public static readonly Color ColorBadgeText = Color.FromArgb(67, 56, 202);        // #4338CA Deep Indigo
+        public static readonly Color ColorBadgeBorder = Color.FromArgb(199, 210, 254);     // #C7D2FE
+        public static readonly Color ColorSuccess = Color.FromArgb(16, 185, 129);         // #10B981 Emerald
+        public static readonly Color ColorSuccessBg = Color.FromArgb(236, 253, 245);       // #ECFDF5
+        public static readonly Color ColorDanger = Color.FromArgb(220, 38, 38);           // #DC2626
+        public static readonly Color ColorDangerBg = Color.FromArgb(254, 242, 242);       // #FEF2F2
+        public static readonly Color ColorSurfaceBg = Color.FromArgb(248, 250, 252);      // #F8FAFC Canvas
+        public static readonly Color ColorTextDark = Color.FromArgb(15, 23, 42);          // #0F172A Slate 900
+        public static readonly Color ColorTextMuted = Color.FromArgb(100, 116, 139);      // #64748B Slate 500
+        public static readonly Color ColorBorder = Color.FromArgb(226, 232, 240);         // #E2E8F0 Border
 
         public static string SanitizeFolderName(string input)
         {

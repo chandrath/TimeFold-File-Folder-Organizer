@@ -32,13 +32,14 @@ namespace FileOrganizer
                 _settings = prefsForm.Settings;
                 _settings.SaveToFile();
                 ApplySettings();
+                ApplyTheme(_settings.DarkMode);
                 LoadPreview();
             }
         }
 
         private void MenuAbout_Click(object? sender, EventArgs e)
         {
-            using var aboutForm = new AboutForm();
+            using var aboutForm = new AboutForm(_settings.DarkMode);
             aboutForm.ShowDialog();
         }
 
@@ -63,8 +64,16 @@ namespace FileOrganizer
 
         private void BtnRecentFolders_Click(object? sender, EventArgs e)
         {
-            var menu = new ContextMenuStrip { ShowImageMargin = false };
+            bool isDark = _settings.DarkMode;
+            var palette = AppTheme.GetPalette(isDark);
+            var menu = new ContextMenuStrip
+            {
+                ShowImageMargin = false,
+                Renderer = isDark ? AppTheme.DarkMenuRenderer : new ToolStripProfessionalRenderer(),
+                BackColor = palette.MenuBg
+            };
             PopulateRecentMenu(menu.Items);
+            SetMenuColors(menu.Items, palette);
             menu.Show(_btnRecentFolders, new Point(0, _btnRecentFolders.Height + 2));
         }
 
@@ -93,23 +102,31 @@ namespace FileOrganizer
 
         private void PnlSourceDrop_DragEnter(object? sender, DragEventArgs e)
         {
+            var palette = AppTheme.GetPalette(_settings.DarkMode);
             if (e.Data != null && e.Data.GetDataPresent(DataFormats.FileDrop))
             {
                 var files = (string[]?)e.Data.GetData(DataFormats.FileDrop);
-                if (files != null && files.Length == 1 && Directory.Exists(files[0]))
+                if (files != null && files.Length >= 1)
                 {
                     e.Effect = DragDropEffects.Copy;
-                    _pnlSourceDrop.BackColor = Color.FromArgb(200, 230, 255);
+                    _pnlSourceDrop.BackColor = palette.DropZoneHoverBg;
                     return;
                 }
             }
             e.Effect = DragDropEffects.None;
-            _pnlSourceDrop.BackColor = Color.FromArgb(255, 200, 200);
+            _pnlSourceDrop.BackColor = palette.DangerBg;
+        }
+
+        private void PnlSourceDrop_DragLeave(object? sender, EventArgs e)
+        {
+            var palette = AppTheme.GetPalette(_settings.DarkMode);
+            _pnlSourceDrop.BackColor = palette.DropZoneBg;
         }
 
         private void PnlSourceDrop_DragDrop(object? sender, DragEventArgs e)
         {
-            _pnlSourceDrop.BackColor = Color.FromArgb(248, 248, 248);
+            var palette = AppTheme.GetPalette(_settings.DarkMode);
+            _pnlSourceDrop.BackColor = palette.DropZoneBg;
 
             if (e.Data != null && e.Data.GetDataPresent(DataFormats.FileDrop))
             {
@@ -121,9 +138,13 @@ namespace FileOrganizer
                     {
                         SetSourceFolder(path);
                     }
-                    else
+                    else if (File.Exists(path))
                     {
-                        MessageBox.Show("Please drop a folder, not a file.", "Invalid Selection", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                        string? dir = Path.GetDirectoryName(path);
+                        if (!string.IsNullOrEmpty(dir) && Directory.Exists(dir))
+                        {
+                            SetSourceFolder(dir);
+                        }
                     }
                 }
             }
@@ -212,16 +233,19 @@ namespace FileOrganizer
             {
                 _lblSummary.Text = "No files found to organize.";
                 _btnStart.Enabled = false;
+                if (_pnlEmptyState != null) _pnlEmptyState.Visible = true;
+                _lstFiles.Visible = false;
                 return;
             }
+
+            if (_pnlEmptyState != null) _pnlEmptyState.Visible = false;
+            _lstFiles.Visible = true;
 
             var grouped = _organizerService?.GroupByMonthYear(_filesToOrganize) ?? new Dictionary<string, List<FileItem>>();
             var fileCount = _filesToOrganize.Count(f => !f.IsDirectory);
             var folderCount = _filesToOrganize.Count(f => f.IsDirectory);
 
-            _lblSummary.Text = $"Summary: • Total Items: {_filesToOrganize.Count} " +
-                              $"(Files: {fileCount}, Folders: {folderCount}) • " +
-                              $"Folders: {grouped.Count}";
+            _lblSummary.Text = $"Ready: {fileCount} file(s), {folderCount} folder(s) → {grouped.Count} target date folder(s)";
             _btnStart.Enabled = true;
         }
 
@@ -399,22 +423,26 @@ namespace FileOrganizer
             _lastResult = result;
 
             var summaryBuilder = new StringBuilder();
-            summaryBuilder.AppendLine("PERFORMANCE SUMMARY");
-            summaryBuilder.AppendLine($"  • Files Moved:             {result.FilesMoved} of {result.TotalFiles}");
-            summaryBuilder.AppendLine($"  • Folders Created:         {result.MonthFoldersCreated}");
-            summaryBuilder.AppendLine($"  • Name Conflicts Renamed:  {result.ConflictsResolved}");
-
+            summaryBuilder.AppendLine("ORGANIZATION RESULTS");
+            summaryBuilder.AppendLine($"  ✔ Items Organized:     {result.FilesMoved} of {result.TotalFiles} successfully processed");
+            summaryBuilder.AppendLine($"  📁 Folders Created:     {result.MonthFoldersCreated} date-based folder(s)");
+            if (result.ConflictsResolved > 0)
+            {
+                summaryBuilder.AppendLine($"  🛡 Name Conflicts:      {result.ConflictsResolved} safely auto-renamed");
+            }
             if (result.Errors > 0)
             {
-                summaryBuilder.AppendLine($"  ⚠ Errors Encountered:      {result.Errors}");
+                summaryBuilder.AppendLine($"  ⚠ Errors Encountered:  {result.Errors}");
             }
-
             summaryBuilder.AppendLine();
-            summaryBuilder.AppendLine("OUTPUT DESTINATION");
+            summaryBuilder.AppendLine("OUTPUT FOLDER");
             summaryBuilder.AppendLine($"  📂 {(string.IsNullOrWhiteSpace(result.SortedFolderPath) ? "Not available" : result.SortedFolderPath)}");
-            summaryBuilder.AppendLine();
-            summaryBuilder.AppendLine("AUDIT LOG");
-            summaryBuilder.AppendLine($"  📊 {(string.IsNullOrWhiteSpace(result.CsvLogPath) ? "Not generated" : result.CsvLogPath)}");
+            if (!string.IsNullOrWhiteSpace(result.CsvLogPath))
+            {
+                summaryBuilder.AppendLine();
+                summaryBuilder.AppendLine("AUDIT LOG");
+                summaryBuilder.AppendLine($"  📊 {result.CsvLogPath}");
+            }
 
             _lblCompleteSummary.Text = summaryBuilder.ToString();
 

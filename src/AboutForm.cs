@@ -6,13 +6,17 @@ namespace FileOrganizer
 {
     public partial class AboutForm : Form
     {
-        public AboutForm()
+        private readonly bool _isDark;
+
+        public AboutForm(bool isDark = false)
         {
+            _isDark = isDark;
             InitializeComponent();
         }
         
         private void InitializeComponent()
         {
+            var palette = Config.AppTheme.GetPalette(_isDark);
             this.Text = $"About {Config.AppConstants.ShortAppName}";
             if (Config.AppConstants.AppIcon != null) this.Icon = Config.AppConstants.AppIcon;
             this.Size = new Size(520, 410);
@@ -20,6 +24,9 @@ namespace FileOrganizer
             this.FormBorderStyle = FormBorderStyle.FixedDialog;
             this.MaximizeBox = false;
             this.MinimizeBox = false;
+            this.BackColor = palette.CanvasBg;
+            this.ForeColor = palette.TextPrimary;
+            this.Shown += (s, e) => Config.AppTheme.SetWindowDarkTitleBar(this.Handle, _isDark);
 
             var picLogo = new PictureBox
             {
@@ -33,7 +40,7 @@ namespace FileOrganizer
             {
                 Text = Config.AppConstants.AppName,
                 Font = new Font("Segoe UI", 14, FontStyle.Bold),
-                ForeColor = Color.FromArgb(30, 58, 138),
+                ForeColor = _isDark ? Color.FromArgb(147, 197, 253) : Color.FromArgb(30, 58, 138),
                 Location = new Point(88, 18),
                 AutoSize = true
             };
@@ -42,7 +49,7 @@ namespace FileOrganizer
             {
                 Text = $"Version {Config.AppConstants.AppVersion} (Build {Config.AppConstants.BuildNumber})",
                 Font = new Font("Segoe UI", 9F, FontStyle.Bold),
-                ForeColor = Color.FromArgb(75, 85, 99),
+                ForeColor = palette.TextMuted,
                 Location = new Point(88, 50),
                 AutoSize = true
             };
@@ -51,7 +58,7 @@ namespace FileOrganizer
             {
                 Text = Config.AppConstants.AppDescription,
                 Font = new Font("Segoe UI", 9),
-                ForeColor = Config.AppConstants.ColorTextDark,
+                ForeColor = palette.TextPrimary,
                 Location = new Point(20, 84),
                 Size = new Size(460, 50),
                 AutoSize = false
@@ -61,7 +68,7 @@ namespace FileOrganizer
             {
                 Text = "Developer:",
                 Font = new Font("Segoe UI", 9, FontStyle.Bold),
-                ForeColor = Color.FromArgb(55, 65, 81),
+                ForeColor = palette.TextPrimary,
                 Location = new Point(20, 144),
                 AutoSize = true
             };
@@ -70,7 +77,7 @@ namespace FileOrganizer
             {
                 Text = Config.AppConstants.Author,
                 Font = new Font("Segoe UI", 9.5F),
-                ForeColor = Config.AppConstants.ColorTextDark,
+                ForeColor = palette.TextPrimary,
                 Location = new Point(20, 164),
                 AutoSize = true
             };
@@ -79,7 +86,7 @@ namespace FileOrganizer
             {
                 Text = "Project URL:",
                 Font = new Font("Segoe UI", 9, FontStyle.Bold),
-                ForeColor = Color.FromArgb(55, 65, 81),
+                ForeColor = palette.TextPrimary,
                 Location = new Point(20, 196),
                 AutoSize = true
             };
@@ -90,9 +97,9 @@ namespace FileOrganizer
                 Font = new Font("Segoe UI", 9),
                 Location = new Point(20, 216),
                 AutoSize = true,
-                ActiveLinkColor = Color.FromArgb(37, 99, 235),
-                LinkColor = Color.FromArgb(37, 99, 235),
-                VisitedLinkColor = Color.FromArgb(37, 99, 235)
+                ActiveLinkColor = _isDark ? Color.FromArgb(96, 165, 250) : Color.FromArgb(37, 99, 235),
+                LinkColor = _isDark ? Color.FromArgb(96, 165, 250) : Color.FromArgb(37, 99, 235),
+                VisitedLinkColor = _isDark ? Color.FromArgb(96, 165, 250) : Color.FromArgb(37, 99, 235)
             };
             linkSource.LinkClicked += (s, e) =>
             {
@@ -111,7 +118,7 @@ namespace FileOrganizer
             {
                 Text = Config.AppConstants.LicenseText,
                 Font = new Font("Segoe UI", 8),
-                ForeColor = Color.Gray,
+                ForeColor = palette.TextMuted,
                 Location = new Point(20, 260),
                 AutoSize = true
             };
@@ -121,6 +128,8 @@ namespace FileOrganizer
                 Text = "Close",
                 Size = new Size(100, 32),
                 Location = new Point(380, 310),
+                BackColor = palette.SecondaryButtonBg,
+                ForeColor = palette.SecondaryButtonText,
                 DialogResult = DialogResult.OK
             };
             

@@ -16,6 +16,7 @@ namespace FileOrganizer
         private CheckBox _chkGenerateCsvLog = null!;
         private CheckBox _chkUse24Hour = null!;
         private CheckBox _chkAutoLoadExeDir = null!;
+        private CheckBox _chkDarkMode = null!;
 
         // Folder Naming Controls
         private ComboBox _cmbFormat = null!;
@@ -23,10 +24,14 @@ namespace FileOrganizer
         private CheckBox _chkShortMonth = null!;
         private TextBox _txtPrefix = null!;
         private TextBox _txtSuffix = null!;
+        private Panel _pnlLivePreview = null!;
+        private Label _lblPreviewTitle = null!;
         private Label _lblSample1 = null!;
         private Label _lblSample2 = null!;
         private Label _lblSample3 = null!;
         private Label _lblSample4 = null!;
+        private Button _btnOpenConfig = null!;
+        private Button _btnDefaults = null!;
         private Button _btnOK = null!;
         private Button _btnCancel = null!;
 
@@ -74,7 +79,8 @@ namespace FileOrganizer
                 AutoLoadExeDirectoryOnStartup = currentSettings.AutoLoadExeDirectoryOnStartup,
                 FolderFormat = currentSettings.FolderFormat,
                 FolderPrefix = currentSettings.FolderPrefix,
-                FolderSuffix = currentSettings.FolderSuffix
+                FolderSuffix = currentSettings.FolderSuffix,
+                DarkMode = currentSettings.DarkMode
             };
             InitializeComponent();
         }
@@ -83,7 +89,7 @@ namespace FileOrganizer
         {
             this.Text = "Preferences";
             if (AppConstants.AppIcon != null) this.Icon = AppConstants.AppIcon;
-            this.Size = new Size(580, 755);
+            this.Size = new Size(580, 785);
             this.StartPosition = FormStartPosition.CenterParent;
             this.FormBorderStyle = FormBorderStyle.FixedDialog;
             this.MaximizeBox = false;
@@ -96,13 +102,13 @@ namespace FileOrganizer
             int contentWidth = this.ClientSize.Width - (leftMargin * 2);
 
             // 1. File Organization Options
-            var lblOrgHeader = new Label { Text = "File & Folder Rules:", Font = new Font("Segoe UI", 10F, FontStyle.Bold), Location = new Point(leftMargin, currentY), AutoSize = true };
+            var lblOrgHeader = new Label { Text = "File & Folder Rules:", UseMnemonic = false, Font = new Font("Segoe UI", 10F, FontStyle.Bold), Location = new Point(leftMargin, currentY), AutoSize = true };
             currentY += 24;
 
             _chkIncludeFolders = new CheckBox { Text = "Include Top-Level Folders (Move entire folder packages as atomic units)", Location = new Point(leftMargin, currentY), Size = new Size(contentWidth, 24), Checked = _settings.IncludeTopLevelFolders };
             currentY += spacing;
 
-            _chkIgnoreSystemFiles = new CheckBox { Text = "Ignore Windows system files & protected folders (desktop.ini, Thumbs.db, $RECYCLE.BIN)", Location = new Point(leftMargin, currentY), Size = new Size(contentWidth, 24), Checked = _settings.IgnoreSystemFiles };
+            _chkIgnoreSystemFiles = new CheckBox { Text = "Ignore Windows system files & protected folders (desktop.ini, Thumbs.db, $RECYCLE.BIN)", UseMnemonic = false, Location = new Point(leftMargin, currentY), Size = new Size(contentWidth, 24), Checked = _settings.IgnoreSystemFiles };
             currentY += 32;
 
             // Detect initial modifier states from _settings.FolderFormat
@@ -144,19 +150,21 @@ namespace FileOrganizer
             {
                 if (e.Index < 0 || e.Index >= _cmbFormat.Items.Count || _cmbFormat.Items[e.Index] is not FormatItem item) return;
                 var baseFont = e.Font ?? _cmbFormat.Font ?? this.Font;
+                bool isDark = _chkDarkMode?.Checked ?? _settings.DarkMode;
+                var palette = AppTheme.GetPalette(isDark);
 
                 if (item.IsHeader)
                 {
-                    using var bgBrush = new SolidBrush(Color.FromArgb(243, 244, 246));
+                    using var bgBrush = new SolidBrush(isDark ? Color.FromArgb(30, 41, 59) : Color.FromArgb(243, 244, 246));
                     e.Graphics.FillRectangle(bgBrush, e.Bounds);
-                    using var textBrush = new SolidBrush(Color.FromArgb(107, 114, 128));
+                    using var textBrush = new SolidBrush(isDark ? Color.FromArgb(148, 163, 184) : Color.FromArgb(107, 114, 128));
                     using var headerFont = new Font(baseFont, FontStyle.Bold);
                     e.Graphics.DrawString(item.DisplayName, headerFont, textBrush, e.Bounds.X + 4, e.Bounds.Y + 3);
                 }
                 else
                 {
                     e.DrawBackground();
-                    using var textBrush = new SolidBrush((e.State & DrawItemState.Selected) != 0 ? SystemColors.HighlightText : AppConstants.ColorTextDark);
+                    using var textBrush = new SolidBrush((e.State & DrawItemState.Selected) != 0 ? SystemColors.HighlightText : palette.TextPrimary);
                     e.Graphics.DrawString($"  {item.DisplayName}", baseFont, textBrush, e.Bounds.X + 8, e.Bounds.Y + 3);
                     e.DrawFocusRectangle();
                 }
@@ -220,14 +228,14 @@ namespace FileOrganizer
             currentY += 32;
 
             // Live Multi-Folder Preview Card
-            var pnlLivePreview = new Panel { Location = new Point(leftMargin, currentY), Width = contentWidth, Height = 120, BorderStyle = BorderStyle.FixedSingle, BackColor = Color.FromArgb(249, 250, 251), Padding = new Padding(12, 8, 12, 8) };
-            var lblPreviewTitle = new Label { Text = "👁 Live Multi-Folder Preview:", Font = new Font("Segoe UI", 8.5F, FontStyle.Bold), ForeColor = Color.FromArgb(75, 85, 99), Dock = DockStyle.Top, Height = 18 };
-            _lblSample1 = new Label { Text = "", Font = new Font("Segoe UI", 9F, FontStyle.Regular), ForeColor = AppConstants.ColorTextDark, Dock = DockStyle.Top, Height = 22 };
-            _lblSample2 = new Label { Text = "", Font = new Font("Segoe UI", 9F, FontStyle.Regular), ForeColor = AppConstants.ColorTextDark, Dock = DockStyle.Top, Height = 22 };
-            _lblSample3 = new Label { Text = "", Font = new Font("Segoe UI", 9F, FontStyle.Regular), ForeColor = AppConstants.ColorTextDark, Dock = DockStyle.Top, Height = 22 };
-            _lblSample4 = new Label { Text = "", Font = new Font("Segoe UI", 9F, FontStyle.Regular), ForeColor = AppConstants.ColorTextDark, Dock = DockStyle.Top, Height = 22 };
+            _pnlLivePreview = new Panel { Location = new Point(leftMargin, currentY), Width = contentWidth, Height = 120, BorderStyle = BorderStyle.FixedSingle, BackColor = Color.FromArgb(249, 250, 251), Padding = new Padding(12, 8, 12, 8) };
+            _lblPreviewTitle = new Label { Text = "👁 Live Multi-Folder Preview:", UseMnemonic = false, Font = new Font("Segoe UI Emoji", 8.5F, FontStyle.Bold), ForeColor = Color.FromArgb(75, 85, 99), Dock = DockStyle.Top, Height = 18 };
+            _lblSample1 = new Label { Text = "", UseMnemonic = false, Font = new Font("Segoe UI Emoji", 9F, FontStyle.Regular), ForeColor = AppConstants.ColorTextDark, Dock = DockStyle.Top, Height = 22 };
+            _lblSample2 = new Label { Text = "", UseMnemonic = false, Font = new Font("Segoe UI Emoji", 9F, FontStyle.Regular), ForeColor = AppConstants.ColorTextDark, Dock = DockStyle.Top, Height = 22 };
+            _lblSample3 = new Label { Text = "", UseMnemonic = false, Font = new Font("Segoe UI Emoji", 9F, FontStyle.Regular), ForeColor = AppConstants.ColorTextDark, Dock = DockStyle.Top, Height = 22 };
+            _lblSample4 = new Label { Text = "", UseMnemonic = false, Font = new Font("Segoe UI Emoji", 9F, FontStyle.Regular), ForeColor = AppConstants.ColorTextDark, Dock = DockStyle.Top, Height = 22 };
 
-            pnlLivePreview.Controls.AddRange([_lblSample4, _lblSample3, _lblSample2, _lblSample1, lblPreviewTitle]);
+            _pnlLivePreview.Controls.AddRange([_lblSample4, _lblSample3, _lblSample2, _lblSample1, _lblPreviewTitle]);
             currentY += 128;
 
             // 3. Application & Window Behavior
@@ -247,14 +255,18 @@ namespace FileOrganizer
             currentY += spacing;
 
             _chkAutoLoadExeDir = new CheckBox { Text = "Auto-load application folder on startup", Location = new Point(leftMargin, currentY), AutoSize = true, Checked = _settings.AutoLoadExeDirectoryOnStartup };
+            currentY += spacing;
+
+            _chkDarkMode = new CheckBox { Text = "Enable Dark Mode (Fluent Slate theme)", Location = new Point(leftMargin, currentY), AutoSize = true, Checked = _settings.DarkMode };
+            _chkDarkMode.CheckedChanged += (s, e) => ApplyDialogTheme(_chkDarkMode.Checked);
 
             // Buttons: Left (Config Location, Defaults), Right (Save / Cancel)
             int buttonY = this.ClientSize.Height - 52;
-            var btnOpenConfig = new Button { Text = "📂 Config Location", Size = new Size(130, 32), Location = new Point(leftMargin, buttonY), Font = new Font("Segoe UI", 8.5F) };
-            btnOpenConfig.Click += (s, e) => AppConstants.OpenConfigLocation();
+            _btnOpenConfig = new Button { Text = "📂 Config Location", UseMnemonic = false, Size = new Size(130, 32), Location = new Point(leftMargin, buttonY), Font = new Font("Segoe UI Emoji", 8.5F) };
+            _btnOpenConfig.Click += (s, e) => AppConstants.OpenConfigLocation();
 
-            var btnDefaults = new Button { Text = "↺ Defaults", Size = new Size(90, 32), Location = new Point(leftMargin + 138, buttonY), Font = new Font("Segoe UI", 8.5F) };
-            btnDefaults.Click += (s, e) => RestoreDefaults();
+            _btnDefaults = new Button { Text = "↺ Defaults", UseMnemonic = false, Size = new Size(90, 32), Location = new Point(leftMargin + 138, buttonY), Font = new Font("Segoe UI Emoji", 8.5F) };
+            _btnDefaults.Click += (s, e) => RestoreDefaults();
 
             _btnCancel = new Button { Text = "Cancel", Size = new Size(90, 32), Location = new Point(this.ClientSize.Width - leftMargin - 90, buttonY), DialogResult = DialogResult.Cancel };
             _btnOK = new Button { Text = "Save", Size = new Size(90, 32), Location = new Point(this.ClientSize.Width - leftMargin - 90 - 10 - 90, buttonY), DialogResult = DialogResult.OK };
@@ -263,13 +275,14 @@ namespace FileOrganizer
             this.Controls.AddRange([
                 lblOrgHeader, _chkIncludeFolders, _chkIgnoreSystemFiles, lblNamingHeader, _cmbFormat,
                 _btnFlipOrder, _chkShortMonth, lblPrefix, lblSuffix, _txtPrefix, _txtSuffix,
-                pnlLivePreview, lblBehaviorHeader, _chkShowProgress, _chkGenerateCsvLog, _chkShowOnTop, _chkUse24Hour, _chkAutoLoadExeDir,
-                btnOpenConfig, btnDefaults, _btnOK, _btnCancel
+                _pnlLivePreview, lblBehaviorHeader, _chkShowProgress, _chkGenerateCsvLog, _chkShowOnTop, _chkUse24Hour, _chkAutoLoadExeDir, _chkDarkMode,
+                _btnOpenConfig, _btnDefaults, _btnOK, _btnCancel
             ]);
 
             this.AcceptButton = _btnOK;
             this.CancelButton = _btnCancel;
 
+            this.Shown += (s, e) => ApplyDialogTheme(_settings.DarkMode);
             UpdateLivePreview();
         }
 
@@ -280,9 +293,12 @@ namespace FileOrganizer
             bool canFlip = item.Core != CoreFormat.YearOnly;
             bool canShortMonth = item.Core is CoreFormat.YearMonth or CoreFormat.Daily;
 
+            bool isDark = _chkDarkMode?.Checked ?? _settings.DarkMode;
+            var palette = AppTheme.GetPalette(isDark);
             _btnFlipOrder.Enabled = canFlip;
             _btnFlipOrder.Text = canFlip ? (_isFlipped ? "⇄ Order: Flipped" : "⇄ Order: Standard") : "⇄ Flip (N/A)";
-            _btnFlipOrder.BackColor = (canFlip && _isFlipped) ? Color.FromArgb(224, 231, 255) : Color.FromArgb(243, 244, 246);
+            _btnFlipOrder.BackColor = (canFlip && _isFlipped) ? (isDark ? Color.FromArgb(67, 56, 202) : Color.FromArgb(224, 231, 255)) : palette.SecondaryButtonBg;
+            _btnFlipOrder.ForeColor = (canFlip && _isFlipped && isDark) ? Color.White : palette.SecondaryButtonText;
             _chkShortMonth.Enabled = canShortMonth;
 
             int currentYear = DateTime.Now.Year;
@@ -359,6 +375,7 @@ namespace FileOrganizer
             _chkGenerateCsvLog.Checked = AppConstants.DefaultGenerateCsvLog;
             _chkUse24Hour.Checked = AppConstants.DefaultUse24HourTimestamp;
             _chkAutoLoadExeDir.Checked = AppConstants.DefaultAutoLoadExeDirectoryOnStartup;
+            _chkDarkMode.Checked = AppConstants.DefaultDarkMode;
 
             _txtPrefix.Text = AppConstants.DefaultFolderPrefix;
             _txtSuffix.Text = AppConstants.DefaultFolderSuffix;
@@ -389,9 +406,56 @@ namespace FileOrganizer
             _settings.GenerateCsvLog = _chkGenerateCsvLog.Checked;
             _settings.Use24HourTimestamp = _chkUse24Hour.Checked;
             _settings.AutoLoadExeDirectoryOnStartup = _chkAutoLoadExeDir.Checked;
+            _settings.DarkMode = _chkDarkMode.Checked;
             _settings.FolderFormat = ResolveFolderFormat();
             _settings.FolderPrefix = AppConstants.SanitizeFolderName(_txtPrefix.Text);
             _settings.FolderSuffix = AppConstants.SanitizeFolderName(_txtSuffix.Text);
+        }
+
+        private void ApplyDialogTheme(bool isDark)
+        {
+            var palette = AppTheme.GetPalette(isDark);
+            this.BackColor = palette.CanvasBg;
+            this.ForeColor = palette.TextPrimary;
+            AppTheme.SetWindowDarkTitleBar(this.Handle, isDark);
+
+            foreach (Control c in this.Controls)
+            {
+                if (c is CheckBox chk) chk.ForeColor = palette.TextPrimary;
+                else if (c is Label lbl) lbl.ForeColor = palette.TextPrimary;
+                else if (c is TextBox txt)
+                {
+                    txt.BackColor = palette.InputBg;
+                    txt.ForeColor = palette.TextPrimary;
+                }
+                else if (c is Button btn && btn != _btnOK && btn != _btnFlipOrder)
+                {
+                    btn.BackColor = palette.SecondaryButtonBg;
+                    btn.ForeColor = palette.SecondaryButtonText;
+                }
+            }
+
+            if (_pnlLivePreview != null)
+            {
+                _pnlLivePreview.BackColor = palette.CardBg;
+                _lblPreviewTitle.ForeColor = palette.TextMuted;
+                _lblSample1.ForeColor = palette.TextPrimary;
+                _lblSample2.ForeColor = palette.TextPrimary;
+                _lblSample3.ForeColor = palette.TextPrimary;
+                _lblSample4.ForeColor = palette.TextPrimary;
+            }
+
+            if (_cmbFormat != null)
+            {
+                _cmbFormat.BackColor = palette.InputBg;
+                _cmbFormat.ForeColor = palette.TextPrimary;
+            }
+            if (_btnOK != null)
+            {
+                _btnOK.BackColor = AppConstants.ColorPrimary;
+                _btnOK.ForeColor = Color.White;
+            }
+            UpdateOptionsState();
         }
     }
 }

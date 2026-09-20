@@ -13,6 +13,7 @@ namespace FileOrganizer.Models
         public bool GenerateCsvLog { get; set; } = Config.AppConstants.DefaultGenerateCsvLog;
         public bool Use24HourTimestamp { get; set; } = Config.AppConstants.DefaultUse24HourTimestamp;
         public bool AutoLoadExeDirectoryOnStartup { get; set; } = Config.AppConstants.DefaultAutoLoadExeDirectoryOnStartup;
+        public bool DarkMode { get; set; } = Config.AppConstants.DefaultDarkMode;
         public System.Collections.Generic.List<string> RecentFolders { get; set; } = new();
         public FolderFormat FolderFormat { get; set; } = Config.AppConstants.DefaultFolderFormat;
         public string FolderPrefix { get; set; } = Config.AppConstants.DefaultFolderPrefix;
