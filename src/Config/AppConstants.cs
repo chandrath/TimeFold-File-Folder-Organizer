@@ -95,6 +95,7 @@ namespace FileOrganizer.Config
         public const bool DefaultUse24HourTimestamp = false;
         public const bool DefaultAutoLoadExeDirectoryOnStartup = false;
         public const bool DefaultDarkMode = false;
+        public const bool DefaultHasSeenWelcomeTour = false;
         public const int MaxRecentFolders = 5;
         public const FolderFormat DefaultFolderFormat = FolderFormat.YearMonth;
         public const string DefaultFolderPrefix = "";

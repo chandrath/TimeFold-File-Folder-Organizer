@@ -14,6 +14,7 @@ namespace FileOrganizer.Models
         public bool Use24HourTimestamp { get; set; } = Config.AppConstants.DefaultUse24HourTimestamp;
         public bool AutoLoadExeDirectoryOnStartup { get; set; } = Config.AppConstants.DefaultAutoLoadExeDirectoryOnStartup;
         public bool DarkMode { get; set; } = Config.AppConstants.DefaultDarkMode;
+        public bool HasSeenWelcomeTour { get; set; } = Config.AppConstants.DefaultHasSeenWelcomeTour;
         public System.Collections.Generic.List<string> RecentFolders { get; set; } = new();
         public FolderFormat FolderFormat { get; set; } = Config.AppConstants.DefaultFolderFormat;
         public string FolderPrefix { get; set; } = Config.AppConstants.DefaultFolderPrefix;

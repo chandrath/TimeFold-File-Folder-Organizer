@@ -42,9 +42,9 @@ namespace FileOrganizer
             _menuPreferences.Click += MenuPreferences_Click;
 
             _menuHelp = new ToolStripMenuItem("Help");
-            _menuAbout = new ToolStripMenuItem("About");
-            _menuAbout.Click += MenuAbout_Click;
-            _menuHelp.DropDownItems.Add(_menuAbout);
+            var menuTour = new ToolStripMenuItem("💡 Quick Tour & Guide...", null, MenuWelcomeTour_Click);
+            _menuAbout = new ToolStripMenuItem("About", null, MenuAbout_Click);
+            _menuHelp.DropDownItems.AddRange(new ToolStripItem[] { menuTour, new ToolStripSeparator(), _menuAbout });
 
             _menuStrip.Items.AddRange(new ToolStripItem[] { _menuFile, _menuPreferences, _menuHelp });
             this.MainMenuStrip = _menuStrip;

@@ -112,6 +112,20 @@ namespace FileOrganizer
             {
                 UpdateOutputFolder();
             }
+
+            this.Shown += (s, e) =>
+            {
+                if (!_settings.HasSeenWelcomeTour)
+                {
+                    this.BeginInvoke(new Action(() =>
+                    {
+                        using var tourForm = new WelcomeTourForm(_settings.DarkMode);
+                        tourForm.ShowDialog(this);
+                        _settings.HasSeenWelcomeTour = tourForm.DontShowOnStartup;
+                        _settings.SaveToFile();
+                    }));
+                }
+            };
         }
 
         private void SetupToolTips()
@@ -280,6 +294,17 @@ namespace FileOrganizer
         {
             using var aboutForm = new AboutForm(_settings.DarkMode);
             aboutForm.ShowDialog();
+        }
+
+        private void MenuWelcomeTour_Click(object? sender, EventArgs e)
+        {
+            using var tourForm = new WelcomeTourForm(_settings.DarkMode);
+            tourForm.ShowDialog(this);
+            if (tourForm.DontShowOnStartup != _settings.HasSeenWelcomeTour)
+            {
+                _settings.HasSeenWelcomeTour = tourForm.DontShowOnStartup;
+                _settings.SaveToFile();
+            }
         }
 
         private void ResetForm()
