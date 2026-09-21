@@ -15,9 +15,12 @@ namespace FileOrganizer
         private CheckBox _chkGenerateCsvLog = null!;
         private CheckBox _chkUse24Hour = null!;
         private CheckBox _chkAutoLoadExeDir = null!;
-        private CheckBox _chkDarkMode = null!;
         private ComboBox _cmbFileDateSource = null!;
         private ComboBox _cmbFolderDateSource = null!;
+
+        // Appearance Controls
+        private Button _btnThemeLight = null!;
+        private Button _btnThemeDark = null!;
 
         // Folder Naming Controls
         private ComboBox _cmbFormat = null!;
@@ -46,7 +49,7 @@ namespace FileOrganizer
         {
             this.Text = "Preferences";
             if (AppConstants.AppIcon != null) this.Icon = AppConstants.AppIcon;
-            this.Size = new Size(580, 890);
+            this.Size = new Size(580, 840);
             this.StartPosition = FormStartPosition.CenterParent;
             this.FormBorderStyle = FormBorderStyle.FixedDialog;
             this.MaximizeBox = false;
@@ -122,7 +125,7 @@ namespace FileOrganizer
             {
                 if (e.Index < 0 || e.Index >= _cmbFormat.Items.Count || _cmbFormat.Items[e.Index] is not FormatItem item) return;
                 var baseFont = e.Font ?? _cmbFormat.Font ?? this.Font;
-                bool isDark = _chkDarkMode?.Checked ?? _settings.DarkMode;
+                bool isDark = _isDarkMode;
                 var palette = AppTheme.GetPalette(isDark);
 
                 if (item.IsHeader)
@@ -202,8 +205,35 @@ namespace FileOrganizer
             _pnlLivePreview.Controls.AddRange([_lblSample4, _lblSample3, _lblSample2, _lblSample1, _lblPreviewTitle]);
             currentY += 128;
 
-            // 3. Application & Window Behavior
-            var lblBehaviorHeader = new Label { Text = "General Behavior & Performance:", Font = new Font("Segoe UI", 10F, FontStyle.Bold), Location = new Point(leftMargin, currentY), AutoSize = true };
+            // 3. Appearance & Theme
+            var lblAppearanceHeader = new Label { Text = "Appearance & Theme:", UseMnemonic = false, Font = new Font("Segoe UI", 10F, FontStyle.Bold), Location = new Point(leftMargin, currentY), AutoSize = true };
+            currentY += 24;
+
+            _btnThemeLight = new Button
+            {
+                Text = "☀️  Light Mode (Classic)",
+                UseMnemonic = false,
+                Font = new Font("Segoe UI Emoji", 9F, FontStyle.Regular),
+                Location = new Point(leftMargin, currentY),
+                Size = new Size(halfWidth, 34),
+                Cursor = Cursors.Hand
+            };
+            _btnThemeLight.Click += (s, e) => SetTheme(false);
+
+            _btnThemeDark = new Button
+            {
+                Text = "🌙  Dark Mode (Fluent Slate)",
+                UseMnemonic = false,
+                Font = new Font("Segoe UI Emoji", 9F, FontStyle.Regular),
+                Location = new Point(leftMargin + halfWidth + 16, currentY),
+                Size = new Size(halfWidth, 34),
+                Cursor = Cursors.Hand
+            };
+            _btnThemeDark.Click += (s, e) => SetTheme(true);
+            currentY += 42;
+
+            // 4. Application & Window Behavior
+            var lblBehaviorHeader = new Label { Text = "General Behavior & Performance:", UseMnemonic = false, Font = new Font("Segoe UI", 10F, FontStyle.Bold), Location = new Point(leftMargin, currentY), AutoSize = true };
             currentY += 24;
 
             _chkShowProgress = new CheckBox { Text = "Show Detailed Progress during organization", Location = new Point(leftMargin, currentY), AutoSize = true, Checked = _settings.ShowDetailedProgress };
@@ -219,11 +249,7 @@ namespace FileOrganizer
             currentY += spacing;
 
             _chkAutoLoadExeDir = new CheckBox { Text = "Auto-load application folder on startup", Location = new Point(leftMargin, currentY), AutoSize = true, Checked = _settings.AutoLoadExeDirectoryOnStartup };
-            currentY += spacing;
-
-            _chkDarkMode = new CheckBox { Text = "Enable Dark Mode (Fluent Slate theme)", Location = new Point(leftMargin, currentY), AutoSize = true, Checked = _settings.DarkMode };
-            _chkDarkMode.CheckedChanged += (s, e) => ApplyDialogTheme(_chkDarkMode.Checked);
-            currentY += spacing + 2;
+            currentY += spacing + 4;
 
             // Preview Limit Row
             var lblPreviewLimit = new Label { Text = "Preview Items Limit:", Location = new Point(leftMargin, currentY + 3), AutoSize = true, Font = new Font("Segoe UI", 9F) };
@@ -258,7 +284,9 @@ namespace FileOrganizer
             this.Controls.AddRange([
                 lblOrgHeader, _chkIncludeFolders, _chkIgnoreSystemFiles, lblFileDate, lblFolderDate, _cmbFileDateSource, _cmbFolderDateSource,
                 lblNamingHeader, _cmbFormat, _btnFlipOrder, _chkShortMonth, lblPrefix, lblSuffix, _txtPrefix, _txtSuffix,
-                _pnlLivePreview, lblBehaviorHeader, _chkShowProgress, _chkGenerateCsvLog, _chkShowOnTop, _chkUse24Hour, _chkAutoLoadExeDir, _chkDarkMode,
+                _pnlLivePreview,
+                lblAppearanceHeader, _btnThemeLight, _btnThemeDark,
+                lblBehaviorHeader, _chkShowProgress, _chkGenerateCsvLog, _chkShowOnTop, _chkUse24Hour, _chkAutoLoadExeDir,
                 lblPreviewLimit, _cmbPreviewLimit, _lblPreviewLimitWarning,
                 _btnOpenConfig, _btnDefaults, _btnOK, _btnCancel
             ]);

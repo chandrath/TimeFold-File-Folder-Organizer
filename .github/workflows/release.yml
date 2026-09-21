@@ -44,12 +44,12 @@ jobs:
       - name: Build 1 - ReadyToRun (Self-Contained / Standalone)
         shell: pwsh
         run: |
-          dotnet publish src/FileOrganizer.csproj -c Release -r win-x64 --self-contained -p:PublishSingleFile=true -p:EnableCompressionInSingleFile=true -p:DebugType=none -o ./publish_ready_to_run
+          dotnet publish src/TimeFold.csproj -c Release -r win-x64 --self-contained -p:PublishSingleFile=true -p:EnableCompressionInSingleFile=true -p:DebugType=none -o ./publish_ready_to_run
 
       - name: Build 2 - RequiresDotNet10 (Framework-Dependent / Lightweight)
         shell: pwsh
         run: |
-          dotnet publish src/FileOrganizer.csproj -c Release -r win-x64 --no-self-contained -p:PublishSingleFile=true -p:EnableCompressionInSingleFile=false -p:DebugType=none -o ./publish_requires_dotnet
+          dotnet publish src/TimeFold.csproj -c Release -r win-x64 --no-self-contained -p:PublishSingleFile=true -p:EnableCompressionInSingleFile=false -p:DebugType=none -o ./publish_requires_dotnet
 
       - name: Create Release Archives
         shell: pwsh

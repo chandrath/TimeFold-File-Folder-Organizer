@@ -1,40 +1,37 @@
 using System;
 using System.Drawing;
-using System.Drawing.Drawing2D;
 using System.Windows.Forms;
 using FileOrganizer.Config;
-using FileOrganizer.Controls;
 
 namespace FileOrganizer
 {
-    public class WelcomeTourForm : Form
+    public partial class WelcomeTourForm : Form
     {
-        private readonly bool _isDark;
-        private readonly AppTheme.ThemePalette _palette;
+        private bool _isDark;
+        private AppTheme.ThemePalette _palette;
         private int _currentSlideIndex = 0;
         private readonly TourSlide[] _slides;
-
-        // UI Controls
-        private Label _lblStepIndicator = null!;
-        private Label[] _dotLabels = null!;
-        private Label _lblBadge = null!;
-        private Label _lblSlideTitle = null!;
-        private Label _lblSlideSubtitle = null!;
-        private TableLayoutPanel _pnlBullets = null!;
-        private CheckBox _chkDontShowAgain = null!;
-        private ModernButton _btnPrev = null!;
-        private ModernButton _btnNext = null!;
+        private readonly Action<bool>? _onThemeChanged;
 
         public bool DontShowOnStartup => _chkDontShowAgain.Checked;
+        public bool SelectedDarkMode => _isDark;
 
-        public WelcomeTourForm(bool isDark = false)
+        public WelcomeTourForm(bool isDark = false, Action<bool>? onThemeChanged = null)
         {
             _isDark = isDark;
             _palette = AppTheme.GetPalette(_isDark);
+            _onThemeChanged = onThemeChanged;
             _slides = InitializeSlides();
 
             InitializeComponent();
             ShowSlide(0);
+        }
+
+        private void SetTourTheme(bool isDark)
+        {
+            _isDark = isDark;
+            ApplyTourTheme(_isDark);
+            _onThemeChanged?.Invoke(_isDark);
         }
 
         private TourSlide[] InitializeSlides()
@@ -46,6 +43,20 @@ namespace FileOrganizer
 
             return new[]
             {
+                new TourSlide(
+                    "🎨",
+                    "APPEARANCE",
+                    Color.FromArgb(99, 102, 241),
+                    "Personalize Your Look & Experience",
+                    "Select your preferred visual theme. You can always change this in Preferences.",
+                    new[]
+                    {
+                        "Instant Live Preview: Notice how TimeFold instantly updates to match your selection above.",
+                        "Distraction-Free Productivity: Choose Light or Dark theme tailored for daytime focus or night comfort.",
+                        "100% Non-Destructive Guarantee: TimeFold never deletes, overwrites, or alters your personal files.",
+                        "Ready to explore? Click 'Next' to see how TimeFold solves messy, freezing folders!"
+                    }
+                ),
                 new TourSlide(
                     "⚠️",
                     "THE PROBLEM",
@@ -106,226 +117,6 @@ namespace FileOrganizer
             };
         }
 
-        private void InitializeComponent()
-        {
-            this.Text = $"Welcome to {AppConstants.ShortAppName} — Quick Tour";
-            if (AppConstants.AppIcon != null) this.Icon = AppConstants.AppIcon;
-            this.Size = new Size(670, 520);
-            this.StartPosition = FormStartPosition.CenterParent;
-            this.FormBorderStyle = FormBorderStyle.FixedDialog;
-            this.MaximizeBox = false;
-            this.MinimizeBox = false;
-            this.BackColor = _palette.CanvasBg;
-            this.ForeColor = _palette.TextPrimary;
-            this.KeyPreview = true;
-            this.Shown += (s, e) => AppTheme.SetWindowDarkTitleBar(this.Handle, _isDark);
-            this.KeyDown += WelcomeTourForm_KeyDown;
-
-            // 1. Top Header Banner
-            var pnlTop = new Panel
-            {
-                Dock = DockStyle.Top,
-                Height = 56,
-                Padding = new Padding(20, 10, 20, 10),
-                BackColor = _palette.CardBg
-            };
-            pnlTop.Paint += (s, pe) =>
-            {
-                using var pen = new Pen(_palette.CardBorder);
-                pe.Graphics.DrawLine(pen, 0, pnlTop.Height - 1, pnlTop.Width, pnlTop.Height - 1);
-            };
-
-            var picLogo = new PictureBox
-            {
-                Image = AppConstants.AppLogo,
-                SizeMode = PictureBoxSizeMode.Zoom,
-                Size = new Size(32, 32),
-                Location = new Point(20, 12)
-            };
-
-            var lblAppTitle = new Label
-            {
-                Text = AppConstants.AppName,
-                Font = new Font("Segoe UI", 11.5F, FontStyle.Bold),
-                ForeColor = _palette.TextPrimary,
-                Location = new Point(58, 16),
-                AutoSize = true
-            };
-
-            _lblStepIndicator = new Label
-            {
-                Text = "Step 1 of 4",
-                Font = new Font("Segoe UI", 9F, FontStyle.Bold),
-                ForeColor = _palette.TextMuted,
-                Anchor = AnchorStyles.Top | AnchorStyles.Right,
-                Location = new Point(460, 18),
-                Size = new Size(80, 20),
-                TextAlign = ContentAlignment.MiddleRight
-            };
-
-            var pnlDots = new FlowLayoutPanel
-            {
-                Anchor = AnchorStyles.Top | AnchorStyles.Right,
-                Location = new Point(546, 17),
-                Size = new Size(96, 22),
-                FlowDirection = FlowDirection.LeftToRight,
-                WrapContents = false
-            };
-
-            _dotLabels = new Label[_slides.Length];
-            for (int i = 0; i < _slides.Length; i++)
-            {
-                int index = i;
-                var dot = new Label
-                {
-                    Text = "●",
-                    Font = new Font("Segoe UI", 11F),
-                    ForeColor = _palette.TextMuted,
-                    Size = new Size(18, 20),
-                    Cursor = Cursors.Hand,
-                    TextAlign = ContentAlignment.MiddleCenter
-                };
-                dot.Click += (s, e) => ShowSlide(index);
-                _dotLabels[i] = dot;
-                pnlDots.Controls.Add(dot);
-            }
-
-            pnlTop.Controls.AddRange(new Control[] { picLogo, lblAppTitle, _lblStepIndicator, pnlDots });
-
-            // 2. Center Slide Card
-            var pnlCenter = new Panel
-            {
-                Dock = DockStyle.Fill,
-                Padding = new Padding(20, 14, 20, 10),
-                BackColor = Color.Transparent
-            };
-
-            var card = new Panel
-            {
-                Dock = DockStyle.Fill,
-                BackColor = _palette.CardBg,
-                Padding = new Padding(20, 16, 20, 16)
-            };
-            card.Paint += (s, pe) =>
-            {
-                using var pen = new Pen(_palette.CardBorder);
-                pe.Graphics.DrawRectangle(pen, 0, 0, card.Width - 1, card.Height - 1);
-            };
-
-            _lblBadge = new Label
-            {
-                Text = "THE PROBLEM",
-                Font = new Font("Segoe UI", 8.5F, FontStyle.Bold),
-                ForeColor = Color.White,
-                BackColor = Color.FromArgb(239, 68, 68),
-                Padding = new Padding(6, 2, 6, 2),
-                AutoSize = true,
-                Location = new Point(20, 14)
-            };
-
-            _lblSlideTitle = new Label
-            {
-                Font = new Font("Segoe UI", 13.5F, FontStyle.Bold),
-                ForeColor = _palette.TextPrimary,
-                Location = new Point(18, 42),
-                Size = new Size(590, 30),
-                AutoEllipsis = true
-            };
-
-            _lblSlideSubtitle = new Label
-            {
-                Font = new Font("Segoe UI", 9.5F, FontStyle.Italic),
-                ForeColor = _palette.TextMuted,
-                Location = new Point(20, 72),
-                Size = new Size(590, 22),
-                AutoEllipsis = true
-            };
-
-            _pnlBullets = new TableLayoutPanel
-            {
-                Location = new Point(20, 100),
-                Size = new Size(590, 240),
-                ColumnCount = 1,
-                RowCount = 5,
-                AutoScroll = true
-            };
-            _pnlBullets.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 100));
-
-            card.Controls.AddRange(new Control[] { _lblBadge, _lblSlideTitle, _lblSlideSubtitle, _pnlBullets });
-            pnlCenter.Controls.Add(card);
-
-            // 3. Bottom Action Bar
-            var pnlBottom = new Panel
-            {
-                Dock = DockStyle.Bottom,
-                Height = 60,
-                Padding = new Padding(20, 12, 20, 12),
-                BackColor = _palette.CardBg
-            };
-            pnlBottom.Paint += (s, pe) =>
-            {
-                using var pen = new Pen(_palette.CardBorder);
-                pe.Graphics.DrawLine(pen, 0, 0, pnlBottom.Width, 0);
-            };
-
-            _chkDontShowAgain = new CheckBox
-            {
-                Text = "Don't show this tour on startup",
-                Font = new Font("Segoe UI", 9F),
-                ForeColor = _palette.TextMuted,
-                Checked = true,
-                AutoSize = true,
-                Location = new Point(20, 20)
-            };
-
-            var btnSkip = new ModernButton
-            {
-                Text = "Skip Tour",
-                Size = new Size(86, 34),
-                Location = new Point(310, 13),
-                BackColor = _palette.CardBg,
-                BorderColor = _palette.SecondaryButtonBorder,
-                ForeColor = _palette.TextMuted,
-                BorderRadius = 6
-            };
-            btnSkip.Click += (s, e) => this.Close();
-
-            _btnPrev = new ModernButton
-            {
-                Text = "< Back",
-                Size = new Size(86, 34),
-                Location = new Point(404, 13),
-                BackColor = _palette.SecondaryButtonBg,
-                BorderColor = _palette.SecondaryButtonBorder,
-                ForeColor = _palette.SecondaryButtonText,
-                BorderRadius = 6,
-                Enabled = false
-            };
-            _btnPrev.Click += (s, e) => ShowSlide(_currentSlideIndex - 1);
-
-            _btnNext = new ModernButton
-            {
-                Text = "Next >",
-                Size = new Size(140, 34),
-                Location = new Point(498, 13),
-                BackColor = Color.FromArgb(37, 99, 235),
-                BorderColor = Color.Transparent,
-                ForeColor = Color.White,
-                BorderRadius = 6
-            };
-            _btnNext.Click += (s, e) =>
-            {
-                if (_currentSlideIndex < _slides.Length - 1)
-                    ShowSlide(_currentSlideIndex + 1);
-                else
-                    this.Close();
-            };
-
-            pnlBottom.Controls.AddRange(new Control[] { _chkDontShowAgain, btnSkip, _btnPrev, _btnNext });
-
-            this.Controls.AddRange(new Control[] { pnlCenter, pnlBottom, pnlTop });
-        }
-
         private void ShowSlide(int index)
         {
             if (index < 0 || index >= _slides.Length) return;
@@ -354,6 +145,12 @@ namespace FileOrganizer
             _lblSlideTitle.Text = slide.Title;
             _lblSlideSubtitle.Text = slide.Subtitle;
 
+            // Slide 0 displays Theme Selector, other slides hide it
+            bool isThemeSlide = index == 0;
+            _pnlThemeChooser.Visible = isThemeSlide;
+            _pnlBullets.Location = isThemeSlide ? new Point(20, 152) : new Point(20, 100);
+            _pnlBullets.Size = isThemeSlide ? new Size(590, 188) : new Size(590, 240);
+
             // Rebuild bullet list
             _pnlBullets.SuspendLayout();
             _pnlBullets.Controls.Clear();
@@ -364,6 +161,7 @@ namespace FileOrganizer
                 var lblBullet = new Label
                 {
                     Text = slide.BulletPoints[i],
+                    UseMnemonic = false,
                     Font = new Font("Segoe UI", 9.25F),
                     ForeColor = _palette.TextPrimary,
                     Dock = DockStyle.Top,

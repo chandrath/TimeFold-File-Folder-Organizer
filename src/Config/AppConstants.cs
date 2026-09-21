@@ -13,9 +13,11 @@ namespace FileOrganizer.Config
     public static class AppConstants
     {
         // Application Metadata (SSoT)
+        // NOTE: AppVersion is dynamically resolved from the build assembly stamped by TimeFold.csproj (<Version>x.y.z</Version>).
+        // To bump the version across the entire app, simply change <Version> in TimeFold.csproj.
         public const string AppName = "TimeFold: File & Folder Organizer";
         public const string ShortAppName = "TimeFold";
-        public const string AppVersion = "1.0.0";
+        public static string AppVersion => typeof(AppConstants).Assembly.GetName().Version!.ToString(3);
         private static readonly Lazy<string> _lazyBuildNumber = new(() =>
         {
             try

@@ -83,7 +83,7 @@ dotnet run
 #### Build Standalone Single-File Executable
 To produce a standalone `.exe` that bundles all runtimes:
 ```bash
-dotnet publish FileOrganizer.csproj -c Release -r win-x64 --self-contained -p:PublishSingleFile=true -p:EnableCompressionInSingleFile=true -p:DebugType=none -o ../publish
+dotnet publish TimeFold.csproj -c Release -r win-x64 --self-contained -p:PublishSingleFile=true -p:EnableCompressionInSingleFile=true -p:DebugType=none -o ../publish
 ```
 The compiled single-file `TimeFold.exe` will be generated inside the `publish/` directory.
 

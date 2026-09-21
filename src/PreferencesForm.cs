@@ -11,6 +11,7 @@ namespace FileOrganizer
         private AppSettings _settings;
         private bool _isFlipped = false;
         private bool _useShortMonth = false;
+        private bool _isDarkMode = false;
 
         public AppSettings Settings => _settings;
 
@@ -72,6 +73,7 @@ namespace FileOrganizer
                 MaxPreviewItems = currentSettings.MaxPreviewItems,
                 DarkMode = currentSettings.DarkMode
             };
+            _isDarkMode = _settings.DarkMode;
             InitializeComponent();
         }
 
@@ -109,7 +111,7 @@ namespace FileOrganizer
             bool canFlip = item.Core != CoreFormat.YearOnly && item.Core != CoreFormat.YearQuarterMonths;
             bool canShortMonth = item.Core is CoreFormat.YearMonth or CoreFormat.Daily or CoreFormat.YearQuarterMonths;
 
-            bool isDark = _chkDarkMode?.Checked ?? _settings.DarkMode;
+            bool isDark = _isDarkMode;
             var palette = AppTheme.GetPalette(isDark);
             _btnFlipOrder.Enabled = canFlip;
             _btnFlipOrder.Text = canFlip ? (_isFlipped ? "⇄ Order: Flipped" : "⇄ Order: Standard") : "⇄ Flip (N/A)";
@@ -183,6 +185,12 @@ namespace FileOrganizer
             _lblSample4.Text = $"  📁 {AppConstants.FormatFolderDate(d4, format, prefix, suffix)}";
         }
 
+        private void SetTheme(bool isDark)
+        {
+            _isDarkMode = isDark;
+            ApplyDialogTheme(_isDarkMode);
+        }
+
         private void RestoreDefaults()
         {
             _chkIncludeFolders.Checked = AppConstants.DefaultIncludeTopLevelFolders;
@@ -192,7 +200,7 @@ namespace FileOrganizer
             _chkGenerateCsvLog.Checked = AppConstants.DefaultGenerateCsvLog;
             _chkUse24Hour.Checked = AppConstants.DefaultUse24HourTimestamp;
             _chkAutoLoadExeDir.Checked = AppConstants.DefaultAutoLoadExeDirectoryOnStartup;
-            _chkDarkMode.Checked = AppConstants.DefaultDarkMode;
+            _isDarkMode = AppConstants.DefaultDarkMode;
 
             _cmbFileDateSource.SelectedIndex = (int)AppConstants.DefaultFileDateSource;
             _cmbFolderDateSource.SelectedIndex = (int)AppConstants.DefaultFolderDateSource;
@@ -216,6 +224,7 @@ namespace FileOrganizer
             UpdateOptionsState();
             UpdateLivePreview();
             PreviewLimitChanged();
+            ApplyDialogTheme(_isDarkMode);
         }
 
         private void BtnOK_Click(object? sender, EventArgs e)
@@ -229,7 +238,7 @@ namespace FileOrganizer
             _settings.GenerateCsvLog = _chkGenerateCsvLog.Checked;
             _settings.Use24HourTimestamp = _chkUse24Hour.Checked;
             _settings.AutoLoadExeDirectoryOnStartup = _chkAutoLoadExeDir.Checked;
-            _settings.DarkMode = _chkDarkMode.Checked;
+            _settings.DarkMode = _isDarkMode;
             _settings.FolderFormat = ResolveFolderFormat();
             _settings.FolderPrefix = AppConstants.SanitizeFolderName(_txtPrefix.Text);
             _settings.FolderSuffix = AppConstants.SanitizeFolderName(_txtSuffix.Text);
@@ -238,6 +247,7 @@ namespace FileOrganizer
 
         private void ApplyDialogTheme(bool isDark)
         {
+            _isDarkMode = isDark;
             var palette = AppTheme.GetPalette(isDark);
             this.BackColor = palette.CanvasBg;
             this.ForeColor = palette.TextPrimary;
@@ -252,10 +262,47 @@ namespace FileOrganizer
                     txt.BackColor = palette.InputBg;
                     txt.ForeColor = palette.TextPrimary;
                 }
-                else if (c is Button btn && btn != _btnOK && btn != _btnFlipOrder)
+                else if (c is Button btn && btn != _btnOK && btn != _btnFlipOrder && btn != _btnThemeLight && btn != _btnThemeDark)
                 {
                     btn.BackColor = palette.SecondaryButtonBg;
                     btn.ForeColor = palette.SecondaryButtonText;
+                }
+            }
+
+            // Highlight active theme button
+            if (_btnThemeLight != null && _btnThemeDark != null)
+            {
+                if (!isDark) // Light Mode active
+                {
+                    _btnThemeLight.BackColor = Color.FromArgb(224, 231, 255);
+                    _btnThemeLight.ForeColor = Color.FromArgb(30, 58, 138);
+                    _btnThemeLight.Font = new Font("Segoe UI Emoji", 9F, FontStyle.Bold);
+                    _btnThemeLight.FlatStyle = FlatStyle.Flat;
+                    _btnThemeLight.FlatAppearance.BorderColor = Color.FromArgb(59, 130, 246);
+                    _btnThemeLight.FlatAppearance.BorderSize = 2;
+
+                    _btnThemeDark.BackColor = palette.SecondaryButtonBg;
+                    _btnThemeDark.ForeColor = palette.TextMuted;
+                    _btnThemeDark.Font = new Font("Segoe UI Emoji", 9F, FontStyle.Regular);
+                    _btnThemeDark.FlatStyle = FlatStyle.Flat;
+                    _btnThemeDark.FlatAppearance.BorderColor = palette.SecondaryButtonBorder;
+                    _btnThemeDark.FlatAppearance.BorderSize = 1;
+                }
+                else // Dark Mode active
+                {
+                    _btnThemeDark.BackColor = Color.FromArgb(30, 58, 138);
+                    _btnThemeDark.ForeColor = Color.White;
+                    _btnThemeDark.Font = new Font("Segoe UI Emoji", 9F, FontStyle.Bold);
+                    _btnThemeDark.FlatStyle = FlatStyle.Flat;
+                    _btnThemeDark.FlatAppearance.BorderColor = Color.FromArgb(96, 165, 250);
+                    _btnThemeDark.FlatAppearance.BorderSize = 2;
+
+                    _btnThemeLight.BackColor = palette.SecondaryButtonBg;
+                    _btnThemeLight.ForeColor = palette.TextMuted;
+                    _btnThemeLight.Font = new Font("Segoe UI Emoji", 9F, FontStyle.Regular);
+                    _btnThemeLight.FlatStyle = FlatStyle.Flat;
+                    _btnThemeLight.FlatAppearance.BorderColor = palette.SecondaryButtonBorder;
+                    _btnThemeLight.FlatAppearance.BorderSize = 1;
                 }
             }
 

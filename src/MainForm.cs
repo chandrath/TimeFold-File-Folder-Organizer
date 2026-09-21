@@ -119,10 +119,16 @@ namespace FileOrganizer
                 {
                     this.BeginInvoke(new Action(() =>
                     {
-                        using var tourForm = new WelcomeTourForm(_settings.DarkMode);
+                        using var tourForm = new WelcomeTourForm(_settings.DarkMode, isDark =>
+                        {
+                            _settings.DarkMode = isDark;
+                            ApplyTheme(_settings.DarkMode);
+                        });
                         tourForm.ShowDialog(this);
+                        _settings.DarkMode = tourForm.SelectedDarkMode;
                         _settings.HasSeenWelcomeTour = tourForm.DontShowOnStartup;
                         _settings.SaveToFile();
+                        ApplyTheme(_settings.DarkMode);
                     }));
                 }
             };
@@ -298,13 +304,19 @@ namespace FileOrganizer
 
         private void MenuWelcomeTour_Click(object? sender, EventArgs e)
         {
-            using var tourForm = new WelcomeTourForm(_settings.DarkMode);
+            using var tourForm = new WelcomeTourForm(_settings.DarkMode, isDark =>
+            {
+                _settings.DarkMode = isDark;
+                ApplyTheme(_settings.DarkMode);
+            });
             tourForm.ShowDialog(this);
+            _settings.DarkMode = tourForm.SelectedDarkMode;
             if (tourForm.DontShowOnStartup != _settings.HasSeenWelcomeTour)
             {
                 _settings.HasSeenWelcomeTour = tourForm.DontShowOnStartup;
-                _settings.SaveToFile();
             }
+            _settings.SaveToFile();
+            ApplyTheme(_settings.DarkMode);
         }
 
         private void ResetForm()
