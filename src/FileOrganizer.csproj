@@ -13,7 +13,7 @@
     <PublishReadyToRun>true</PublishReadyToRun>
     <EnableCompressionInSingleFile>true</EnableCompressionInSingleFile>
     <ApplicationIcon>Assets\app.ico</ApplicationIcon>
-    <AssemblyName>FileOrganizer</AssemblyName>
+    <AssemblyName>TimeFold</AssemblyName>
     <RootNamespace>FileOrganizer</RootNamespace>
   </PropertyGroup>
 

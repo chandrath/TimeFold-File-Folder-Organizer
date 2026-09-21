@@ -55,11 +55,12 @@ Do you have folders like **Downloads**, **Screenshots**, **Photos**, or your **D
 
 ## 🚀 Getting Started
 
-### Option 1: Download Pre-built Executable (No Installation Required)
+### Option 1: Download Pre-built Release (Recommended)
 
 1. Go to the [Releases](https://github.com/chandrath/TimeFold-File-Folder-Organizer/releases) page.
-2. Download the latest `TimeFold-win-x64.zip`.
-3. Extract and double-click `TimeFold.exe` — it is completely self-contained with zero runtime dependencies required.
+2. Choose the download that fits your needs:
+   * **⭐ ReadyToRun (`TimeFold-win-x64-ReadyToRun.zip`):** Recommended for everyone. Just extract and double-click `TimeFold.exe` — completely standalone with zero prerequisites.
+   * **💻 Lightweight (`TimeFold-win-x64-RequiresDotNet10.zip`):** Ultra-compact 1.5 MB download for developers who already have the .NET 10 Desktop Runtime installed.
 
 ---
 
@@ -82,7 +83,7 @@ dotnet run
 #### Build Standalone Single-File Executable
 To produce a standalone `.exe` that bundles all runtimes:
 ```bash
-dotnet publish FileOrganizer.csproj -c Release -r win-x64 --self-contained -p:PublishSingleFile=true -p:EnableCompressionInSingleFile=true -o ../publish
+dotnet publish FileOrganizer.csproj -c Release -r win-x64 --self-contained -p:PublishSingleFile=true -p:EnableCompressionInSingleFile=true -p:DebugType=none -o ../publish
 ```
 The compiled single-file `TimeFold.exe` will be generated inside the `publish/` directory.
 
@@ -94,7 +95,7 @@ The compiled single-file `TimeFold.exe` will be generated inside the `publish/` 
 2. **Review Preview:** TimeFold scans the directory and populates the live preview grid.
 3. **Configure Options:** Pick your preferred date format (Month, Day, Quarter, Year), custom prefixes, or 24-hour timestamps in Preferences.
 4. **Click Start Organizing:** Watch progress in real-time as files move into organized folders.
-5. **Open & Enjoy:** Click "Open Output Folder" or review the generated CSV audit log.
+5. **Open & Enjoy:** Click "Open Output Folder" or review the generated CSV audit logs.
 
 ---
 

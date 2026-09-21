@@ -40,19 +40,37 @@ jobs:
           }
           echo "tag=$tag" >> $env:GITHUB_OUTPUT
 
-      - name: Build & Publish Standalone Windows x64
+      - name: Build 1 - ReadyToRun (Self-Contained / Standalone)
         shell: pwsh
         run: |
-          dotnet publish src/FileOrganizer.csproj -c Release -r win-x64 --self-contained -p:PublishSingleFile=true -p:EnableCompressionInSingleFile=true -o ./publish_win64
+          dotnet publish src/FileOrganizer.csproj -c Release -r win-x64 --self-contained -p:PublishSingleFile=true -p:EnableCompressionInSingleFile=true -p:DebugType=none -o ./publish_ready_to_run
 
-      - name: Create Release Archive
+      - name: Build 2 - RequiresDotNet10 (Framework-Dependent / Lightweight)
+        shell: pwsh
+        run: |
+          dotnet publish src/FileOrganizer.csproj -c Release -r win-x64 --no-self-contained -p:PublishSingleFile=true -p:DebugType=none -o ./publish_requires_dotnet
+
+      - name: Create Release Archives
         shell: pwsh
         run: |
           $tag = "${{ steps.get_version.outputs.tag }}"
-          $zipName = "TimeFold-${tag}-win-x64.zip"
-          Compress-Archive -Path ./publish_win64/* -DestinationPath "./$zipName"
-          $hash = (Get-FileHash -Path "./$zipName" -Algorithm SHA256).Hash
-          "$hash  $zipName" | Out-File -FilePath "./checksums.txt" -Encoding utf8
+          
+          # Clean any PDBs
+          Remove-Item -Path ./publish_ready_to_run/*.pdb -Force -ErrorAction SilentlyContinue
+          Remove-Item -Path ./publish_requires_dotnet/*.pdb -Force -ErrorAction SilentlyContinue
+
+          # 1. Package ReadyToRun edition
+          $rtrZip = "TimeFold-${tag}-win-x64-ReadyToRun.zip"
+          Compress-Archive -Path ./publish_ready_to_run/* -DestinationPath "./$rtrZip"
+
+          # 2. Package RequiresDotNet10 edition
+          $reqZip = "TimeFold-${tag}-win-x64-RequiresDotNet10.zip"
+          Compress-Archive -Path ./publish_requires_dotnet/* -DestinationPath "./$reqZip"
+
+          # Generate Checksums
+          $rtrHash = (Get-FileHash -Path "./$rtrZip" -Algorithm SHA256).Hash
+          $reqHash = (Get-FileHash -Path "./$reqZip" -Algorithm SHA256).Hash
+          "$rtrHash  $rtrZip`n$reqHash  $reqZip" | Out-File -FilePath "./checksums.txt" -Encoding utf8
 
       - name: Publish GitHub Release
         uses: softprops/action-gh-release@v2
@@ -62,6 +80,12 @@ jobs:
           draft: false
           prerelease: false
           generate_release_notes: true
+          body: |
+            ### 📦 Which file should I download?
+            * **⭐ If in doubt, choose:** **`TimeFold-${{ steps.get_version.outputs.tag }}-win-x64-ReadyToRun.zip`**  
+              *(Recommended for everyone — just extract and double-click to run. No installation or setup needed).*
+            * **💻 For Developers & Power Users:** **`TimeFold-${{ steps.get_version.outputs.tag }}-win-x64-RequiresDotNet10.zip`**  
+              *(Tiny 1.5MB download. Only works if you already have the .NET 10 Desktop Runtime installed on your PC).*
           files: |
             TimeFold-*.zip
             checksums.txt
