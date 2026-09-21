@@ -146,7 +146,7 @@ namespace FileOrganizer.Services
                 throw new Exception($"Error scanning files: {ex.Message}", ex);
             }
 
-            return files.OrderBy(f => f.ModifiedDate).ToList();
+            return files.OrderByDescending(f => f.ModifiedDate).ToList();
         }
 
         public Dictionary<string, List<FileItem>> GroupByMonthYear(List<FileItem> files)

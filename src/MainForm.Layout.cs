@@ -291,12 +291,10 @@ namespace FileOrganizer
                 );
             };
 
-            _pnlCenterSection.Controls.Add(_pnlEmptyState);
-            _pnlCenterSection.Controls.Add(_lstFiles);
-            _pnlCenterSection.Controls.Add(_pnlLoadMore);
-            _pnlCenterSection.Controls.Add(_pnlTimestampWarning);
-            _pnlCenterSection.Controls.Add(_pnlConflicts);
-            _pnlCenterSection.Controls.Add(pnlPreviewHeader);
+            _pnlCenterSection.Controls.AddRange([_pnlEmptyState, _lstFiles, _pnlLoadMore, _pnlTimestampWarning, _pnlConflicts, pnlPreviewHeader]);
+            _pnlLoadMore.SendToBack();
+            _lstFiles.BringToFront();
+            _pnlEmptyState.BringToFront();
 
             _pnlMain.Controls.Add(_pnlCenterSection);
             _pnlMain.Controls.Add(_pnlTopSection);

@@ -130,6 +130,9 @@ namespace FileOrganizer
             {
                 _currentPreviewLimit = _settings.MaxPreviewItems > 0 ? _settings.MaxPreviewItems : AppConstants.DefaultMaxPreviewItems;
                 _filesToOrganize = _organizerService.ScanFiles(_settings.IncludeTopLevelFolders, _settings.IgnoreSystemFiles, _settings.FileDateSource, _settings.FolderDateSource);
+                _sortColumn = 2;
+                _sortAscending = false;
+                UpdateColumnHeaderSortIndicators();
                 UpdateFileList();
                 UpdateSummary();
                 CheckConflicts();
@@ -141,8 +144,8 @@ namespace FileOrganizer
             }
         }
 
-        private int _sortColumn = -1;
-        private bool _sortAscending = true;
+        private int _sortColumn = 2;
+        private bool _sortAscending = false;
         private static readonly string[] ColumnBaseHeaders = { "File Name", "Type", "Modified Date", "Created Date", "Target Folder", "Size" };
 
         private void UpdateFileList()
@@ -195,43 +198,37 @@ namespace FileOrganizer
                 {
                     _btnLoadMore.Text = $"➕ Load 1,000 More ({remaining:N0} remaining)";
                     _pnlLoadMore.Visible = true;
+                    _pnlLoadMore.SendToBack();
+                    _lstFiles.BringToFront();
                 }
             }
-            else if (_pnlLoadMore != null)
-            {
-                _pnlLoadMore.Visible = false;
-            }
+            else if (_pnlLoadMore != null) _pnlLoadMore.Visible = false;
 
             UpdatePreviewHeaderCount(displayedFiles.Count, total);
-
-            if (_sortColumn >= 0)
-            {
-                _lstFiles.ListViewItemSorter = new FileItemComparer(_sortColumn, _sortAscending);
-                _lstFiles.Sort();
-            }
         }
 
         private void LstFiles_ColumnClick(object? sender, ColumnClickEventArgs e)
         {
-            if (_sortColumn == e.Column)
-            {
-                _sortAscending = !_sortAscending;
-            }
+            if (_sortColumn == e.Column) _sortAscending = !_sortAscending;
             else
             {
                 _sortColumn = e.Column;
-                _sortAscending = true;
+                _sortAscending = (e.Column != 2 && e.Column != 3 && e.Column != 5);
             }
 
+            UpdateColumnHeaderSortIndicators();
+            FileItemComparer.Sort(_filesToOrganize, _sortColumn, _sortAscending);
+            UpdateFileList();
+        }
+
+        private void UpdateColumnHeaderSortIndicators()
+        {
             for (int i = 0; i < _lstFiles.Columns.Count && i < ColumnBaseHeaders.Length; i++)
             {
                 _lstFiles.Columns[i].Text = (i == _sortColumn)
                     ? $"{ColumnBaseHeaders[i]} {(_sortAscending ? "▲" : "▼")}"
                     : ColumnBaseHeaders[i];
             }
-
-            _lstFiles.ListViewItemSorter = new FileItemComparer(_sortColumn, _sortAscending);
-            _lstFiles.Sort();
         }
 
         private void UpdateSummary()

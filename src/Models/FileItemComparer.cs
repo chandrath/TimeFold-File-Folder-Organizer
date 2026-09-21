@@ -9,6 +9,25 @@ namespace FileOrganizer.Models
         private readonly int _column;
         private readonly bool _ascending;
 
+        public static void Sort(System.Collections.Generic.List<FileItem> list, int column, bool ascending)
+        {
+            if (list == null || list.Count <= 1) return;
+
+            Comparison<FileItem> comparison = column switch
+            {
+                0 => (x, y) => string.Compare(x.Name, y.Name, StringComparison.CurrentCultureIgnoreCase),
+                1 => CompareType,
+                2 => (x, y) => DateTime.Compare(x.ModifiedDate, y.ModifiedDate),
+                3 => (x, y) => DateTime.Compare(x.CreatedDate, y.CreatedDate),
+                4 => (x, y) => string.Compare(x.TargetFolder, y.TargetFolder, StringComparison.CurrentCultureIgnoreCase),
+                5 => CompareSize,
+                _ => (x, y) => DateTime.Compare(x.ModifiedDate, y.ModifiedDate)
+            };
+
+            if (ascending) list.Sort(comparison);
+            else list.Sort((x, y) => comparison(y, x));
+        }
+
         public FileItemComparer(int column, bool ascending)
         {
             _column = column;
