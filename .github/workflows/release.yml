@@ -1,0 +1,67 @@
+name: Release TimeFold
+
+on:
+  push:
+    tags:
+      - 'v*'
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'Release version tag (e.g. v1.0.0)'
+        required: false
+        default: 'v1.0.0'
+
+permissions:
+  contents: write
+
+jobs:
+  build-and-release:
+    runs-on: windows-latest
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Setup .NET 10
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '10.0.x'
+
+      - name: Determine Version Tag
+        id: get_version
+        shell: pwsh
+        run: |
+          if ($env:GITHUB_REF_TYPE -eq 'tag') {
+            $tag = $env:GITHUB_REF_NAME
+          } elseif ($env:INPUT_VERSION) {
+            $tag = $env:INPUT_VERSION
+          } else {
+            $tag = "v1.0.0"
+          }
+          echo "tag=$tag" >> $env:GITHUB_OUTPUT
+
+      - name: Build & Publish Standalone Windows x64
+        shell: pwsh
+        run: |
+          dotnet publish src/FileOrganizer.csproj -c Release -r win-x64 --self-contained -p:PublishSingleFile=true -p:EnableCompressionInSingleFile=true -o ./publish_win64
+
+      - name: Create Release Archive
+        shell: pwsh
+        run: |
+          $tag = "${{ steps.get_version.outputs.tag }}"
+          $zipName = "TimeFold-${tag}-win-x64.zip"
+          Compress-Archive -Path ./publish_win64/* -DestinationPath "./$zipName"
+          $hash = (Get-FileHash -Path "./$zipName" -Algorithm SHA256).Hash
+          "$hash  $zipName" | Out-File -FilePath "./checksums.txt" -Encoding utf8
+
+      - name: Publish GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ steps.get_version.outputs.tag }}
+          name: "TimeFold ${{ steps.get_version.outputs.tag }}"
+          draft: false
+          prerelease: false
+          generate_release_notes: true
+          files: |
+            TimeFold-*.zip
+            checksums.txt

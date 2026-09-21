@@ -72,6 +72,7 @@ artifacts/
 *.tmp_proj
 *_wpftmp.csproj
 *.log
+build_log.txt
 *.vspscc
 *.vssscc
 .builds
