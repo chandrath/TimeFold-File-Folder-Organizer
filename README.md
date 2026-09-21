@@ -16,6 +16,10 @@
   <img src="https://img.shields.io/badge/Release-Standalone%20Single%20File-success" alt="Single File" />
 </p>
 
+<p align="center">
+  <img src="docs/assets/timefold-banner.jpg" alt="TimeFold: File and Folder Organizer Showcase" width="100%" />
+</p>
+
 ---
 
 ## 😫 The Problem TimeFold Solves
