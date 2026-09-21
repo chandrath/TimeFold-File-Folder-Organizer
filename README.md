@@ -1,4 +1,8 @@
-# TimeFold: File & Folder Organizer
+<p align="center">
+  <img src="src/Assets/app.png" alt="TimeFold Logo" width="128" />
+</p>
+
+<h1 align="center">TimeFold: File & Folder Organizer</h1>
 
 <p align="center">
   <strong>Effortlessly organize chaotic folders into a clean, date-based timeline in just one click.</strong>
