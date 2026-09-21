@@ -15,8 +15,25 @@ namespace FileOrganizer.Config
         // Application Metadata (SSoT)
         public const string AppName = "TimeFold: File & Folder Organizer";
         public const string ShortAppName = "TimeFold";
-        public const string AppVersion = "1.0.0.0";
-        public const string BuildNumber = "20260920";
+        public const string AppVersion = "1.0.0";
+        private static readonly Lazy<string> _lazyBuildNumber = new(() =>
+        {
+            try
+            {
+                var attrs = typeof(AppConstants).Assembly.GetCustomAttributes(typeof(System.Reflection.AssemblyMetadataAttribute), false);
+                foreach (System.Reflection.AssemblyMetadataAttribute attr in attrs)
+                {
+                    if (attr.Key == "BuildTimestamp" && !string.IsNullOrWhiteSpace(attr.Value))
+                    {
+                        return attr.Value;
+                    }
+                }
+            }
+            catch { }
+            return "20260921";
+        });
+
+        public static string BuildNumber => _lazyBuildNumber.Value;
         public const string AppTagline = "Effortlessly organize files & folders into a clean date-based timeline";
         public const string AppDescription = AppTagline;
         public const string Author = "Shree";

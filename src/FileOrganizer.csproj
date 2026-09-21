@@ -15,11 +15,19 @@
     <ApplicationIcon>Assets\app.ico</ApplicationIcon>
     <AssemblyName>TimeFold</AssemblyName>
     <RootNamespace>FileOrganizer</RootNamespace>
+    <Version>1.0.0</Version>
   </PropertyGroup>
 
   <ItemGroup>
     <EmbeddedResource Include="Assets\app.ico" />
     <EmbeddedResource Include="Assets\app.png" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <AssemblyAttribute Include="System.Reflection.AssemblyMetadataAttribute">
+      <_Parameter1>BuildTimestamp</_Parameter1>
+      <_Parameter2>$([System.DateTime]::UtcNow.AddHours(5.5).ToString("yyyyMMdd.HHmmss"))</_Parameter2>
+    </AssemblyAttribute>
   </ItemGroup>
 
 </Project>

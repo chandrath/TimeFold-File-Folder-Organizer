@@ -48,7 +48,7 @@ jobs:
       - name: Build 2 - RequiresDotNet10 (Framework-Dependent / Lightweight)
         shell: pwsh
         run: |
-          dotnet publish src/FileOrganizer.csproj -c Release -r win-x64 --no-self-contained -p:PublishSingleFile=true -p:DebugType=none -o ./publish_requires_dotnet
+          dotnet publish src/FileOrganizer.csproj -c Release -r win-x64 --no-self-contained -p:PublishSingleFile=true -p:EnableCompressionInSingleFile=false -p:DebugType=none -o ./publish_requires_dotnet
 
       - name: Create Release Archives
         shell: pwsh
@@ -59,11 +59,13 @@ jobs:
           Remove-Item -Path ./publish_ready_to_run/*.pdb -Force -ErrorAction SilentlyContinue
           Remove-Item -Path ./publish_requires_dotnet/*.pdb -Force -ErrorAction SilentlyContinue
 
-          # 1. Package ReadyToRun edition
+          # 1. Package ReadyToRun edition (Rename exe with version and flavor)
+          Rename-Item -Path ./publish_ready_to_run/TimeFold.exe -NewName "TimeFold-${tag}-win-x64-ReadyToRun.exe"
           $rtrZip = "TimeFold-${tag}-win-x64-ReadyToRun.zip"
           Compress-Archive -Path ./publish_ready_to_run/* -DestinationPath "./$rtrZip"
 
-          # 2. Package RequiresDotNet10 edition
+          # 2. Package RequiresDotNet10 edition (Rename exe with version and flavor)
+          Rename-Item -Path ./publish_requires_dotnet/TimeFold.exe -NewName "TimeFold-${tag}-win-x64-RequiresDotNet10.exe"
           $reqZip = "TimeFold-${tag}-win-x64-RequiresDotNet10.zip"
           Compress-Archive -Path ./publish_requires_dotnet/* -DestinationPath "./$reqZip"
 
@@ -83,9 +85,9 @@ jobs:
           body: |
             ### 📦 Which file should I download?
             * **⭐ If in doubt, choose:** **`TimeFold-${{ steps.get_version.outputs.tag }}-win-x64-ReadyToRun.zip`**  
-              *(Recommended for everyone — just extract and double-click to run. No installation or setup needed).*
+              *(Recommended for everyone — extracts to `TimeFold-${{ steps.get_version.outputs.tag }}-win-x64-ReadyToRun.exe`. Double-click to run. No installation or setup needed).*
             * **💻 For Developers & Power Users:** **`TimeFold-${{ steps.get_version.outputs.tag }}-win-x64-RequiresDotNet10.zip`**  
-              *(Tiny 1.5MB download. Only works if you already have the .NET 10 Desktop Runtime installed on your PC).*
+              *(Tiny 1.5MB download — extracts to `TimeFold-${{ steps.get_version.outputs.tag }}-win-x64-RequiresDotNet10.exe`. Only works if you already have the .NET 10 Desktop Runtime installed on your PC).*
           files: |
             TimeFold-*.zip
             checksums.txt
