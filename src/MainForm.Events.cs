@@ -14,20 +14,10 @@ namespace FileOrganizer
 {
     public partial class MainForm
     {
-
-
         private void BtnBrowseSource_Click(object? sender, EventArgs e)
         {
-            using var dialog = new FolderBrowserDialog
-            {
-                Description = "Select folder to organize",
-                ShowNewFolderButton = false
-            };
-
-            if (dialog.ShowDialog() == DialogResult.OK)
-            {
-                SetSourceFolder(dialog.SelectedPath);
-            }
+            using var dialog = new FolderBrowserDialog { Description = "Select folder to organize", ShowNewFolderButton = false };
+            if (dialog.ShowDialog() == DialogResult.OK) SetSourceFolder(dialog.SelectedPath);
         }
 
         private void BtnUseCurrentFolder_Click(object? sender, EventArgs e) => SetSourceFolder(_executableDirectory);
@@ -49,17 +39,8 @@ namespace FileOrganizer
 
         private void BtnBrowseOutput_Click(object? sender, EventArgs e)
         {
-            using var dialog = new FolderBrowserDialog
-            {
-                Description = "Select output folder (where Sorted folder will be created)",
-                ShowNewFolderButton = true
-            };
-
-            if (dialog.ShowDialog() == DialogResult.OK)
-            {
-                _customOutputFolder = dialog.SelectedPath;
-                UpdateOutputFolder();
-            }
+            using var dialog = new FolderBrowserDialog { Description = "Select output folder (where Sorted folder will be created)", ShowNewFolderButton = true };
+            if (dialog.ShowDialog() == DialogResult.OK) { _customOutputFolder = dialog.SelectedPath; UpdateOutputFolder(); }
         }
 
         private void ChkUseSourceAsOutput_CheckedChanged(object? sender, EventArgs e) => UpdateOutputFolder();
@@ -75,25 +56,17 @@ namespace FileOrganizer
         private void PnlSourceDrop_DragEnter(object? sender, DragEventArgs e)
         {
             var palette = AppTheme.GetPalette(_settings.DarkMode);
-            if (e.Data != null && e.Data.GetDataPresent(DataFormats.FileDrop))
+            if (e.Data?.GetDataPresent(DataFormats.FileDrop) == true && ((string[]?)e.Data.GetData(DataFormats.FileDrop))?.Length >= 1)
             {
-                var files = (string[]?)e.Data.GetData(DataFormats.FileDrop);
-                if (files != null && files.Length >= 1)
-                {
-                    e.Effect = DragDropEffects.Copy;
-                    _pnlSourceDrop.BackColor = palette.DropZoneHoverBg;
-                    return;
-                }
+                e.Effect = DragDropEffects.Copy;
+                _pnlSourceDrop.BackColor = palette.DropZoneHoverBg;
+                return;
             }
             e.Effect = DragDropEffects.None;
             _pnlSourceDrop.BackColor = palette.DangerBg;
         }
 
-        private void PnlSourceDrop_DragLeave(object? sender, EventArgs e)
-        {
-            var palette = AppTheme.GetPalette(_settings.DarkMode);
-            _pnlSourceDrop.BackColor = palette.DropZoneBg;
-        }
+        private void PnlSourceDrop_DragLeave(object? sender, EventArgs e) => _pnlSourceDrop.BackColor = AppTheme.GetPalette(_settings.DarkMode).DropZoneBg;
 
         private void PnlSourceDrop_DragDrop(object? sender, DragEventArgs e)
         {
@@ -146,7 +119,7 @@ namespace FileOrganizer
 
         private int _sortColumn = 2;
         private bool _sortAscending = false;
-        private static readonly string[] ColumnBaseHeaders = { "File Name", "Type", "Modified Date", "Created Date", "🎯 Target Folder", "Size" };
+        private static readonly string[] ColumnBaseHeaders = { "File Name", "Type", "Modified Date", "Created Date", "📁 Target Folder", "Size" };
 
         private void UpdateFileList()
         {
@@ -225,10 +198,47 @@ namespace FileOrganizer
         private void UpdateColumnHeaderSortIndicators()
         {
             for (int i = 0; i < _lstFiles.Columns.Count && i < ColumnBaseHeaders.Length; i++)
+                _lstFiles.Columns[i].Text = (i == _sortColumn) ? $"{ColumnBaseHeaders[i]} {(_sortAscending ? "▲" : "▼")}" : ColumnBaseHeaders[i];
+        }
+
+        private bool _isAdjustingColumns;
+
+        private void AutoFitColumns()
+        {
+            if (_isAdjustingColumns || _lstFiles == null || _lstFiles.Columns.Count < 6 || _filesToOrganize.Count == 0) return;
+            _isAdjustingColumns = true;
+            _lstFiles.BeginUpdate();
+            try
             {
-                _lstFiles.Columns[i].Text = (i == _sortColumn)
-                    ? $"{ColumnBaseHeaders[i]} {(_sortAscending ? "▲" : "▼")}"
-                    : ColumnBaseHeaders[i];
+                var boldFont = GetBoldListFont();
+                _lstFiles.Columns[1].AutoResize(ColumnHeaderAutoResizeStyle.ColumnContent);
+                _lstFiles.Columns[1].Width = Math.Max(_lstFiles.Columns[1].Width + 8, TextRenderer.MeasureText(ColumnBaseHeaders[1], _lstFiles.Font).Width + 14);
+
+                _lstFiles.Columns[2].AutoResize(ColumnHeaderAutoResizeStyle.ColumnContent);
+                _lstFiles.Columns[2].Width = Math.Max(_lstFiles.Columns[2].Width + 10, TextRenderer.MeasureText(ColumnBaseHeaders[2] + " ▼", _lstFiles.Font).Width + 14);
+
+                _lstFiles.Columns[3].AutoResize(ColumnHeaderAutoResizeStyle.ColumnContent);
+                _lstFiles.Columns[3].Width = Math.Max(_lstFiles.Columns[3].Width + 10, TextRenderer.MeasureText(ColumnBaseHeaders[3], _lstFiles.Font).Width + 14);
+
+                int maxTargetW = TextRenderer.MeasureText(ColumnBaseHeaders[4], _lstFiles.Font).Width + 16;
+                foreach (var f in _filesToOrganize)
+                {
+                    int w = TextRenderer.MeasureText($"📁 {f.TargetFolder}", boldFont).Width + 16;
+                    if (w > maxTargetW) maxTargetW = w;
+                }
+                _lstFiles.Columns[4].Width = Math.Max(maxTargetW, 90);
+
+                _lstFiles.Columns[5].AutoResize(ColumnHeaderAutoResizeStyle.ColumnContent);
+                _lstFiles.Columns[5].Width = Math.Max(_lstFiles.Columns[5].Width + 8, TextRenderer.MeasureText(ColumnBaseHeaders[5], _lstFiles.Font).Width + 14);
+
+                int otherW = _lstFiles.Columns[1].Width + _lstFiles.Columns[2].Width + _lstFiles.Columns[3].Width + _lstFiles.Columns[4].Width + _lstFiles.Columns[5].Width;
+                int availW = _lstFiles.ClientSize.Width - SystemInformation.VerticalScrollBarWidth;
+                _lstFiles.Columns[0].Width = Math.Max(200, availW - otherW);
+            }
+            finally
+            {
+                _lstFiles.EndUpdate();
+                _isAdjustingColumns = false;
             }
         }
 
@@ -260,6 +270,11 @@ namespace FileOrganizer
                 ? $"✔ Ready: {total:N0} items ({fileCount:N0} files, {folderCount:N0} folders) → {grouped.Count:N0} target {label}"
                 : $"✔ Ready: {fileCount:N0} file(s) → {grouped.Count:N0} target {label}";
             _btnStart.Enabled = true;
+            if (_shouldAutoFitColumns)
+            {
+                _shouldAutoFitColumns = false;
+                AutoFitColumns();
+            }
         }
 
         private void CheckConflicts()
@@ -469,19 +484,9 @@ namespace FileOrganizer
         private void BtnOpenFolder_Click(object? sender, EventArgs e)
         {
             var targetPath = _lastResult?.SortedFolderPath;
-            if (!string.IsNullOrWhiteSpace(targetPath) && Directory.Exists(targetPath))
-            {
-                Process.Start("explorer.exe", targetPath);
-                return;
-            }
-
+            if (!string.IsNullOrWhiteSpace(targetPath) && Directory.Exists(targetPath)) { Process.Start("explorer.exe", targetPath); return; }
             var fallback = _organizerService?.OutputDirectory;
-            if (!string.IsNullOrWhiteSpace(fallback) && Directory.Exists(fallback))
-            {
-                Process.Start("explorer.exe", fallback);
-                return;
-            }
-
+            if (!string.IsNullOrWhiteSpace(fallback) && Directory.Exists(fallback)) { Process.Start("explorer.exe", fallback); return; }
             MessageBox.Show("Output folder is not available yet.", "Folder Unavailable", MessageBoxButtons.OK, MessageBoxIcon.Information);
         }
 

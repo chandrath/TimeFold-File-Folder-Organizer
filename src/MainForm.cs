@@ -48,6 +48,7 @@ namespace FileOrganizer
         private ListView _lstFiles = null!;
         private ContextMenuStrip _ctxFileMenu = null!;
         private ModernButton _btnRefresh = null!;
+        private bool _shouldAutoFitColumns;
         private ModernButton _lblFormatBadge = null!;
         private ModernButton _btnModeSelector = null!;
         private Panel _pnlEmptyState = null!;
@@ -144,7 +145,7 @@ namespace FileOrganizer
             _toolTip.SetToolTip(_btnUseCurrentFolder, "Use the folder where this application is currently located");
             _toolTip.SetToolTip(_txtSourceFolder, "Selected source folder to organize");
             _toolTip.SetToolTip(_pnlSourceDrop, "Drag and drop any folder or files here to inspect (or click Browse)");
-            _toolTip.SetToolTip(_lblDropHint, "Drag and drop any folder or files here to inspect (or click Browse)");
+            _toolTip.SetToolTip(_lblDropHint, _toolTip.GetToolTip(_pnlSourceDrop));
             _toolTip.SetToolTip(_chkUseSourceAsOutput, "Create the sorted date folders directly inside the source folder");
             _toolTip.SetToolTip(_chkIncludeFolders, "When checked, moves loose folders as units alongside files. When unchecked, folders are skipped");
             _toolTip.SetToolTip(_btnBrowseOutput, "Choose a different destination folder for the sorted date folders");
@@ -228,6 +229,7 @@ namespace FileOrganizer
                     _settings.CategoryPrefix,
                     _settings.CategorySuffix,
                     _settings.KeepSubtitleCompanionsTogether);
+                _shouldAutoFitColumns = true;
                 UpdateOutputFolder();
                 LoadPreview();
             }

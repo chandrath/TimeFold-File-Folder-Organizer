@@ -20,8 +20,10 @@ namespace FileOrganizer
         private ToolStripMenuItem _menuItemChangeCategory = null!;
         private ToolStripMenuItem _menuItemRename = null!;
         private ToolStripMenuItem _menuItemDelete = null!;
+        private ToolStripMenuItem _menuItemAutoFit = null!;
         private ToolStripSeparator _sepTargetFolder = null!;
         private ToolStripSeparator _sepFileOps = null!;
+        private ToolStripSeparator _sepAutoFit = null!;
         private Point _lastRightClickPoint;
 
         private void InitializeContextMenu()
@@ -36,12 +38,16 @@ namespace FileOrganizer
             _menuItemChangeCategory = new ToolStripMenuItem("🔀 Remap all files...", null, (s, e) => ChangeCategoryForSelectedExtension());
             _menuItemRename = new ToolStripMenuItem("✏ Rename File...", null, (s, e) => RenameSelectedFile());
             _menuItemDelete = new ToolStripMenuItem("🗑 Delete (Recycle Bin)", null, (s, e) => DeleteSelectedFile());
+            _menuItemAutoFit = new ToolStripMenuItem("↔ Auto-fit All Columns", null, (s, e) => AutoFitColumns());
 
             _sepTargetFolder = new ToolStripSeparator();
             _sepFileOps = new ToolStripSeparator();
+            _sepAutoFit = new ToolStripSeparator();
 
             _ctxFileMenu.Items.AddRange(new ToolStripItem[]
             {
+                _menuItemAutoFit,
+                _sepAutoFit,
                 _menuItemRenameCategory,
                 _menuItemResetCategoryName,
                 _menuItemChangeCategory,
@@ -67,8 +73,9 @@ namespace FileOrganizer
                 var hit = _lstFiles.HitTest(_lastRightClickPoint);
                 if (hit.Item == null)
                 {
-                    // Right clicked on empty space - cancel context menu
-                    e.Cancel = true;
+                    if (_filesToOrganize.Count == 0) { e.Cancel = true; return; }
+                    foreach (ToolStripItem it in _ctxFileMenu.Items) it.Visible = false;
+                    _menuItemAutoFit.Visible = true;
                     return;
                 }
 
@@ -139,6 +146,8 @@ namespace FileOrganizer
                         _menuItemChangeCategory.Text = $"🔀 Remap all {selItem!.Extension.ToLowerInvariant()} files...";
                     }
                 }
+                _sepAutoFit.Visible = true;
+                _menuItemAutoFit.Visible = true;
             };
 
             _lstFiles.ContextMenuStrip = _ctxFileMenu;
