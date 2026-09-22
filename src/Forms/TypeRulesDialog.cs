@@ -66,11 +66,11 @@ namespace FileOrganizer.Forms
             _txtSearch.TextChanged += (s, e) => LoadRulesList();
 
             var lblPre = new Label { Text = "Prefix:", AutoSize = true, Location = new Point(440, 7) };
-            _txtPrefix = new TextBox { Text = _settings.CategoryPrefix, Location = new Point(485, 4), Width = 70, PlaceholderText = "e.g. Cat_" };
+            _txtPrefix = new TextBox { Text = _settings.CategoryPrefix, Location = new Point(485, 4), Width = 70, MaxLength = AppConstants.MaxPrefixSuffixLength, PlaceholderText = "e.g. Cat_" };
             _txtPrefix.TextChanged += OnPrefixSuffixChanged;
 
             var lblSuf = new Label { Text = "Suffix:", AutoSize = true, Location = new Point(568, 7) };
-            _txtSuffix = new TextBox { Text = _settings.CategorySuffix, Location = new Point(612, 4), Width = 70, PlaceholderText = "e.g. _Files" };
+            _txtSuffix = new TextBox { Text = _settings.CategorySuffix, Location = new Point(612, 4), Width = 70, MaxLength = AppConstants.MaxPrefixSuffixLength, PlaceholderText = "e.g. _Files" };
             _txtSuffix.TextChanged += OnPrefixSuffixChanged;
 
             pnlSearch.Controls.AddRange(new Control[] { lblSearch, _txtSearch, lblPre, _txtPrefix, lblSuf, _txtSuffix });
@@ -178,8 +178,8 @@ namespace FileOrganizer.Forms
 
         private void OnPrefixSuffixChanged(object? sender, EventArgs e)
         {
-            _settings.CategoryPrefix = _txtPrefix.Text;
-            _settings.CategorySuffix = _txtSuffix.Text;
+            _settings.CategoryPrefix = AppConstants.SanitizeFolderName(_txtPrefix.Text);
+            _settings.CategorySuffix = AppConstants.SanitizeFolderName(_txtSuffix.Text);
             _settings.SaveToFile();
         }
 

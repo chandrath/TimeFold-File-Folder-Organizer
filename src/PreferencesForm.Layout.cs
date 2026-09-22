@@ -188,10 +188,10 @@ namespace FileOrganizer
             var lblSuffix = new Label { Text = "Folder Suffix:", Location = new Point(leftMargin + halfWidth + 16, currentY), AutoSize = true, Font = new Font("Segoe UI", 8.5F) };
             currentY += 18;
 
-            _txtPrefix = new TextBox { Location = new Point(leftMargin, currentY), Width = halfWidth, Font = new Font("Segoe UI", 9F), PlaceholderText = "e.g. Photos_ or Project_", Text = _settings.FolderPrefix };
+            _txtPrefix = new TextBox { Location = new Point(leftMargin, currentY), Width = halfWidth, Font = new Font("Segoe UI", 9F), MaxLength = AppConstants.MaxPrefixSuffixLength, PlaceholderText = "e.g. Photos_ or Project_", Text = _settings.FolderPrefix };
             _txtPrefix.TextChanged += (s, e) => UpdateLivePreview();
 
-            _txtSuffix = new TextBox { Location = new Point(leftMargin + halfWidth + 16, currentY), Width = halfWidth, Font = new Font("Segoe UI", 9F), PlaceholderText = "e.g. _Archive or _Sorted", Text = _settings.FolderSuffix };
+            _txtSuffix = new TextBox { Location = new Point(leftMargin + halfWidth + 16, currentY), Width = halfWidth, Font = new Font("Segoe UI", 9F), MaxLength = AppConstants.MaxPrefixSuffixLength, PlaceholderText = "e.g. _Archive or _Sorted", Text = _settings.FolderSuffix };
             _txtSuffix.TextChanged += (s, e) => UpdateLivePreview();
             currentY += 32;
 

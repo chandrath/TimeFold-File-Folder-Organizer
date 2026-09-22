@@ -27,9 +27,11 @@ namespace FileOrganizer.Services
             string GetFormattedCategory()
             {
                 string baseCat = item.IsDirectory ? AppConstants.DefaultGroupedFolderName : FileTypeService.Instance.GetCategory(item.Extension);
-                if (string.IsNullOrWhiteSpace(categoryPrefix) && string.IsNullOrWhiteSpace(categorySuffix))
+                string cleanPre = AppConstants.SanitizeFolderName(categoryPrefix);
+                string cleanSuf = AppConstants.SanitizeFolderName(categorySuffix);
+                if (string.IsNullOrWhiteSpace(cleanPre) && string.IsNullOrWhiteSpace(cleanSuf))
                     return baseCat;
-                return $"{categoryPrefix}{baseCat}{categorySuffix}".Trim();
+                return $"{cleanPre}{baseCat}{cleanSuf}".Trim();
             }
 
             switch (mode)

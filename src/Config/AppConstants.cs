@@ -129,6 +129,7 @@ namespace FileOrganizer.Config
         public const string DefaultFolderSuffix = "";
         public const string DefaultCategoryPrefix = "";
         public const string DefaultCategorySuffix = "";
+        public const int MaxPrefixSuffixLength = 30;
         public const bool DefaultKeepHtmlCompanionsTogether = true;
         public const bool DefaultKeepSubtitleCompanionsTogether = true;
         public const DateSource DefaultFileDateSource = DateSource.Modified;
@@ -202,15 +203,19 @@ namespace FileOrganizer.Config
         public static readonly Color ColorTextMuted = Color.FromArgb(100, 116, 139);      // #64748B Slate 500
         public static readonly Color ColorBorder = Color.FromArgb(226, 232, 240);         // #E2E8F0 Border
 
-        public static string SanitizeFolderName(string input)
+        public static string SanitizeFolderName(string input, int maxLength = MaxPrefixSuffixLength)
         {
             if (string.IsNullOrEmpty(input)) return string.Empty;
             char[] invalidChars = Path.GetInvalidFileNameChars();
-            var sanitized = new System.Text.StringBuilder(input.Length);
+            var sanitized = new System.Text.StringBuilder(Math.Min(input.Length, maxLength));
             foreach (char c in input)
             {
                 if (Array.IndexOf(invalidChars, c) < 0)
+                {
                     sanitized.Append(c);
+                    if (sanitized.Length >= maxLength)
+                        break;
+                }
             }
             return sanitized.ToString();
         }
