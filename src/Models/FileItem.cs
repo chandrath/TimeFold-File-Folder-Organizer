@@ -19,6 +19,7 @@ namespace FileOrganizer.Models
         public string OriginalName { get; set; } = string.Empty;
         public string ErrorMessage { get; set; } = string.Empty;
 
+        public string Extension => Path.GetExtension(Name);
         public string TypeDisplay => IsDirectory ? "Folder" : (string.IsNullOrEmpty(Path.GetExtension(Name)) ? "File" : Path.GetExtension(Name).TrimStart('.').ToUpperInvariant());
     }
 }

@@ -220,6 +220,23 @@ namespace FileOrganizer
             };
             _lblFormatBadge.Click += (s, e) => MenuPreferences_Click(s, e);
 
+            _btnModeSelector = new ModernButton
+            {
+                Text = GetModeSelectorText(),
+                Font = new Font("Segoe UI Emoji", 8.5F, FontStyle.Bold),
+                ForeColor = AppConstants.ColorBadgeText,
+                BackColor = AppConstants.ColorBadgeBg,
+                BorderColor = AppConstants.ColorBadgeBorder,
+                BorderRadius = 12,
+                Dock = DockStyle.Right,
+                AutoSize = true,
+                Height = 26,
+                Padding = new Padding(8, 0, 8, 0),
+                Margin = new Padding(0, 0, 6, 0),
+                Cursor = Cursors.Hand
+            };
+            _btnModeSelector.Click += BtnModeSelector_Click;
+
             _btnRefresh = new ModernButton
             {
                 Text = "🔄 Refresh",
@@ -237,9 +254,7 @@ namespace FileOrganizer
             };
             _btnRefresh.Click += (s, e) => LoadPreview();
 
-            pnlPreviewHeader.Controls.Add(_btnRefresh);
-            pnlPreviewHeader.Controls.Add(_lblFormatBadge);
-            pnlPreviewHeader.Controls.Add(_lblPreviewHeader);
+            pnlPreviewHeader.Controls.AddRange([_btnRefresh, _lblFormatBadge, _btnModeSelector, _lblPreviewHeader]);
 
             _pnlConflicts = new Panel { Dock = DockStyle.Top, Height = 42, BorderStyle = BorderStyle.FixedSingle, BackColor = AppConstants.ColorDangerBg, Visible = false, Padding = new Padding(8, 4, 8, 4), Margin = new Padding(0, 2, 0, 6) };
             _lblConflicts = new Label { Text = "⚠ Conflicts Detected:", Font = new Font("Segoe UI", 9F, FontStyle.Bold), ForeColor = AppConstants.ColorDanger, Dock = DockStyle.Fill, TextAlign = ContentAlignment.MiddleLeft };
@@ -249,24 +264,8 @@ namespace FileOrganizer
             _lblTimestampWarning = new Label { Text = "", Font = new Font("Segoe UI", 8.5F, FontStyle.Bold), ForeColor = Color.FromArgb(146, 64, 14), Dock = DockStyle.Fill, TextAlign = ContentAlignment.MiddleLeft };
             _pnlTimestampWarning.Controls.Add(_lblTimestampWarning);
 
-            _lstFiles = new ListView
-            {
-                Dock = DockStyle.Fill,
-                View = View.Details,
-                FullRowSelect = true,
-                GridLines = true,
-                MultiSelect = false,
-                BorderStyle = BorderStyle.FixedSingle,
-                BackColor = Color.White,
-                Font = new Font("Segoe UI", 9F),
-                Visible = false
-            };
-            _lstFiles.Columns.Add("File Name", 260);
-            _lstFiles.Columns.Add("Type", 70);
-            _lstFiles.Columns.Add("Modified Date", 140);
-            _lstFiles.Columns.Add("Created Date", 140);
-            _lstFiles.Columns.Add("Target Folder", 160);
-            _lstFiles.Columns.Add("Size", 75);
+            _lstFiles = new ListView { Dock = DockStyle.Fill, View = View.Details, FullRowSelect = true, GridLines = true, MultiSelect = false, BorderStyle = BorderStyle.FixedSingle, BackColor = Color.White, Font = new Font("Segoe UI", 9F), Visible = false };
+            _lstFiles.Columns.AddRange([new ColumnHeader { Text = "File Name", Width = 260 }, new ColumnHeader { Text = "Type", Width = 70 }, new ColumnHeader { Text = "Modified Date", Width = 140 }, new ColumnHeader { Text = "Created Date", Width = 140 }, new ColumnHeader { Text = "Target Folder", Width = 160 }, new ColumnHeader { Text = "Size", Width = 75 }]);
             _lstFiles.ColumnClick += LstFiles_ColumnClick;
             _lstFiles.Click += LstFiles_Click;
 

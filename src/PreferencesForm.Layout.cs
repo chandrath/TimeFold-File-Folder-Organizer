@@ -15,6 +15,8 @@ namespace FileOrganizer
         private CheckBox _chkGenerateCsvLog = null!;
         private CheckBox _chkUse24Hour = null!;
         private CheckBox _chkAutoLoadExeDir = null!;
+        private CheckBox _chkKeepHtmlCompanions = null!;
+        private Button _btnTypeRules = null!;
         private ComboBox _cmbFileDateSource = null!;
         private ComboBox _cmbFolderDateSource = null!;
 
@@ -49,7 +51,7 @@ namespace FileOrganizer
         {
             this.Text = "Preferences";
             if (AppConstants.AppIcon != null) this.Icon = AppConstants.AppIcon;
-            this.Size = new Size(580, 840);
+            this.Size = new Size(600, 870);
             this.StartPosition = FormStartPosition.CenterParent;
             this.FormBorderStyle = FormBorderStyle.FixedDialog;
             this.MaximizeBox = false;
@@ -83,6 +85,9 @@ namespace FileOrganizer
             currentY += spacing;
 
             _chkIgnoreSystemFiles = new CheckBox { Text = "Ignore Windows system files & protected folders (desktop.ini, Thumbs.db, $RECYCLE.BIN)", UseMnemonic = false, Location = new Point(leftMargin, currentY), Size = new Size(contentWidth, 24), Checked = _settings.IgnoreSystemFiles };
+            currentY += spacing;
+
+            _chkKeepHtmlCompanions = new CheckBox { Text = "Keep saved HTML pages & companion asset folders (_files, _data) paired together", UseMnemonic = false, Location = new Point(leftMargin, currentY), Size = new Size(contentWidth, 24), Checked = _settings.KeepHtmlCompanionsTogether };
             currentY += 32;
 
             // Detect initial modifier states
@@ -269,26 +274,29 @@ namespace FileOrganizer
             };
             currentY += 48;
 
-            // Buttons: Left (Config Location, Defaults), Right (Save / Cancel)
+            // Buttons: Left (Config Location, Defaults, File Types), Right (Save / Cancel)
             int buttonY = this.ClientSize.Height - 52;
-            _btnOpenConfig = new Button { Text = "📂 Config Location", UseMnemonic = false, Size = new Size(130, 32), Location = new Point(leftMargin, buttonY), Font = new Font("Segoe UI Emoji", 8.5F) };
+            _btnOpenConfig = new Button { Text = "📂 Config Location", UseMnemonic = false, Size = new Size(125, 32), Location = new Point(leftMargin, buttonY), Font = new Font("Segoe UI Emoji", 8.5F) };
             _btnOpenConfig.Click += (s, e) => AppConstants.OpenConfigLocation();
 
-            _btnDefaults = new Button { Text = "↺ Defaults", UseMnemonic = false, Size = new Size(90, 32), Location = new Point(leftMargin + 138, buttonY), Font = new Font("Segoe UI Emoji", 8.5F) };
+            _btnDefaults = new Button { Text = "↺ Defaults", UseMnemonic = false, Size = new Size(85, 32), Location = new Point(leftMargin + 130, buttonY), Font = new Font("Segoe UI Emoji", 8.5F) };
             _btnDefaults.Click += (s, e) => RestoreDefaults();
+
+            _btnTypeRules = new Button { Text = "🗂️ File Types...", UseMnemonic = false, Size = new Size(100, 32), Location = new Point(leftMargin + 220, buttonY), Font = new Font("Segoe UI Emoji", 8.5F) };
+            _btnTypeRules.Click += (s, e) => { using var dlg = new Forms.TypeRulesDialog(_isDarkMode); dlg.ShowDialog(this); };
 
             _btnCancel = new Button { Text = "Cancel", Size = new Size(90, 32), Location = new Point(this.ClientSize.Width - leftMargin - 90, buttonY), DialogResult = DialogResult.Cancel };
             _btnOK = new Button { Text = "Save", Size = new Size(90, 32), Location = new Point(this.ClientSize.Width - leftMargin - 90 - 10 - 90, buttonY), DialogResult = DialogResult.OK };
             _btnOK.Click += BtnOK_Click;
 
             this.Controls.AddRange([
-                lblOrgHeader, _chkIncludeFolders, _chkIgnoreSystemFiles, lblFileDate, lblFolderDate, _cmbFileDateSource, _cmbFolderDateSource,
+                lblOrgHeader, _chkIncludeFolders, _chkIgnoreSystemFiles, _chkKeepHtmlCompanions, lblFileDate, lblFolderDate, _cmbFileDateSource, _cmbFolderDateSource,
                 lblNamingHeader, _cmbFormat, _btnFlipOrder, _chkShortMonth, lblPrefix, lblSuffix, _txtPrefix, _txtSuffix,
                 _pnlLivePreview,
                 lblAppearanceHeader, _btnThemeLight, _btnThemeDark,
                 lblBehaviorHeader, _chkShowProgress, _chkGenerateCsvLog, _chkShowOnTop, _chkUse24Hour, _chkAutoLoadExeDir,
                 lblPreviewLimit, _cmbPreviewLimit, _lblPreviewLimitWarning,
-                _btnOpenConfig, _btnDefaults, _btnOK, _btnCancel
+                _btnOpenConfig, _btnDefaults, _btnTypeRules, _btnOK, _btnCancel
             ]);
 
             this.AcceptButton = _btnOK;

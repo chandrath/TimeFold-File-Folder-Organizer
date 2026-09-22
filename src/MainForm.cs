@@ -49,6 +49,7 @@ namespace FileOrganizer
         private ContextMenuStrip _ctxFileMenu = null!;
         private ModernButton _btnRefresh = null!;
         private ModernButton _lblFormatBadge = null!;
+        private ModernButton _btnModeSelector = null!;
         private Panel _pnlEmptyState = null!;
         private Label _lblSummary = null!;
         private Panel _pnlConflicts = null!;
@@ -162,12 +163,13 @@ namespace FileOrganizer
 
             if (_organizerService != null)
             {
-                _organizerService.ApplyNamingSettings(_settings.FolderFormat, _settings.FolderPrefix, _settings.FolderSuffix, _settings.Use24HourTimestamp);
+                _organizerService.ApplyNamingSettings(_settings.FolderFormat, _settings.FolderPrefix, _settings.FolderSuffix, _settings.Use24HourTimestamp, _settings.OrgMode, _settings.KeepHtmlCompanionsTogether);
             }
             if (_chkIncludeFolders != null && _chkIncludeFolders.Checked != _settings.IncludeTopLevelFolders)
             {
                 _chkIncludeFolders.Checked = _settings.IncludeTopLevelFolders;
             }
+            if (_btnModeSelector != null) _btnModeSelector.Text = GetModeSelectorText();
             UpdateFormatBadge();
             UpdateOutputFolder();
         }
@@ -189,7 +191,7 @@ namespace FileOrganizer
                 _settings.AddRecentFolder(folder);
                 UpdateRecentMenus();
                 _organizerService = new FileOrganizerService(_executablePath, folder);
-                _organizerService.ApplyNamingSettings(_settings.FolderFormat, _settings.FolderPrefix, _settings.FolderSuffix, _settings.Use24HourTimestamp);
+                _organizerService.ApplyNamingSettings(_settings.FolderFormat, _settings.FolderPrefix, _settings.FolderSuffix, _settings.Use24HourTimestamp, _settings.OrgMode, _settings.KeepHtmlCompanionsTogether);
                 UpdateOutputFolder();
                 LoadPreview();
             }

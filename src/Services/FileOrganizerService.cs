@@ -18,6 +18,8 @@ namespace FileOrganizer.Services
         private string _folderPrefix = AppConstants.DefaultFolderPrefix;
         private string _folderSuffix = AppConstants.DefaultFolderSuffix;
         private bool _use24HourTimestamp = AppConstants.DefaultUse24HourTimestamp;
+        private OrganizationMode _organizationMode = OrganizationMode.Date;
+        private bool _keepHtmlCompanionsTogether = true;
 
         public FileOrganizerService(string executablePath, string? workingDirectory = null, string? outputDirectory = null)
         {
@@ -113,7 +115,7 @@ namespace FileOrganizer.Services
                                 IsCreatedDateActive = isCreatedActive,
                                 Size = 0
                             };
-                            fileItem.TargetFolder = FormatTargetFolder(itemDate);
+                            fileItem.TargetFolder = TargetFolderResolver.Resolve(fileItem, _organizationMode, _folderFormat, _folderPrefix, _folderSuffix);
                             files.Add(fileItem);
                         }
                         else if (File.Exists(itemPath))
@@ -130,7 +132,7 @@ namespace FileOrganizer.Services
                                 IsCreatedDateActive = isCreatedActive,
                                 Size = fileInfo.Length
                             };
-                            fileItem.TargetFolder = FormatTargetFolder(itemDate);
+                            fileItem.TargetFolder = TargetFolderResolver.Resolve(fileItem, _organizationMode, _folderFormat, _folderPrefix, _folderSuffix);
                             files.Add(fileItem);
                         }
                     }
@@ -144,6 +146,11 @@ namespace FileOrganizer.Services
             catch (Exception ex)
             {
                 throw new Exception($"Error scanning files: {ex.Message}", ex);
+            }
+
+            if (_keepHtmlCompanionsTogether)
+            {
+                TargetFolderResolver.ApplyHtmlCompanionPairing(files);
             }
 
             return files.OrderByDescending(f => f.ModifiedDate).ToList();
@@ -373,12 +380,14 @@ namespace FileOrganizer.Services
             set => _folderSuffix = value ?? string.Empty;
         }
 
-        public void ApplyNamingSettings(FolderFormat format, string prefix, string suffix, bool use24Hour = false)
+        public void ApplyNamingSettings(FolderFormat format, string prefix, string suffix, bool use24Hour = false, OrganizationMode mode = OrganizationMode.Date, bool keepHtmlCompanions = true)
         {
             _folderFormat = format;
             _folderPrefix = prefix ?? string.Empty;
             _folderSuffix = suffix ?? string.Empty;
             _use24HourTimestamp = use24Hour;
+            _organizationMode = mode;
+            _keepHtmlCompanionsTogether = keepHtmlCompanions;
         }
 
         public string FormatTargetFolder(DateTime date)

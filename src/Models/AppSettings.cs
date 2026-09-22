@@ -21,6 +21,9 @@ namespace FileOrganizer.Models
         public string FolderSuffix { get; set; } = Config.AppConstants.DefaultFolderSuffix;
         public DateSource FileDateSource { get; set; } = Config.AppConstants.DefaultFileDateSource;
         public DateSource FolderDateSource { get; set; } = Config.AppConstants.DefaultFolderDateSource;
+        public int SchemaVersion { get; set; } = 1;
+        public OrganizationMode OrgMode { get; set; } = OrganizationMode.Date;
+        public bool KeepHtmlCompanionsTogether { get; set; } = true;
         public int MaxPreviewItems { get; set; } = Config.AppConstants.DefaultMaxPreviewItems;
 
         public static AppSettings LoadFromFile()
@@ -33,6 +36,24 @@ namespace FileOrganizer.Models
                     string json = File.ReadAllText(path);
                     var settings = JsonSerializer.Deserialize<AppSettings>(json);
                     if (settings != null) return settings;
+                }
+
+                // Check for legacy configuration in %APPDATA%\TimeFold\
+                string legacyDir = Config.AppConstants.GetLegacyConfigDirectoryPath();
+                if (Directory.Exists(legacyDir))
+                {
+                    var legacyFiles = Directory.GetFiles(legacyDir, "*_Config.json");
+                    if (legacyFiles.Length > 0)
+                    {
+                        Array.Sort(legacyFiles, (a, b) => File.GetLastWriteTimeUtc(b).CompareTo(File.GetLastWriteTimeUtc(a)));
+                        string legacyJson = File.ReadAllText(legacyFiles[0]);
+                        var migrated = JsonSerializer.Deserialize<AppSettings>(legacyJson);
+                        if (migrated != null)
+                        {
+                            migrated.SaveToFile();
+                            return migrated;
+                        }
+                    }
                 }
             }
             catch
@@ -49,9 +70,11 @@ namespace FileOrganizer.Models
                 string dir = Config.AppConstants.GetConfigDirectoryPath();
                 if (!Directory.Exists(dir)) Directory.CreateDirectory(dir);
                 string path = Config.AppConstants.GetConfigFilePath();
+                string tempPath = path + ".tmp";
                 var options = new JsonSerializerOptions { WriteIndented = true };
                 string json = JsonSerializer.Serialize(this, options);
-                File.WriteAllText(path, json);
+                File.WriteAllText(tempPath, json);
+                File.Move(tempPath, path, overwrite: true);
             }
             catch
             {

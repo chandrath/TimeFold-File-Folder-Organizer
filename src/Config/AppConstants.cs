@@ -15,6 +15,7 @@ namespace FileOrganizer.Config
         // Application Metadata (SSoT)
         // NOTE: AppVersion is dynamically resolved from the build assembly stamped by TimeFold.csproj (<Version>x.y.z</Version>).
         // To bump the version across the entire app, simply change <Version> in TimeFold.csproj.
+        public const string VendorName = "Appsphinx";
         public const string AppName = "TimeFold: File & Folder Organizer";
         public const string ShortAppName = "TimeFold";
         public static string AppVersion => typeof(AppConstants).Assembly.GetName().Version!.ToString(3);
@@ -71,10 +72,16 @@ namespace FileOrganizer.Config
 
         // Configuration File Paths (SSoT)
         public static string GetConfigDirectoryPath() =>
+            Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), VendorName, ShortAppName);
+
+        public static string GetLegacyConfigDirectoryPath() =>
             Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), ShortAppName);
 
         public static string GetConfigFilePath() =>
-            Path.Combine(GetConfigDirectoryPath(), $"{ShortAppName}_V{AppVersion}_Config.json");
+            Path.Combine(GetConfigDirectoryPath(), "settings.json");
+
+        public static string GetCustomTypesFilePath() =>
+            Path.Combine(GetConfigDirectoryPath(), "custom_types.json");
 
         public static void OpenConfigLocation()
         {
