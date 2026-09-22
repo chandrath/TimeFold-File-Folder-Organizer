@@ -140,7 +140,20 @@ namespace FileOrganizer.Models
         YearQuarterShortMonths, // "2026 Q1 (Jan, Feb & Mar)"
         YearHalf,               // "2026 H1"
         HalfYear,               // "H1 2026"
-        YearOnly                // "2026"
+        YearOnly,               // "2026"
+        // Year-nested (2-level): top = year, sub = date sub-folder
+        YearWithMonth,          // "2026" / "2026 January"
+        YearWithShortMonth,     // "2026" / "2026 Jan"
+        YearWithMonthFlipped,       // "2026" / "January 2026"
+        YearWithShortMonthFlipped,  // "2026" / "Jan 2026"
+        YearWithMonthOnly,      // "2026" / "January"  (month name only, no year in subfolder)
+        YearWithShortMonthOnly, // "2026" / "Jan"
+        YearWithIsoMonth,       // "2026" / "2026-01"
+        YearWithIsoMonthFlipped,    // "2026" / "01-2026"
+        YearWithQuarter,        // "2026" / "2026 Q1"
+        YearWithQuarterFlipped, // "2026" / "Q1 2026"
+        YearWithHalf,           // "2026" / "2026 H1"
+        YearWithHalfFlipped     // "2026" / "H1 2026"
     }
 
     public enum DateSource

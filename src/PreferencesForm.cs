@@ -15,7 +15,7 @@ namespace FileOrganizer
 
         public AppSettings Settings => _settings;
 
-        private enum CoreFormat { Header, YearMonth, IsoMonth, Daily, YearQuarter, YearQuarterMonths, YearHalf, YearOnly }
+        private enum CoreFormat { Header, YearMonth, IsoMonth, Daily, YearQuarter, YearQuarterMonths, YearHalf, YearOnly, YearNestedMonth, YearNestedMonthOnly, YearNestedIso, YearNestedQuarter, YearNestedHalf }
 
         private class FormatItem(string displayName, CoreFormat core, bool isHeader = false)
         {
@@ -50,6 +50,11 @@ namespace FileOrganizer
                 CoreFormat.YearQuarterMonths => $"Year & Quarter with Months (e.g. {year} Q1 ({qm}))",
                 CoreFormat.YearHalf => flipped ? $"Half & Year (e.g. H1 {year})" : $"Year & Half (e.g. {year} H1)",
                 CoreFormat.YearOnly => $"Year (e.g. {year})",
+                CoreFormat.YearNestedMonth => shortMonth ? $"Year / Year & Month (e.g. {year} > {year} Mar)" : $"Year / Year & Month (e.g. {year} > {year} {m})",
+                CoreFormat.YearNestedMonthOnly => shortMonth ? $"Year / Month (e.g. {year} > Mar)" : $"Year / Month (e.g. {year} > {m})",
+                CoreFormat.YearNestedIso => $"Year / ISO Month (e.g. {year} > {year}-03)",
+                CoreFormat.YearNestedQuarter => flipped ? $"Year / Quarter & Year (e.g. {year} > Q1 {year})" : $"Year / Year & Quarter (e.g. {year} > {year} Q1)",
+                CoreFormat.YearNestedHalf => flipped ? $"Year / Half & Year (e.g. {year} > H1 {year})" : $"Year / Year & Half (e.g. {year} > {year} H1)",
                 _ => ""
             };
         }
@@ -115,8 +120,12 @@ namespace FileOrganizer
         {
             if (_cmbFormat.SelectedItem is not FormatItem item) return;
 
-            bool canFlip = item.Core != CoreFormat.YearOnly && item.Core != CoreFormat.YearQuarterMonths;
-            bool canShortMonth = item.Core is CoreFormat.YearMonth or CoreFormat.Daily or CoreFormat.YearQuarterMonths;
+            bool canFlip = item.Core is CoreFormat.YearMonth or CoreFormat.IsoMonth or CoreFormat.Daily
+                or CoreFormat.YearQuarter or CoreFormat.YearHalf
+                or CoreFormat.YearNestedMonth or CoreFormat.YearNestedIso
+                or CoreFormat.YearNestedQuarter or CoreFormat.YearNestedHalf;
+            bool canShortMonth = item.Core is CoreFormat.YearMonth or CoreFormat.Daily or CoreFormat.YearQuarterMonths
+                or CoreFormat.YearNestedMonth or CoreFormat.YearNestedMonthOnly;
 
             bool isDark = _isDarkMode;
             var palette = AppTheme.GetPalette(isDark);
@@ -162,6 +171,17 @@ namespace FileOrganizer
                 CoreFormat.YearQuarterMonths => _useShortMonth ? FolderFormat.YearQuarterShortMonths : FolderFormat.YearQuarterMonths,
                 CoreFormat.YearHalf => _isFlipped ? FolderFormat.HalfYear : FolderFormat.YearHalf,
                 CoreFormat.YearOnly => FolderFormat.YearOnly,
+                CoreFormat.YearNestedMonth => (_isFlipped, _useShortMonth) switch
+                {
+                    (false, false) => FolderFormat.YearWithMonth,
+                    (true,  false) => FolderFormat.YearWithMonthFlipped,
+                    (false, true)  => FolderFormat.YearWithShortMonth,
+                    (true,  true)  => FolderFormat.YearWithShortMonthFlipped
+                },
+                CoreFormat.YearNestedMonthOnly => _useShortMonth ? FolderFormat.YearWithShortMonthOnly : FolderFormat.YearWithMonthOnly,
+                CoreFormat.YearNestedIso => _isFlipped ? FolderFormat.YearWithIsoMonthFlipped : FolderFormat.YearWithIsoMonth,
+                CoreFormat.YearNestedQuarter => _isFlipped ? FolderFormat.YearWithQuarterFlipped : FolderFormat.YearWithQuarter,
+                CoreFormat.YearNestedHalf => _isFlipped ? FolderFormat.YearWithHalfFlipped : FolderFormat.YearWithHalf,
                 _ => FolderFormat.YearMonth
             };
         }
@@ -183,6 +203,9 @@ namespace FileOrganizer
                 CoreFormat.YearQuarter or CoreFormat.YearQuarterMonths => (new DateTime(currentYear, 2, 1), new DateTime(currentYear, 5, 1), new DateTime(currentYear, 8, 1), new DateTime(currentYear, 11, 1)),
                 CoreFormat.YearHalf => (new DateTime(currentYear - 1, 3, 1), new DateTime(currentYear - 1, 9, 1), new DateTime(currentYear, 3, 1), new DateTime(currentYear, 9, 1)),
                 CoreFormat.YearOnly => (new DateTime(currentYear - 3, 1, 1), new DateTime(currentYear - 2, 1, 1), new DateTime(currentYear - 1, 1, 1), new DateTime(currentYear, 1, 1)),
+                CoreFormat.YearNestedMonth or CoreFormat.YearNestedMonthOnly or CoreFormat.YearNestedIso => (new DateTime(currentYear, 1, 15), new DateTime(currentYear, 3, 15), new DateTime(currentYear, 6, 15), new DateTime(currentYear, 9, 15)),
+                CoreFormat.YearNestedQuarter => (new DateTime(currentYear, 2, 1), new DateTime(currentYear, 5, 1), new DateTime(currentYear, 8, 1), new DateTime(currentYear, 11, 1)),
+                CoreFormat.YearNestedHalf => (new DateTime(currentYear - 1, 3, 1), new DateTime(currentYear - 1, 9, 1), new DateTime(currentYear, 3, 1), new DateTime(currentYear, 9, 1)),
                 _ => (new DateTime(currentYear, 1, 15), new DateTime(currentYear, 2, 15), new DateTime(currentYear, 3, 15), new DateTime(currentYear, 4, 15))
             };
 

@@ -266,6 +266,19 @@ namespace FileOrganizer.Config
                 FolderFormat.YearHalf => $"{year} H{half}",
                 FolderFormat.HalfYear => $"H{half} {year}",
                 FolderFormat.YearOnly => $"{year}",
+                // Year-nested: returns "year\subfolder" path
+                FolderFormat.YearWithMonth => System.IO.Path.Combine($"{year}", $"{year} {monthFull}"),
+                FolderFormat.YearWithShortMonth => System.IO.Path.Combine($"{year}", $"{year} {monthShort}"),
+                FolderFormat.YearWithMonthFlipped => System.IO.Path.Combine($"{year}", $"{monthFull} {year}"),
+                FolderFormat.YearWithShortMonthFlipped => System.IO.Path.Combine($"{year}", $"{monthShort} {year}"),
+                FolderFormat.YearWithMonthOnly => System.IO.Path.Combine($"{year}", $"{monthFull}"),
+                FolderFormat.YearWithShortMonthOnly => System.IO.Path.Combine($"{year}", $"{monthShort}"),
+                FolderFormat.YearWithIsoMonth => System.IO.Path.Combine($"{year}", $"{year}-{month:D2}"),
+                FolderFormat.YearWithIsoMonthFlipped => System.IO.Path.Combine($"{year}", $"{month:D2}-{year}"),
+                FolderFormat.YearWithQuarter => System.IO.Path.Combine($"{year}", $"{year} Q{quarter}"),
+                FolderFormat.YearWithQuarterFlipped => System.IO.Path.Combine($"{year}", $"Q{quarter} {year}"),
+                FolderFormat.YearWithHalf => System.IO.Path.Combine($"{year}", $"{year} H{half}"),
+                FolderFormat.YearWithHalfFlipped => System.IO.Path.Combine($"{year}", $"H{half} {year}"),
                 _ => $"{year} {monthFull}"
             };
 
