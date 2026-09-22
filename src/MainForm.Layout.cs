@@ -170,7 +170,7 @@ namespace FileOrganizer
                 pe.Graphics.DrawRectangle(pen, 1, 1, _pnlSourceDrop.Width - 3, _pnlSourceDrop.Height - 3);
             };
 
-            _chkUseSourceAsOutput = new CheckBox { Text = "Use source folder as destination (default)", Font = new Font("Segoe UI", 9F), ForeColor = Color.FromArgb(55, 65, 81), AutoSize = true, Checked = true, Margin = new Padding(0, 0, 14, 0) };
+            _chkUseSourceAsOutput = new CheckBox { Text = "Use source folder as destination (default)", Font = new Font("Segoe UI", 9F), ForeColor = Color.FromArgb(55, 65, 81), AutoSize = true, Checked = _settings.UseSourceAsOutput, Margin = new Padding(0, 0, 14, 0) };
             _chkUseSourceAsOutput.CheckedChanged += ChkUseSourceAsOutput_CheckedChanged;
 
             _chkCreateSubfolder = new CheckBox { Text = "Create 'Sorted_...' subfolder", Font = new Font("Segoe UI", 9F), ForeColor = Color.FromArgb(55, 65, 81), AutoSize = true, Checked = _settings.CreateSortedSubfolder, Margin = new Padding(0, 0, 14, 0) };

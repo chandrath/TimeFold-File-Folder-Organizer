@@ -43,7 +43,11 @@ namespace FileOrganizer
             if (dialog.ShowDialog() == DialogResult.OK) { _customOutputFolder = dialog.SelectedPath; UpdateOutputFolder(); }
         }
 
-        private void ChkUseSourceAsOutput_CheckedChanged(object? sender, EventArgs e) => UpdateOutputFolder();
+        private void ChkUseSourceAsOutput_CheckedChanged(object? sender, EventArgs e)
+        {
+            if (_settings.UseSourceAsOutput != _chkUseSourceAsOutput.Checked) { _settings.UseSourceAsOutput = _chkUseSourceAsOutput.Checked; _settings.SaveToFile(); }
+            UpdateOutputFolder();
+        }
 
         private void ChkCreateSubfolder_CheckedChanged(object? sender, EventArgs e)
         {
@@ -192,11 +196,7 @@ namespace FileOrganizer
         private void LstFiles_ColumnClick(object? sender, ColumnClickEventArgs e)
         {
             if (_sortColumn == e.Column) _sortAscending = !_sortAscending;
-            else
-            {
-                _sortColumn = e.Column;
-                _sortAscending = (e.Column != 2 && e.Column != 3 && e.Column != 5);
-            }
+            else { _sortColumn = e.Column; _sortAscending = (e.Column != 2 && e.Column != 3 && e.Column != 5); }
 
             UpdateColumnHeaderSortIndicators();
             FileItemComparer.Sort(_filesToOrganize, _sortColumn, _sortAscending);

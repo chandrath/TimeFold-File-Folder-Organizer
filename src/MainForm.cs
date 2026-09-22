@@ -165,6 +165,7 @@ namespace FileOrganizer
                     _settings.CategorySuffix, _settings.KeepSubtitleCompanionsTogether,
                     _settings.CreateSortedSubfolder);
             }
+            if (_chkUseSourceAsOutput != null && _chkUseSourceAsOutput.Checked != _settings.UseSourceAsOutput) _chkUseSourceAsOutput.Checked = _settings.UseSourceAsOutput;
             if (_chkIncludeFolders != null && _chkIncludeFolders.Checked != _settings.IncludeTopLevelFolders) _chkIncludeFolders.Checked = _settings.IncludeTopLevelFolders;
             if (_chkCreateSubfolder != null && _chkCreateSubfolder.Checked != _settings.CreateSortedSubfolder) _chkCreateSubfolder.Checked = _settings.CreateSortedSubfolder;
             if (_btnModeSelector != null) _btnModeSelector.Text = GetModeSelectorText();
@@ -357,7 +358,7 @@ namespace FileOrganizer
         private void ResetForm()
         {
             _txtSourceFolder.Text = _customOutputFolder = _txtOutputFolder.Text = "";
-            _chkUseSourceAsOutput.Checked = true;
+            _chkUseSourceAsOutput.Checked = AppConstants.DefaultUseSourceAsOutput; _chkCreateSubfolder.Checked = AppConstants.DefaultCreateSortedSubfolder; _chkIncludeFolders.Checked = AppConstants.DefaultIncludeTopLevelFolders;
             _filesToOrganize.Clear();
             _lstFiles.Items.Clear();
             _lstFiles.Visible = false;

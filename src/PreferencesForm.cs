@@ -83,6 +83,8 @@ namespace FileOrganizer
                 CategorySuffix = currentSettings.CategorySuffix,
                 KeepHtmlCompanionsTogether = currentSettings.KeepHtmlCompanionsTogether,
                 KeepSubtitleCompanionsTogether = currentSettings.KeepSubtitleCompanionsTogether,
+                CreateSortedSubfolder = currentSettings.CreateSortedSubfolder,
+                UseSourceAsOutput = currentSettings.UseSourceAsOutput,
                 RecentFolders = new System.Collections.Generic.List<string>(currentSettings.RecentFolders)
             };
             _isDarkMode = _settings.DarkMode;
@@ -224,6 +226,9 @@ namespace FileOrganizer
         private void RestoreDefaults()
         {
             _chkIncludeFolders.Checked = AppConstants.DefaultIncludeTopLevelFolders;
+            _settings.IncludeTopLevelFolders = AppConstants.DefaultIncludeTopLevelFolders;
+            _settings.CreateSortedSubfolder = AppConstants.DefaultCreateSortedSubfolder;
+            _settings.UseSourceAsOutput = AppConstants.DefaultUseSourceAsOutput;
             _chkIgnoreSystemFiles.Checked = AppConstants.DefaultIgnoreSystemFiles;
             _settings.KeepSubtitleCompanionsTogether = AppConstants.DefaultKeepSubtitleCompanionsTogether;
             _settings.KeepHtmlCompanionsTogether = AppConstants.DefaultKeepHtmlCompanionsTogether;
