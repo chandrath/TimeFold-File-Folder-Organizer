@@ -93,7 +93,8 @@ namespace FileOrganizer
                 or FolderFormat.QuarterYear or FolderFormat.HalfYear or FolderFormat.MonthIso
                 or FolderFormat.YearWithMonthFlipped or FolderFormat.YearWithShortMonthFlipped
                 or FolderFormat.YearWithIsoMonthFlipped
-                or FolderFormat.YearWithQuarterFlipped or FolderFormat.YearWithHalfFlipped => true,
+                or FolderFormat.YearWithQuarterFlipped or FolderFormat.YearWithHalfFlipped
+                or FolderFormat.IsoDateFlipped or FolderFormat.YearWithMonthAndDayFlipped or FolderFormat.YearWithShortMonthAndDayFlipped or FolderFormat.YearWithIsoMonthAndDayFlipped => true,
                 _ => false
             };
 
@@ -101,7 +102,8 @@ namespace FileOrganizer
             {
                 FolderFormat.YearShortMonth or FolderFormat.ShortMonthYear or FolderFormat.YearShortMonthDay
                 or FolderFormat.DayShortMonthYear or FolderFormat.YearQuarterShortMonths
-                or FolderFormat.YearWithShortMonth or FolderFormat.YearWithShortMonthFlipped => true,
+                or FolderFormat.YearWithShortMonth or FolderFormat.YearWithShortMonthFlipped
+                or FolderFormat.YearWithShortMonthAndDay or FolderFormat.YearWithShortMonthAndDayFlipped => true,
                 _ => false
             };
 
@@ -114,22 +116,28 @@ namespace FileOrganizer
             int currentYear = DateTime.Now.Year;
             var formatOptions = new FormatItem[]
             {
-                new("── Year ─────────────────────", CoreFormat.Header, true),
+                new("── By Year ──────────────────", CoreFormat.Header, true),
                 new(GetFormatDisplayName(CoreFormat.YearOnly, _isFlipped, _useShortMonth, currentYear), CoreFormat.YearOnly),
+
+                new("── By Month ─────────────────", CoreFormat.Header, true),
+                new(GetFormatDisplayName(CoreFormat.YearMonth, _isFlipped, _useShortMonth, currentYear), CoreFormat.YearMonth),
+                new(GetFormatDisplayName(CoreFormat.IsoMonth, _isFlipped, _useShortMonth, currentYear), CoreFormat.IsoMonth),
                 new(GetFormatDisplayName(CoreFormat.YearNestedMonthOnly, _isFlipped, _useShortMonth, currentYear), CoreFormat.YearNestedMonthOnly),
                 new(GetFormatDisplayName(CoreFormat.YearNestedMonth, _isFlipped, _useShortMonth, currentYear), CoreFormat.YearNestedMonth),
                 new(GetFormatDisplayName(CoreFormat.YearNestedIso, _isFlipped, _useShortMonth, currentYear), CoreFormat.YearNestedIso),
-                new(GetFormatDisplayName(CoreFormat.YearNestedQuarter, _isFlipped, _useShortMonth, currentYear), CoreFormat.YearNestedQuarter),
-                new(GetFormatDisplayName(CoreFormat.YearNestedHalf, _isFlipped, _useShortMonth, currentYear), CoreFormat.YearNestedHalf),
-                new("── Monthly ──────────────────", CoreFormat.Header, true),
-                new(GetFormatDisplayName(CoreFormat.YearMonth, _isFlipped, _useShortMonth, currentYear), CoreFormat.YearMonth),
-                new(GetFormatDisplayName(CoreFormat.IsoMonth, _isFlipped, _useShortMonth, currentYear), CoreFormat.IsoMonth),
-                new("── Daily ────────────────────", CoreFormat.Header, true),
+
+                new("── By Day ───────────────────", CoreFormat.Header, true),
                 new(GetFormatDisplayName(CoreFormat.Daily, _isFlipped, _useShortMonth, currentYear), CoreFormat.Daily),
-                new("── Quarters & Half-Years ────", CoreFormat.Header, true),
+                new(GetFormatDisplayName(CoreFormat.IsoDate, _isFlipped, _useShortMonth, currentYear), CoreFormat.IsoDate),
+                new(GetFormatDisplayName(CoreFormat.YearNestedDaily, _isFlipped, _useShortMonth, currentYear), CoreFormat.YearNestedDaily),
+                new(GetFormatDisplayName(CoreFormat.YearNestedIsoDaily, _isFlipped, _useShortMonth, currentYear), CoreFormat.YearNestedIsoDaily),
+
+                new("── By Quarter & Half-Year ───", CoreFormat.Header, true),
                 new(GetFormatDisplayName(CoreFormat.YearQuarter, _isFlipped, _useShortMonth, currentYear), CoreFormat.YearQuarter),
                 new(GetFormatDisplayName(CoreFormat.YearQuarterMonths, _isFlipped, _useShortMonth, currentYear), CoreFormat.YearQuarterMonths),
+                new(GetFormatDisplayName(CoreFormat.YearNestedQuarter, _isFlipped, _useShortMonth, currentYear), CoreFormat.YearNestedQuarter),
                 new(GetFormatDisplayName(CoreFormat.YearHalf, _isFlipped, _useShortMonth, currentYear), CoreFormat.YearHalf),
+                new(GetFormatDisplayName(CoreFormat.YearNestedHalf, _isFlipped, _useShortMonth, currentYear), CoreFormat.YearNestedHalf),
             };
 
             _cmbFormat.Items.AddRange(formatOptions);
@@ -167,6 +175,10 @@ namespace FileOrganizer
                 FolderFormat.YearMonth or FolderFormat.MonthYear or FolderFormat.YearShortMonth or FolderFormat.ShortMonthYear => CoreFormat.YearMonth,
                 FolderFormat.IsoMonth or FolderFormat.MonthIso => CoreFormat.IsoMonth,
                 FolderFormat.YearMonthDay or FolderFormat.DayMonthYear or FolderFormat.YearShortMonthDay or FolderFormat.DayShortMonthYear => CoreFormat.Daily,
+                FolderFormat.IsoDate or FolderFormat.IsoDateFlipped => CoreFormat.IsoDate,
+                FolderFormat.YearWithMonthAndDay or FolderFormat.YearWithShortMonthAndDay
+                or FolderFormat.YearWithMonthAndDayFlipped or FolderFormat.YearWithShortMonthAndDayFlipped => CoreFormat.YearNestedDaily,
+                FolderFormat.YearWithIsoMonthAndDay or FolderFormat.YearWithIsoMonthAndDayFlipped => CoreFormat.YearNestedIsoDaily,
                 FolderFormat.YearQuarter or FolderFormat.QuarterYear => CoreFormat.YearQuarter,
                 FolderFormat.YearQuarterMonths or FolderFormat.YearQuarterShortMonths => CoreFormat.YearQuarterMonths,
                 FolderFormat.YearHalf or FolderFormat.HalfYear => CoreFormat.YearHalf,

@@ -317,6 +317,13 @@ namespace FileOrganizer.Config
                 FolderFormat.YearWithQuarterFlipped => System.IO.Path.Combine($"{year}", $"Q{quarter} {year}"),
                 FolderFormat.YearWithHalf => System.IO.Path.Combine($"{year}", $"{year} H{half}"),
                 FolderFormat.YearWithHalfFlipped => System.IO.Path.Combine($"{year}", $"H{half} {year}"),
+                FolderFormat.IsoDateFlipped => $"{day:D2}-{month:D2}-{year}",
+                FolderFormat.YearWithMonthAndDay => System.IO.Path.Combine($"{year}", $"{monthFull}", $"{day:D2}"),
+                FolderFormat.YearWithShortMonthAndDay => System.IO.Path.Combine($"{year}", $"{monthShort}", $"{day:D2}"),
+                FolderFormat.YearWithMonthAndDayFlipped => System.IO.Path.Combine($"{day:D2}", $"{monthFull}", $"{year}"),
+                FolderFormat.YearWithShortMonthAndDayFlipped => System.IO.Path.Combine($"{day:D2}", $"{monthShort}", $"{year}"),
+                FolderFormat.YearWithIsoMonthAndDay => System.IO.Path.Combine($"{year}", $"{year}-{month:D2}", $"{day:D2}"),
+                FolderFormat.YearWithIsoMonthAndDayFlipped => System.IO.Path.Combine($"{day:D2}", $"{year}-{month:D2}", $"{year}"),
                 _ => $"{year} {monthFull}"
             };
 

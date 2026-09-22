@@ -60,20 +60,26 @@ jobs:
           Remove-Item -Path ./publish_ready_to_run/*.pdb -Force -ErrorAction SilentlyContinue
           Remove-Item -Path ./publish_requires_dotnet/*.pdb -Force -ErrorAction SilentlyContinue
 
-          # 1. Package ReadyToRun edition (Rename exe with version and flavor)
-          Rename-Item -Path ./publish_ready_to_run/TimeFold.exe -NewName "TimeFold-${tag}-win-x64-ReadyToRun.exe"
+          # 1. Package ReadyToRun edition (Direct standalone exe and zip archive)
+          $rtrExeName = "TimeFold-${tag}-win-x64-ReadyToRun.exe"
+          Rename-Item -Path ./publish_ready_to_run/TimeFold.exe -NewName $rtrExeName
+          Copy-Item -Path "./publish_ready_to_run/$rtrExeName" -Destination "./$rtrExeName"
           $rtrZip = "TimeFold-${tag}-win-x64-ReadyToRun.zip"
           Compress-Archive -Path ./publish_ready_to_run/* -DestinationPath "./$rtrZip"
 
-          # 2. Package RequiresDotNet10 edition (Rename exe with version and flavor)
-          Rename-Item -Path ./publish_requires_dotnet/TimeFold.exe -NewName "TimeFold-${tag}-win-x64-RequiresDotNet10.exe"
+          # 2. Package RequiresDotNet10 edition (Direct standalone exe and zip archive)
+          $reqExeName = "TimeFold-${tag}-win-x64-RequiresDotNet10.exe"
+          Rename-Item -Path ./publish_requires_dotnet/TimeFold.exe -NewName $reqExeName
+          Copy-Item -Path "./publish_requires_dotnet/$reqExeName" -Destination "./$reqExeName"
           $reqZip = "TimeFold-${tag}-win-x64-RequiresDotNet10.zip"
           Compress-Archive -Path ./publish_requires_dotnet/* -DestinationPath "./$reqZip"
 
-          # Generate Checksums
-          $rtrHash = (Get-FileHash -Path "./$rtrZip" -Algorithm SHA256).Hash
-          $reqHash = (Get-FileHash -Path "./$reqZip" -Algorithm SHA256).Hash
-          "$rtrHash  $rtrZip`n$reqHash  $reqZip" | Out-File -FilePath "./checksums.txt" -Encoding utf8
+          # Generate Checksums for both standalone EXEs and ZIPs
+          $rtrExeHash = (Get-FileHash -Path "./$rtrExeName" -Algorithm SHA256).Hash
+          $reqExeHash = (Get-FileHash -Path "./$reqExeName" -Algorithm SHA256).Hash
+          $rtrZipHash = (Get-FileHash -Path "./$rtrZip" -Algorithm SHA256).Hash
+          $reqZipHash = (Get-FileHash -Path "./$reqZip" -Algorithm SHA256).Hash
+          "$rtrExeHash  $rtrExeName`n$reqExeHash  $reqExeName`n$rtrZipHash  $rtrZip`n$reqZipHash  $reqZip" | Out-File -FilePath "./checksums.txt" -Encoding utf8
 
       - name: Publish GitHub Release
         uses: softprops/action-gh-release@v2
@@ -90,5 +96,6 @@ jobs:
             * **💻 For Developers & Power Users:** **`TimeFold-${{ steps.get_version.outputs.tag }}-win-x64-RequiresDotNet10.zip`**  
               *(Tiny 1.5MB download — extracts to `TimeFold-${{ steps.get_version.outputs.tag }}-win-x64-RequiresDotNet10.exe`. Only works if you already have the .NET 10 Desktop Runtime installed on your PC).*
           files: |
+            TimeFold-*.exe
             TimeFold-*.zip
             checksums.txt

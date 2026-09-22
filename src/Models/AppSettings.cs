@@ -155,7 +155,15 @@ namespace FileOrganizer.Models
         YearWithQuarter,        // "2026" / "2026 Q1"
         YearWithQuarterFlipped, // "2026" / "Q1 2026"
         YearWithHalf,           // "2026" / "2026 H1"
-        YearWithHalfFlipped     // "2026" / "H1 2026"
+        YearWithHalfFlipped,    // "2026" / "H1 2026"
+        // Nested Daily (3-level): Year / Month / Day
+        IsoDateFlipped,                 // "15-01-2026" (Flipped ISO Daily)
+        YearWithMonthAndDay,            // "2026" / "January" / "15"
+        YearWithShortMonthAndDay,       // "2026" / "Jan" / "15"
+        YearWithMonthAndDayFlipped,     // "15" / "January" / "2026"
+        YearWithShortMonthAndDayFlipped,// "15" / "Jan" / "2026"
+        YearWithIsoMonthAndDay,         // "2026" / "2026-01" / "15"
+        YearWithIsoMonthAndDayFlipped   // "15" / "01-2026" / "2026"
     }
 
     public enum DateSource
