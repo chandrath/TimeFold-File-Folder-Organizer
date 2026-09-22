@@ -35,18 +35,11 @@ namespace FileOrganizer
             var itemExt = new ToolStripMenuItem("🏷️ By File Extension (JPG, PDF...)", null, (s, a) => SetOrganizationMode(OrganizationMode.Extension)) { Checked = _settings.OrgMode == OrganizationMode.Extension };
 
             var hdrHybrid = new ToolStripMenuItem("── Hybrid (2-Level Nested) ──") { Enabled = false };
-            var itemHyb1 = new ToolStripMenuItem(@"🔀 Category / Date  (e.g. Images\2026-09)", null, (s, a) => SetOrganizationMode(OrganizationMode.CategoryAndDate)) { Checked = _settings.OrgMode == OrganizationMode.CategoryAndDate };
-            var itemHyb2 = new ToolStripMenuItem(@"🔄 Date / Category  (e.g. 2026-09\Images)", null, (s, a) => SetOrganizationMode(OrganizationMode.DateAndCategory)) { Checked = _settings.OrgMode == OrganizationMode.DateAndCategory };
+            string sampleDate = AppConstants.FormatFolderDate(DateTime.Now, _settings.FolderFormat, _settings.FolderPrefix, _settings.FolderSuffix);
+            var itemHyb1 = new ToolStripMenuItem($@"🔀 Category / Date  (e.g. Images\{sampleDate})", null, (s, a) => SetOrganizationMode(OrganizationMode.CategoryAndDate)) { Checked = _settings.OrgMode == OrganizationMode.CategoryAndDate };
+            var itemHyb2 = new ToolStripMenuItem($@"🔄 Date / Category  (e.g. {sampleDate}\Images)", null, (s, a) => SetOrganizationMode(OrganizationMode.DateAndCategory)) { Checked = _settings.OrgMode == OrganizationMode.DateAndCategory };
 
-            var itemRules = new ToolStripMenuItem("⚙ Customize File Type Rules...", null, (s, a) =>
-            {
-                using var dlg = new TypeRulesDialog(_settings.DarkMode);
-                dlg.ShowDialog(this);
-                _settings = AppSettings.LoadFromFile();
-                if (_btnModeSelector != null) _btnModeSelector.Text = GetModeSelectorText();
-                UpdateFormatBadge();
-                ReapplyOrganizationMode();
-            });
+            var itemRules = new ToolStripMenuItem("⚙ Customize File Type Rules...", null, MenuTypeRules_Click);
 
             menu.Items.AddRange(new ToolStripItem[]
             {
@@ -115,6 +108,16 @@ namespace FileOrganizer
                 UpdateSummary();
                 CheckConflicts();
             }
+        }
+
+        private void MenuTypeRules_Click(object? sender, EventArgs e)
+        {
+            using var dlg = new TypeRulesDialog(_settings.DarkMode);
+            dlg.ShowDialog(this);
+            _settings = AppSettings.LoadFromFile();
+            if (_btnModeSelector != null) _btnModeSelector.Text = GetModeSelectorText();
+            UpdateFormatBadge();
+            ReapplyOrganizationMode();
         }
     }
 }

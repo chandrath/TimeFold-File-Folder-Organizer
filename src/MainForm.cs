@@ -57,6 +57,7 @@ namespace FileOrganizer
         private Panel _pnlTimestampWarning = null!;
         private Label _lblTimestampWarning = null!;
         private ModernButton _btnStart = null!;
+        private ModernButton _btnThemeToggle = null!;
         private Panel _pnlLoadMore = null!;
         private ModernButton _btnLoadMore = null!;
         private int _currentPreviewLimit;
@@ -145,9 +146,9 @@ namespace FileOrganizer
             _toolTip.SetToolTip(_pnlSourceDrop, "Drag and drop any folder or files here to inspect (or click Browse)");
             _toolTip.SetToolTip(_lblDropHint, "Drag and drop any folder or files here to inspect (or click Browse)");
             _toolTip.SetToolTip(_chkUseSourceAsOutput, "Create the sorted date folders directly inside the source folder");
+            _toolTip.SetToolTip(_chkIncludeFolders, "When checked, moves loose folders as units alongside files. When unchecked, folders are skipped");
             _toolTip.SetToolTip(_btnBrowseOutput, "Choose a different destination folder for the sorted date folders");
             _toolTip.SetToolTip(_txtOutputFolder, "Selected destination folder for organized files");
-            _toolTip.SetToolTip(_chkIncludeFolders, "When checked, moves whole folders as units. When unchecked, folders are skipped");
             _toolTip.SetToolTip(_lblFormatBadge, "Current folder naming pattern. Click to customize in Preferences");
             _toolTip.SetToolTip(_btnRefresh, "Scan and refresh the organization plan (F5)");
             _toolTip.SetToolTip(_btnStart, "Move files & folders into their date-based timeline folders");
@@ -164,15 +165,10 @@ namespace FileOrganizer
             if (_organizerService != null)
             {
                 _organizerService.ApplyNamingSettings(
-                    _settings.FolderFormat,
-                    _settings.FolderPrefix,
-                    _settings.FolderSuffix,
-                    _settings.Use24HourTimestamp,
-                    _settings.OrgMode,
-                    _settings.KeepHtmlCompanionsTogether,
-                    _settings.CategoryPrefix,
-                    _settings.CategorySuffix,
-                    _settings.KeepSubtitleCompanionsTogether);
+                    _settings.FolderFormat, _settings.FolderPrefix, _settings.FolderSuffix,
+                    _settings.Use24HourTimestamp, _settings.OrgMode,
+                    _settings.KeepHtmlCompanionsTogether, _settings.CategoryPrefix,
+                    _settings.CategorySuffix, _settings.KeepSubtitleCompanionsTogether);
             }
             if (_chkIncludeFolders != null && _chkIncludeFolders.Checked != _settings.IncludeTopLevelFolders)
             {
@@ -194,11 +190,13 @@ namespace FileOrganizer
                 if (usesDate)
                 {
                     string sample = Config.AppConstants.FormatFolderDate(DateTime.Now, _settings.FolderFormat, _settings.FolderPrefix, _settings.FolderSuffix);
-                    _lblFormatBadge.Text = $"📁 Format: {sample} ⚙";
+                    string display = sample.Length > 35 ? sample[..33].TrimEnd() + "…" : sample;
+                    _lblFormatBadge.Text = $"📁 {display} ⚙";
                     _lblFormatBadge.BackColor = palette.BadgeBg;
                     _lblFormatBadge.ForeColor = palette.BadgeText;
                     _lblFormatBadge.BorderColor = palette.BadgeBorder;
                     _lblFormatBadge.Cursor = Cursors.Hand;
+                    _toolTip?.SetToolTip(_lblFormatBadge, $"Active Format: {sample}\nClick to customize in Preferences");
                 }
                 else
                 {
@@ -207,6 +205,7 @@ namespace FileOrganizer
                     _lblFormatBadge.ForeColor = palette.TextMuted;
                     _lblFormatBadge.BorderColor = palette.CardBorder;
                     _lblFormatBadge.Cursor = Cursors.Default;
+                    _toolTip?.SetToolTip(_lblFormatBadge, "Date format is not used in this organization mode.");
                 }
             }
         }
@@ -327,8 +326,7 @@ namespace FileOrganizer
             using var prefsForm = new PreferencesForm(_settings);
             if (prefsForm.ShowDialog() == DialogResult.OK)
             {
-                _settings = prefsForm.Settings;
-                _settings.SaveToFile();
+                (_settings = prefsForm.Settings).SaveToFile();
                 ApplySettings();
                 ApplyTheme(_settings.DarkMode);
                 LoadPreview();
@@ -375,6 +373,7 @@ namespace FileOrganizer
             _lastResult = null;
             _currentPreviewLimit = 0;
             if (_pnlLoadMore != null) _pnlLoadMore.Visible = false;
+            _btnStart.Enabled = false;
             UpdatePreviewHeaderCount(0, 0);
             UpdateMainLayout();
         }
@@ -406,12 +405,12 @@ namespace FileOrganizer
 
             if (displayed < total)
             {
-                _lblPreviewHeader.Text = $"Organization Plan (Showing {displayed:N0} of {total:N0} items)";
-                _toolTip?.SetToolTip(_lblPreviewHeader, $"Showing {displayed:N0} of {total:N0} items.\nTip: Change default preview limit in Settings > Preferences");
+                _lblPreviewHeader.Text = $"Organization Plan ({displayed:N0} / {total:N0})";
+                _toolTip?.SetToolTip(_lblPreviewHeader, $"Showing {displayed:N0} of {total:N0} items loaded.\nTip: Change default preview limit in Settings > Preferences");
             }
             else
             {
-                _lblPreviewHeader.Text = $"Organization Plan ({total:N0} items)";
+                _lblPreviewHeader.Text = $"Organization Plan ({total:N0})";
                 _toolTip?.SetToolTip(_lblPreviewHeader, $"All {total:N0} items loaded.\nTip: Change default preview limit in Settings > Preferences");
             }
         }

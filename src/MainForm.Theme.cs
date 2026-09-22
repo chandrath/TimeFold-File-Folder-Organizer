@@ -175,7 +175,59 @@ namespace FileOrganizer
             if (_pnlDetailsCard != null) _pnlDetailsCard.BackColor = palette.CardBg;
             if (_lblCompleteSummary != null) _lblCompleteSummary.ForeColor = palette.TextPrimary;
 
+            if (_btnThemeToggle != null)
+            {
+                _btnThemeToggle.BackColor = palette.CardBg;
+                _btnThemeToggle.BorderColor = palette.CardBorder;
+                _toolTip?.SetToolTip(_btnThemeToggle, isDark ? "Switch to Light Mode" : "Switch to Dark Mode");
+                _btnThemeToggle.Invalidate();
+            }
+
             this.Invalidate(true);
+        }
+
+        private void BtnThemeToggle_Click(object? sender, EventArgs e)
+        {
+            _settings.DarkMode = !_settings.DarkMode;
+            _settings.SaveToFile();
+            ApplyTheme(_settings.DarkMode);
+        }
+
+        private void DrawThemeToggleIcon(Graphics g, Rectangle bounds)
+        {
+            g.SmoothingMode = System.Drawing.Drawing2D.SmoothingMode.AntiAlias;
+            g.PixelOffsetMode = System.Drawing.Drawing2D.PixelOffsetMode.HighQuality;
+            float cx = bounds.X + bounds.Width / 2f;
+            float cy = bounds.Y + bounds.Height / 2f;
+
+            if (_settings.DarkMode)
+            {
+                // Crisp Vector Sun icon (radiant center + 8 rays)
+                using var sunPen = new Pen(Color.FromArgb(251, 191, 36), 1.8f) { StartCap = System.Drawing.Drawing2D.LineCap.Round, EndCap = System.Drawing.Drawing2D.LineCap.Round };
+                using var sunBrush = new SolidBrush(Color.FromArgb(251, 191, 36));
+                g.FillEllipse(sunBrush, cx - 4.5f, cy - 4.5f, 9f, 9f);
+                for (int i = 0; i < 8; i++)
+                {
+                    double angle = i * Math.PI / 4.0;
+                    float x1 = cx + (float)(Math.Cos(angle) * 7.0);
+                    float y1 = cy + (float)(Math.Sin(angle) * 7.0);
+                    float x2 = cx + (float)(Math.Cos(angle) * 10.5);
+                    float y2 = cy + (float)(Math.Sin(angle) * 10.5);
+                    g.DrawLine(sunPen, x1, y1, x2, y2);
+                }
+            }
+            else
+            {
+                // Crisp Vector Crescent Moon icon
+                using var moonBrush = new SolidBrush(Color.FromArgb(71, 85, 105));
+                using var pathOuter = new System.Drawing.Drawing2D.GraphicsPath();
+                pathOuter.AddEllipse(cx - 7.5f, cy - 7.5f, 15f, 15f);
+                using var pathInner = new System.Drawing.Drawing2D.GraphicsPath();
+                pathInner.AddEllipse(cx - 3.2f, cy - 8f, 13.5f, 13.5f);
+                using var moonRegion = new Region(pathOuter);
+                moonRegion.Exclude(pathInner);
+                g.FillRegion(moonBrush, moonRegion);
+            }
         }
 
         private static void SetMenuColors(ToolStripItemCollection items, AppTheme.ThemePalette palette)

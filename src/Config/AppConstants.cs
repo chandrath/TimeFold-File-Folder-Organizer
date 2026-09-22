@@ -129,6 +129,7 @@ namespace FileOrganizer.Config
         public const string DefaultFolderSuffix = "";
         public const string DefaultCategoryPrefix = "";
         public const string DefaultCategorySuffix = "";
+        public const bool DefaultKeepHtmlCompanionsTogether = true;
         public const bool DefaultKeepSubtitleCompanionsTogether = true;
         public const DateSource DefaultFileDateSource = DateSource.Modified;
         public const DateSource DefaultFolderDateSource = DateSource.Modified;

@@ -25,7 +25,7 @@ namespace FileOrganizer.Models
         public OrganizationMode OrgMode { get; set; } = OrganizationMode.Date;
         public string CategoryPrefix { get; set; } = Config.AppConstants.DefaultCategoryPrefix;
         public string CategorySuffix { get; set; } = Config.AppConstants.DefaultCategorySuffix;
-        public bool KeepHtmlCompanionsTogether { get; set; } = true;
+        public bool KeepHtmlCompanionsTogether { get; set; } = Config.AppConstants.DefaultKeepHtmlCompanionsTogether;
         public bool KeepSubtitleCompanionsTogether { get; set; } = Config.AppConstants.DefaultKeepSubtitleCompanionsTogether;
         public int MaxPreviewItems { get; set; } = Config.AppConstants.DefaultMaxPreviewItems;
 

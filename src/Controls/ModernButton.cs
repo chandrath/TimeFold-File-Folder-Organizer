@@ -36,6 +36,10 @@ namespace FileOrganizer.Controls
             }
         }
 
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
+        [Browsable(false)]
+        public Action<Graphics, Rectangle>? PaintOverlay { get; set; }
+
         public ModernButton()
         {
             this.FlatStyle = FlatStyle.Flat;
@@ -129,16 +133,18 @@ namespace FileOrganizer.Controls
             Rectangle rect = new Rectangle(0, 0, this.Width, this.Height);
             RectangleF rectBorder = new RectangleF(0.5f, 0.5f, this.Width - 1, this.Height - 1);
 
+            bool isDark = this.Parent != null && this.Parent.BackColor.GetBrightness() < 0.35f;
+
             Color currentBg = !this.Enabled
-                ? Color.FromArgb(241, 245, 249) // Slate 100
+                ? (isDark ? Color.FromArgb(30, 41, 59) : Color.FromArgb(241, 245, 249)) // Slate 800 vs Slate 100
                 : (_isPressed ? Darken(this.BackColor, 0.12f) : (_isHovered ? Lighten(this.BackColor, 0.08f) : this.BackColor));
 
             Color currentBorder = !this.Enabled
-                ? Color.FromArgb(226, 232, 240) // Slate 200
+                ? (isDark ? Color.FromArgb(51, 65, 85) : Color.FromArgb(226, 232, 240)) // Slate 700 vs Slate 200
                 : (_isHovered && _borderColor != Color.Transparent ? Darken(_borderColor, 0.15f) : _borderColor);
 
             Color currentText = !this.Enabled
-                ? Color.FromArgb(148, 163, 184) // Slate 400 (Always clean light gray, NEVER black!)
+                ? (isDark ? Color.FromArgb(100, 116, 139) : Color.FromArgb(148, 163, 184)) // Slate 500 vs Slate 400
                 : this.ForeColor;
 
             // Paint background surface
@@ -167,14 +173,18 @@ namespace FileOrganizer.Controls
                 }
             }
 
-            // Paint text centered with high-quality rendering
-            TextRenderer.DrawText(
-                g,
-                this.Text,
-                this.Font,
-                rect,
-                currentText,
-                TextFormatFlags.HorizontalCenter | TextFormatFlags.VerticalCenter | TextFormatFlags.SingleLine | TextFormatFlags.WordEllipsis);
+            if (!string.IsNullOrEmpty(this.Text))
+            {
+                TextRenderer.DrawText(
+                    g,
+                    this.Text,
+                    this.Font,
+                    rect,
+                    currentText,
+                    TextFormatFlags.HorizontalCenter | TextFormatFlags.VerticalCenter | TextFormatFlags.SingleLine | TextFormatFlags.WordEllipsis);
+            }
+
+            PaintOverlay?.Invoke(g, rect);
         }
 
         private static GraphicsPath GetFigurePath(RectangleF rect, float radius)

@@ -88,7 +88,8 @@ namespace FileOrganizer
                 ForeColor = Color.White,
                 Font = new Font("Segoe UI", 11F, FontStyle.Bold),
                 BorderRadius = 10,
-                Cursor = Cursors.Hand
+                Cursor = Cursors.Hand,
+                Enabled = false
             };
             _btnStart.Click += BtnStart_Click;
             _pnlFooterSection.Controls.Add(_lblSummary);
@@ -134,7 +135,12 @@ namespace FileOrganizer
                 Location = new Point(46, 25),
                 AutoSize = true
             };
-            pnlHeader.Controls.AddRange([picLogo, _lblTitle, _lblSubtitle]);
+            var pnlToggle = new Panel { Dock = DockStyle.Right, Width = 38, BackColor = Color.Transparent };
+            _btnThemeToggle = new ModernButton { Size = new Size(34, 34), Location = new Point(2, 6), BorderRadius = 8, Cursor = Cursors.Hand };
+            _btnThemeToggle.Click += BtnThemeToggle_Click;
+            _btnThemeToggle.PaintOverlay = DrawThemeToggleIcon;
+            pnlToggle.Controls.Add(_btnThemeToggle);
+            pnlHeader.Controls.AddRange([pnlToggle, picLogo, _lblTitle, _lblSubtitle]);
 
             _lblSourceTitle = new Label { Text = "Source Folder", Font = new Font("Segoe UI", 9.5F, FontStyle.Bold), ForeColor = Color.FromArgb(55, 65, 81), AutoSize = true, Margin = new Padding(0, 0, 0, 3) };
 
@@ -172,8 +178,14 @@ namespace FileOrganizer
                 pe.Graphics.DrawRectangle(pen, 1, 1, _pnlSourceDrop.Width - 3, _pnlSourceDrop.Height - 3);
             };
 
-            _chkUseSourceAsOutput = new CheckBox { Text = "Use source folder as output destination (default)", Font = new Font("Segoe UI", 9.5F), ForeColor = Color.FromArgb(55, 65, 81), AutoSize = true, Checked = true, Margin = new Padding(0, 0, 0, 4) };
+            _chkUseSourceAsOutput = new CheckBox { Text = "Use source folder as output destination (default)", Font = new Font("Segoe UI", 9F), ForeColor = Color.FromArgb(55, 65, 81), AutoSize = true, Checked = true, Margin = new Padding(0, 0, 16, 0) };
             _chkUseSourceAsOutput.CheckedChanged += ChkUseSourceAsOutput_CheckedChanged;
+
+            _chkIncludeFolders = new CheckBox { Text = "Include subfolders (move loose folders alongside files)", Font = new Font("Segoe UI", 9F), ForeColor = Color.FromArgb(55, 65, 81), AutoSize = true, Checked = _settings.IncludeTopLevelFolders, Margin = Padding.Empty };
+            _chkIncludeFolders.CheckedChanged += ChkIncludeFolders_CheckedChanged;
+
+            var pnlOptionsRow = new FlowLayoutPanel { Dock = DockStyle.Top, AutoSize = true, FlowDirection = FlowDirection.LeftToRight, WrapContents = false, Margin = new Padding(0, 0, 0, 4) };
+            pnlOptionsRow.Controls.AddRange([_chkUseSourceAsOutput, _chkIncludeFolders]);
 
             var pnlOutputRow = new TableLayoutPanel { Dock = DockStyle.Top, ColumnCount = 2, Height = 34, Margin = new Padding(0, 0, 0, 4) };
             pnlOutputRow.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 100));
@@ -184,10 +196,7 @@ namespace FileOrganizer
             pnlOutputRow.Controls.Add(_txtOutputFolder, 0, 0);
             pnlOutputRow.Controls.Add(_btnBrowseOutput, 1, 0);
 
-            _chkIncludeFolders = new CheckBox { Text = "Include folders (move whole folders alongside files)", Font = new Font("Segoe UI", 9.5F), ForeColor = Color.FromArgb(55, 65, 81), AutoSize = true, Checked = _settings.IncludeTopLevelFolders, Margin = new Padding(0, 2, 0, 4) };
-            _chkIncludeFolders.CheckedChanged += ChkIncludeFolders_CheckedChanged;
-
-            topLayout.Controls.AddRange(new Control[] { pnlHeader, _lblSourceTitle, pnlSourceRow, _pnlSourceDrop, _chkUseSourceAsOutput, pnlOutputRow, _chkIncludeFolders });
+            topLayout.Controls.AddRange(new Control[] { pnlHeader, _lblSourceTitle, pnlSourceRow, _pnlSourceDrop, pnlOptionsRow, pnlOutputRow });
             _pnlTopSection.Controls.Add(topLayout);
 
             // 3. Center Elastic Preview Table
@@ -239,21 +248,7 @@ namespace FileOrganizer
             };
             _btnModeSelector.Click += BtnModeSelector_Click;
 
-            _btnRefresh = new ModernButton
-            {
-                Text = "🔄 Refresh",
-                Font = new Font("Segoe UI Emoji", 8.5F, FontStyle.Bold),
-                ForeColor = Color.FromArgb(55, 65, 81),
-                BackColor = Color.White,
-                BorderColor = Color.FromArgb(209, 213, 219),
-                BorderRadius = 12,
-                Dock = DockStyle.Right,
-                AutoSize = true,
-                Height = 26,
-                Padding = new Padding(8, 0, 8, 0),
-                Margin = new Padding(0, 0, 6, 0),
-                Cursor = Cursors.Hand
-            };
+            _btnRefresh = new ModernButton { Text = "🔄 Refresh", Font = new Font("Segoe UI Emoji", 8.5F, FontStyle.Bold), ForeColor = Color.FromArgb(55, 65, 81), BackColor = Color.White, BorderColor = Color.FromArgb(209, 213, 219), BorderRadius = 12, Dock = DockStyle.Right, AutoSize = true, Height = 26, Padding = new Padding(8, 0, 8, 0), Margin = new Padding(0, 0, 6, 0), Cursor = Cursors.Hand };
             _btnRefresh.Click += (s, e) => LoadPreview();
 
             // Visual order from left to right: [Refresh] -> [Mode/Category] -> [Date Format]

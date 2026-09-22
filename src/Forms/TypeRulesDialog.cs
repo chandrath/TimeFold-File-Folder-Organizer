@@ -151,6 +151,13 @@ namespace FileOrganizer.Forms
             _btnReset = new ModernButton { Text = "↺ Reset to Defaults", Size = new Size(140, 32), Dock = DockStyle.Left, BorderRadius = 6 };
             _btnReset.Click += BtnReset_Click;
 
+            var btnSmartPairing = new ModernButton { Text = "🔗 Smart Pairing...", Size = new Size(130, 32), Dock = DockStyle.Left, BorderRadius = 6, Margin = new Padding(6, 0, 0, 0) };
+            btnSmartPairing.Click += (s, e) =>
+            {
+                using var dlg = new SmartPairingDialog(_settings, _darkMode);
+                dlg.ShowDialog(this);
+            };
+
             _btnImport = new ModernButton { Text = "📥 Import...", Size = new Size(95, 32), Dock = DockStyle.Right, BorderRadius = 6, Margin = new Padding(0, 0, 6, 0) };
             _btnImport.Click += BtnImport_Click;
 
@@ -160,7 +167,7 @@ namespace FileOrganizer.Forms
             _btnClose = new ModernButton { Text = "Close", Size = new Size(90, 32), Dock = DockStyle.Right, BorderRadius = 6 };
             _btnClose.Click += (s, e) => Close();
 
-            pnlFooter.Controls.AddRange(new Control[] { _btnReset, _btnExport, _btnImport, _btnClose });
+            pnlFooter.Controls.AddRange(new Control[] { _btnReset, btnSmartPairing, _btnExport, _btnImport, _btnClose });
 
             pnlMain.Controls.Add(_lstRules);
             pnlMain.Controls.Add(pnlAdd);

@@ -202,7 +202,8 @@ namespace FileOrganizer
         {
             _chkIncludeFolders.Checked = AppConstants.DefaultIncludeTopLevelFolders;
             _chkIgnoreSystemFiles.Checked = AppConstants.DefaultIgnoreSystemFiles;
-            _chkKeepHtmlCompanions.Checked = true;
+            _settings.KeepSubtitleCompanionsTogether = AppConstants.DefaultKeepSubtitleCompanionsTogether;
+            _settings.KeepHtmlCompanionsTogether = AppConstants.DefaultKeepHtmlCompanionsTogether;
             _chkShowProgress.Checked = AppConstants.DefaultShowDetailedProgress;
             _chkShowOnTop.Checked = AppConstants.DefaultShowOnTop;
             _chkGenerateCsvLog.Checked = AppConstants.DefaultGenerateCsvLog;
@@ -244,7 +245,6 @@ namespace FileOrganizer
         {
             _settings.IncludeTopLevelFolders = _chkIncludeFolders.Checked;
             _settings.IgnoreSystemFiles = _chkIgnoreSystemFiles.Checked;
-            _settings.KeepHtmlCompanionsTogether = _chkKeepHtmlCompanions.Checked;
             _settings.FileDateSource = (DateSource)_cmbFileDateSource.SelectedIndex;
             _settings.FolderDateSource = (DateSource)_cmbFolderDateSource.SelectedIndex;
             _settings.ShowDetailedProgress = _chkShowProgress.Checked;

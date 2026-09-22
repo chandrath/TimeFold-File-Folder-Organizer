@@ -15,7 +15,6 @@ namespace FileOrganizer
         private CheckBox _chkGenerateCsvLog = null!;
         private CheckBox _chkUse24Hour = null!;
         private CheckBox _chkAutoLoadExeDir = null!;
-        private CheckBox _chkKeepHtmlCompanions = null!;
         private Button _btnTypeRules = null!;
         private ComboBox _cmbFileDateSource = null!;
         private ComboBox _cmbFolderDateSource = null!;
@@ -85,9 +84,6 @@ namespace FileOrganizer
             currentY += spacing;
 
             _chkIgnoreSystemFiles = new CheckBox { Text = "Ignore Windows system files & protected folders (desktop.ini, Thumbs.db, $RECYCLE.BIN)", UseMnemonic = false, Location = new Point(leftMargin, currentY), Size = new Size(contentWidth, 24), Checked = _settings.IgnoreSystemFiles };
-            currentY += spacing;
-
-            _chkKeepHtmlCompanions = new CheckBox { Text = "Keep saved HTML pages & companion asset folders (_files, _data) paired together", UseMnemonic = false, Location = new Point(leftMargin, currentY), Size = new Size(contentWidth, 24), Checked = _settings.KeepHtmlCompanionsTogether };
             currentY += 32;
 
             // Detect initial modifier states
@@ -290,7 +286,7 @@ namespace FileOrganizer
             _btnOK.Click += BtnOK_Click;
 
             this.Controls.AddRange([
-                lblOrgHeader, _chkIncludeFolders, _chkIgnoreSystemFiles, _chkKeepHtmlCompanions, lblFileDate, lblFolderDate, _cmbFileDateSource, _cmbFolderDateSource,
+                lblOrgHeader, _chkIncludeFolders, _chkIgnoreSystemFiles, lblFileDate, lblFolderDate, _cmbFileDateSource, _cmbFolderDateSource,
                 lblNamingHeader, _cmbFormat, _btnFlipOrder, _chkShortMonth, lblPrefix, lblSuffix, _txtPrefix, _txtSuffix,
                 _pnlLivePreview,
                 lblAppearanceHeader, _btnThemeLight, _btnThemeDark,
