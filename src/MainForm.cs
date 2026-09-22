@@ -127,7 +127,7 @@ namespace FileOrganizer
                         });
                         tourForm.ShowDialog(this);
                         _settings.DarkMode = tourForm.SelectedDarkMode;
-                        _settings.HasSeenWelcomeTour = tourForm.DontShowOnStartup;
+                        _settings.HasSeenWelcomeTour = true;
                         _settings.SaveToFile();
                         ApplyTheme(_settings.DarkMode);
                     }));
@@ -163,7 +163,16 @@ namespace FileOrganizer
 
             if (_organizerService != null)
             {
-                _organizerService.ApplyNamingSettings(_settings.FolderFormat, _settings.FolderPrefix, _settings.FolderSuffix, _settings.Use24HourTimestamp, _settings.OrgMode, _settings.KeepHtmlCompanionsTogether);
+                _organizerService.ApplyNamingSettings(
+                    _settings.FolderFormat,
+                    _settings.FolderPrefix,
+                    _settings.FolderSuffix,
+                    _settings.Use24HourTimestamp,
+                    _settings.OrgMode,
+                    _settings.KeepHtmlCompanionsTogether,
+                    _settings.CategoryPrefix,
+                    _settings.CategorySuffix,
+                    _settings.KeepSubtitleCompanionsTogether);
             }
             if (_chkIncludeFolders != null && _chkIncludeFolders.Checked != _settings.IncludeTopLevelFolders)
             {
@@ -178,8 +187,27 @@ namespace FileOrganizer
         {
             if (_lblFormatBadge != null)
             {
-                string sample = AppConstants.FormatFolderDate(DateTime.Now, _settings.FolderFormat, _settings.FolderPrefix, _settings.FolderSuffix);
-                _lblFormatBadge.Text = $"📁 Format: {sample} ⚙";
+                _lblFormatBadge.Visible = true;
+                bool usesDate = (_settings.OrgMode != Models.OrganizationMode.Category && _settings.OrgMode != Models.OrganizationMode.Extension);
+                _lblFormatBadge.Enabled = usesDate;
+                var palette = Config.AppTheme.GetPalette(_settings.DarkMode);
+                if (usesDate)
+                {
+                    string sample = Config.AppConstants.FormatFolderDate(DateTime.Now, _settings.FolderFormat, _settings.FolderPrefix, _settings.FolderSuffix);
+                    _lblFormatBadge.Text = $"📁 Format: {sample} ⚙";
+                    _lblFormatBadge.BackColor = palette.BadgeBg;
+                    _lblFormatBadge.ForeColor = palette.BadgeText;
+                    _lblFormatBadge.BorderColor = palette.BadgeBorder;
+                    _lblFormatBadge.Cursor = Cursors.Hand;
+                }
+                else
+                {
+                    _lblFormatBadge.Text = "📁 Format: N/A ⚙";
+                    _lblFormatBadge.BackColor = palette.CardBg;
+                    _lblFormatBadge.ForeColor = palette.TextMuted;
+                    _lblFormatBadge.BorderColor = palette.CardBorder;
+                    _lblFormatBadge.Cursor = Cursors.Default;
+                }
             }
         }
 
@@ -191,7 +219,16 @@ namespace FileOrganizer
                 _settings.AddRecentFolder(folder);
                 UpdateRecentMenus();
                 _organizerService = new FileOrganizerService(_executablePath, folder);
-                _organizerService.ApplyNamingSettings(_settings.FolderFormat, _settings.FolderPrefix, _settings.FolderSuffix, _settings.Use24HourTimestamp, _settings.OrgMode, _settings.KeepHtmlCompanionsTogether);
+                _organizerService.ApplyNamingSettings(
+                    _settings.FolderFormat,
+                    _settings.FolderPrefix,
+                    _settings.FolderSuffix,
+                    _settings.Use24HourTimestamp,
+                    _settings.OrgMode,
+                    _settings.KeepHtmlCompanionsTogether,
+                    _settings.CategoryPrefix,
+                    _settings.CategorySuffix,
+                    _settings.KeepSubtitleCompanionsTogether);
                 UpdateOutputFolder();
                 LoadPreview();
             }
@@ -323,9 +360,7 @@ namespace FileOrganizer
 
         private void ResetForm()
         {
-            _txtSourceFolder.Text = "";
-            _customOutputFolder = "";
-            _txtOutputFolder.Text = "";
+            _txtSourceFolder.Text = _customOutputFolder = _txtOutputFolder.Text = "";
             _chkUseSourceAsOutput.Checked = true;
             _filesToOrganize.Clear();
             _lstFiles.Items.Clear();
@@ -334,12 +369,9 @@ namespace FileOrganizer
             _lblSummary.Font = new Font(_lblSummary.Font, FontStyle.Regular);
             _lblSummary.ForeColor = AppTheme.GetPalette(_settings.DarkMode).TextMuted;
             _lblSummary.Text = "Select a source folder to preview files.";
-            _pnlConflicts.Visible = false;
-            _pnlTimestampWarning.Visible = false;
+            _pnlConflicts.Visible = _pnlTimestampWarning.Visible = _pnlProgress.Visible = _pnlComplete.Visible = false;
             _organizerService = null;
             _pnlMain.Visible = true;
-            _pnlProgress.Visible = false;
-            _pnlComplete.Visible = false;
             _lastResult = null;
             _currentPreviewLimit = 0;
             if (_pnlLoadMore != null) _pnlLoadMore.Visible = false;

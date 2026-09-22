@@ -127,6 +127,9 @@ namespace FileOrganizer.Config
         public const FolderFormat DefaultFolderFormat = FolderFormat.YearMonth;
         public const string DefaultFolderPrefix = "";
         public const string DefaultFolderSuffix = "";
+        public const string DefaultCategoryPrefix = "";
+        public const string DefaultCategorySuffix = "";
+        public const bool DefaultKeepSubtitleCompanionsTogether = true;
         public const DateSource DefaultFileDateSource = DateSource.Modified;
         public const DateSource DefaultFolderDateSource = DateSource.Modified;
         public const int DefaultMaxPreviewItems = 1000;

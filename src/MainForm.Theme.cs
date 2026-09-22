@@ -107,6 +107,12 @@ namespace FileOrganizer
                 _btnRefresh.ForeColor = palette.SecondaryButtonText;
                 _btnRefresh.BorderColor = palette.SecondaryButtonBorder;
             }
+            if (_btnModeSelector != null)
+            {
+                _btnModeSelector.BackColor = palette.SecondaryButtonBg;
+                _btnModeSelector.ForeColor = palette.SecondaryButtonText;
+                _btnModeSelector.BorderColor = palette.SecondaryButtonBorder;
+            }
             if (_lblFormatBadge != null)
             {
                 _lblFormatBadge.BackColor = palette.BadgeBg;

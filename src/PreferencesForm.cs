@@ -72,8 +72,13 @@ namespace FileOrganizer
                 FolderDateSource = currentSettings.FolderDateSource,
                 MaxPreviewItems = currentSettings.MaxPreviewItems,
                 DarkMode = currentSettings.DarkMode,
+                HasSeenWelcomeTour = currentSettings.HasSeenWelcomeTour,
                 OrgMode = currentSettings.OrgMode,
-                KeepHtmlCompanionsTogether = currentSettings.KeepHtmlCompanionsTogether
+                CategoryPrefix = currentSettings.CategoryPrefix,
+                CategorySuffix = currentSettings.CategorySuffix,
+                KeepHtmlCompanionsTogether = currentSettings.KeepHtmlCompanionsTogether,
+                KeepSubtitleCompanionsTogether = currentSettings.KeepSubtitleCompanionsTogether,
+                RecentFolders = new System.Collections.Generic.List<string>(currentSettings.RecentFolders)
             };
             _isDarkMode = _settings.DarkMode;
             InitializeComponent();
@@ -223,6 +228,11 @@ namespace FileOrganizer
                     break;
                 }
             }
+
+            _settings.OrgMode = OrganizationMode.Date;
+            _settings.CategoryPrefix = AppConstants.DefaultCategoryPrefix;
+            _settings.CategorySuffix = AppConstants.DefaultCategorySuffix;
+            _settings.HasSeenWelcomeTour = true;
 
             UpdateOptionsState();
             UpdateLivePreview();

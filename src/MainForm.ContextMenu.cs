@@ -5,6 +5,7 @@ using System.IO;
 using System.Windows.Forms;
 using FileOrganizer.Config;
 using FileOrganizer.Models;
+using FileOrganizer.Services;
 using Microsoft.VisualBasic.FileIO;
 
 namespace FileOrganizer
@@ -14,8 +15,14 @@ namespace FileOrganizer
         private ToolStripMenuItem _menuItemOpen = null!;
         private ToolStripMenuItem _menuItemExplorer = null!;
         private ToolStripMenuItem _menuItemCopy = null!;
+        private ToolStripMenuItem _menuItemRenameCategory = null!;
+        private ToolStripMenuItem _menuItemResetCategoryName = null!;
+        private ToolStripMenuItem _menuItemChangeCategory = null!;
         private ToolStripMenuItem _menuItemRename = null!;
         private ToolStripMenuItem _menuItemDelete = null!;
+        private ToolStripSeparator _sepTargetFolder = null!;
+        private ToolStripSeparator _sepFileOps = null!;
+        private Point _lastRightClickPoint;
 
         private void InitializeContextMenu()
         {
@@ -24,27 +31,114 @@ namespace FileOrganizer
             _menuItemOpen = new ToolStripMenuItem("📄 Open", null, (s, e) => OpenSelectedFile());
             _menuItemExplorer = new ToolStripMenuItem("📂 Open in File Explorer", null, (s, e) => OpenSelectedInExplorer());
             _menuItemCopy = new ToolStripMenuItem("📋 Copy File Path", null, (s, e) => CopySelectedPath());
-            _menuItemRename = new ToolStripMenuItem("✏ Rename...", null, (s, e) => RenameSelectedFile());
+            _menuItemRenameCategory = new ToolStripMenuItem("🏷️ Rename Category...", null, (s, e) => RenameCurrentCategory());
+            _menuItemResetCategoryName = new ToolStripMenuItem("↺ Revert Category to Factory Name", null, (s, e) => ResetCurrentCategoryName());
+            _menuItemChangeCategory = new ToolStripMenuItem("🔀 Remap all files...", null, (s, e) => ChangeCategoryForSelectedExtension());
+            _menuItemRename = new ToolStripMenuItem("✏ Rename File...", null, (s, e) => RenameSelectedFile());
             _menuItemDelete = new ToolStripMenuItem("🗑 Delete (Recycle Bin)", null, (s, e) => DeleteSelectedFile());
+
+            _sepTargetFolder = new ToolStripSeparator();
+            _sepFileOps = new ToolStripSeparator();
 
             _ctxFileMenu.Items.AddRange(new ToolStripItem[]
             {
+                _menuItemRenameCategory,
+                _menuItemResetCategoryName,
+                _menuItemChangeCategory,
+                _sepTargetFolder,
                 _menuItemOpen,
                 _menuItemExplorer,
                 _menuItemCopy,
-                new ToolStripSeparator(),
+                _sepFileOps,
                 _menuItemRename,
                 _menuItemDelete
             });
 
+            _lstFiles.MouseDown += (s, e) =>
+            {
+                if (e.Button == MouseButtons.Right)
+                {
+                    _lastRightClickPoint = e.Location;
+                }
+            };
+
             _ctxFileMenu.Opening += (s, e) =>
             {
-                bool hasSelection = _lstFiles.SelectedItems.Count > 0;
-                _menuItemOpen.Enabled = hasSelection;
-                _menuItemExplorer.Enabled = hasSelection;
-                _menuItemCopy.Enabled = hasSelection;
-                _menuItemRename.Enabled = hasSelection;
-                _menuItemDelete.Enabled = hasSelection;
+                var hit = _lstFiles.HitTest(_lastRightClickPoint);
+                if (hit.Item == null)
+                {
+                    // Right clicked on empty space - cancel context menu
+                    e.Cancel = true;
+                    return;
+                }
+
+                if (!hit.Item.Selected)
+                {
+                    _lstFiles.SelectedItems.Clear();
+                    hit.Item.Selected = true;
+                }
+
+                var selItem = hit.Item.Tag as FileItem;
+                bool isFileWithExt = selItem != null && !selItem.IsDirectory && !string.IsNullOrEmpty(selItem.Extension);
+                int colIndex = (hit.SubItem != null) ? hit.Item.SubItems.IndexOf(hit.SubItem) : 0;
+                bool isTargetFolderCell = (colIndex == 4);
+
+                string currentCategory = isFileWithExt ? FileTypeService.Instance.GetCategory(selItem!.Extension) : "";
+                string originalFactoryName = "";
+                bool isRenamed = isFileWithExt && FileTypeService.Instance.IsCategoryRenamed(currentCategory, out originalFactoryName);
+
+                if (isTargetFolderCell && isFileWithExt)
+                {
+                    // Target Folder cell right-click: focus on category & destination actions
+                    _menuItemRenameCategory.Visible = true;
+                    _menuItemRenameCategory.Text = $"🏷️ Rename Category '{currentCategory}'...";
+
+                    _menuItemResetCategoryName.Visible = isRenamed;
+                    if (isRenamed)
+                    {
+                        _menuItemResetCategoryName.Text = $"↺ Revert Category to Factory Name ('{originalFactoryName}')";
+                    }
+
+                    _menuItemChangeCategory.Visible = true;
+                    _menuItemChangeCategory.Text = $"🔀 Remap all {selItem!.Extension.ToLowerInvariant()} files to another category...";
+
+                    _sepTargetFolder.Visible = true;
+                    _menuItemOpen.Visible = true;
+                    _menuItemExplorer.Visible = true;
+                    _menuItemCopy.Visible = true;
+                    _sepFileOps.Visible = false;
+                    _menuItemRename.Visible = false;
+                    _menuItemDelete.Visible = false;
+                }
+                else
+                {
+                    // File Name / General Row right-click: focus on file operations
+                    _menuItemOpen.Visible = true;
+                    _menuItemExplorer.Visible = true;
+                    _menuItemCopy.Visible = true;
+                    _sepFileOps.Visible = true;
+                    _menuItemRename.Visible = true;
+                    _menuItemDelete.Visible = true;
+
+                    _sepTargetFolder.Visible = isFileWithExt;
+                    _menuItemRenameCategory.Visible = isFileWithExt;
+                    if (isFileWithExt)
+                    {
+                        _menuItemRenameCategory.Text = $"🏷️ Rename Category '{currentCategory}'...";
+                    }
+
+                    _menuItemResetCategoryName.Visible = isRenamed;
+                    if (isRenamed)
+                    {
+                        _menuItemResetCategoryName.Text = $"↺ Revert Category to Factory Name ('{originalFactoryName}')";
+                    }
+
+                    _menuItemChangeCategory.Visible = isFileWithExt;
+                    if (isFileWithExt)
+                    {
+                        _menuItemChangeCategory.Text = $"🔀 Remap all {selItem!.Extension.ToLowerInvariant()} files...";
+                    }
+                }
             };
 
             _lstFiles.ContextMenuStrip = _ctxFileMenu;
@@ -214,6 +308,124 @@ namespace FileOrganizer
             else txt.SelectAll();
 
             return prompt.ShowDialog() == DialogResult.OK ? txt.Text : null;
+        }
+
+        private void RenameCurrentCategory()
+        {
+            var item = GetSelectedFileItem();
+            if (item == null || item.IsDirectory || string.IsNullOrWhiteSpace(item.Extension)) return;
+
+            string ext = item.Extension.ToLowerInvariant();
+            string currentCategory = FileTypeService.Instance.GetCategory(ext);
+
+            string? newName = ShowRenamePrompt(currentCategory, _settings.DarkMode);
+            if (!string.IsNullOrWhiteSpace(newName) && !string.Equals(newName.Trim(), currentCategory, StringComparison.OrdinalIgnoreCase))
+            {
+                FileTypeService.Instance.RenameCategory(currentCategory, newName.Trim());
+                ReapplyOrganizationMode();
+            }
+        }
+
+        private void ResetCurrentCategoryName()
+        {
+            var item = GetSelectedFileItem();
+            if (item == null || item.IsDirectory || string.IsNullOrWhiteSpace(item.Extension)) return;
+
+            string ext = item.Extension.ToLowerInvariant();
+            string currentCategory = FileTypeService.Instance.GetCategory(ext);
+
+            if (FileTypeService.Instance.ResetCategoryName(currentCategory))
+            {
+                ReapplyOrganizationMode();
+            }
+        }
+
+        private void ChangeCategoryForSelectedExtension()
+        {
+            var item = GetSelectedFileItem();
+            if (item == null || item.IsDirectory || string.IsNullOrWhiteSpace(item.Extension)) return;
+
+            string ext = item.Extension.ToLowerInvariant();
+            string currentCategory = FileTypeService.Instance.GetCategory(ext);
+            var categories = FileTypeService.Instance.GetAllCategories();
+
+            string? chosenCategory = ShowCategoryPickerPrompt(ext, currentCategory, categories, _settings.DarkMode);
+            if (!string.IsNullOrWhiteSpace(chosenCategory) && !string.Equals(chosenCategory, currentCategory, StringComparison.OrdinalIgnoreCase))
+            {
+                FileTypeService.Instance.SetCategoryOverride(ext, chosenCategory);
+                ReapplyOrganizationMode();
+            }
+        }
+
+        private static string? ShowCategoryPickerPrompt(string ext, string currentCategory, List<string> categories, bool isDark)
+        {
+            var palette = AppTheme.GetPalette(isDark);
+            using var prompt = new Form
+            {
+                Text = $"Change Destination for {ext}",
+                Size = new Size(460, 220),
+                StartPosition = FormStartPosition.CenterParent,
+                FormBorderStyle = FormBorderStyle.FixedDialog,
+                MaximizeBox = false,
+                MinimizeBox = false,
+                BackColor = palette.CanvasBg,
+                ForeColor = palette.TextPrimary,
+                Font = new Font("Segoe UI", 9F)
+            };
+            AppTheme.SetWindowDarkTitleBar(prompt.Handle, isDark);
+
+            var lblDesc = new Label
+            {
+                Text = $"All '{ext}' files are currently routed to: {currentCategory}\r\nSelect an existing category or type a custom destination folder:",
+                Location = new Point(20, 16),
+                Size = new Size(405, 38),
+                ForeColor = palette.TextPrimary
+            };
+
+            var cbo = new ComboBox
+            {
+                Location = new Point(22, 64),
+                Width = 400,
+                DropDownStyle = ComboBoxStyle.DropDown,
+                Font = new Font("Segoe UI", 10F),
+                BackColor = palette.InputBg,
+                ForeColor = palette.TextPrimary
+            };
+            foreach (var cat in categories)
+            {
+                cbo.Items.Add(cat);
+            }
+            cbo.Text = currentCategory;
+
+            var btnOk = new Button
+            {
+                Text = "Apply",
+                DialogResult = DialogResult.OK,
+                Location = new Point(236, 125),
+                Size = new Size(90, 32),
+                BackColor = AppConstants.ColorPrimary,
+                ForeColor = Color.White,
+                FlatStyle = FlatStyle.Flat
+            };
+            btnOk.FlatAppearance.BorderSize = 0;
+
+            var btnCancel = new Button
+            {
+                Text = "Cancel",
+                DialogResult = DialogResult.Cancel,
+                Location = new Point(332, 125),
+                Size = new Size(90, 32),
+                BackColor = palette.SecondaryButtonBg,
+                ForeColor = palette.SecondaryButtonText,
+                FlatStyle = FlatStyle.Flat
+            };
+            btnCancel.FlatAppearance.BorderColor = palette.SecondaryButtonBorder;
+
+            prompt.Controls.AddRange([lblDesc, cbo, btnOk, btnCancel]);
+            prompt.AcceptButton = btnOk;
+            prompt.CancelButton = btnCancel;
+
+            return prompt.ShowDialog() == DialogResult.OK ? cbo.Text.Trim() : null;
         }
     }
 }

@@ -25,6 +25,11 @@ namespace FileOrganizer.Models
         /// User-defined custom categories and their associated extensions.
         /// </summary>
         public Dictionary<string, List<string>> CustomCategories { get; set; } = new(StringComparer.OrdinalIgnoreCase);
+
+        /// <summary>
+        /// User renames for category names (e.g. "Office Files" -> "My Office Files").
+        /// </summary>
+        public Dictionary<string, string> CategoryRenames { get; set; } = new(StringComparer.OrdinalIgnoreCase);
     }
 
     /// <summary>

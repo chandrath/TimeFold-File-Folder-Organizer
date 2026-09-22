@@ -217,7 +217,8 @@ namespace FileOrganizer
                 Height = 26,
                 Padding = new Padding(8, 0, 8, 0),
                 Cursor = Cursors.Hand,
-                Visible = (_settings.OrgMode != Models.OrganizationMode.Category && _settings.OrgMode != Models.OrganizationMode.Extension)
+                Visible = true,
+                Enabled = (_settings.OrgMode != Models.OrganizationMode.Category && _settings.OrgMode != Models.OrganizationMode.Extension)
             };
             _lblFormatBadge.Click += (s, e) => MenuPreferences_Click(s, e);
 
@@ -255,6 +256,7 @@ namespace FileOrganizer
             };
             _btnRefresh.Click += (s, e) => LoadPreview();
 
+            // Visual order from left to right: [Refresh] -> [Mode/Category] -> [Date Format]
             pnlPreviewHeader.Controls.AddRange([_btnRefresh, _btnModeSelector, _lblFormatBadge, _lblPreviewHeader]);
 
             _pnlConflicts = new Panel { Dock = DockStyle.Top, Height = 42, BorderStyle = BorderStyle.FixedSingle, BackColor = AppConstants.ColorDangerBg, Visible = false, Padding = new Padding(8, 4, 8, 4), Margin = new Padding(0, 2, 0, 6) };

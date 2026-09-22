@@ -20,14 +20,26 @@ namespace FileOrganizer.Services
         // Factory Built-in Categories (SSoT)
         public static readonly IReadOnlyDictionary<string, string[]> FactoryCategories = new Dictionary<string, string[]>(StringComparer.OrdinalIgnoreCase)
         {
-            ["Images"] = new[] { ".jpg", ".jpeg", ".png", ".gif", ".bmp", ".webp", ".svg", ".ico", ".tiff", ".tif", ".psd", ".ai", ".raw", ".cr2", ".nef", ".heic", ".avif", ".eps" },
-            ["Videos"] = new[] { ".mp4", ".mkv", ".avi", ".mov", ".wmv", ".flv", ".webm", ".m4v", ".mpg", ".mpeg", ".3gp", ".ts", ".m2ts" },
-            ["Audio"] = new[] { ".mp3", ".wav", ".flac", ".aac", ".ogg", ".wma", ".m4a", ".alac", ".opus", ".mid", ".midi" },
-            ["Documents"] = new[] { ".pdf", ".doc", ".docx", ".xls", ".xlsx", ".ppt", ".pptx", ".txt", ".rtf", ".csv", ".odt", ".ods", ".odp", ".epub", ".md", ".log" },
-            ["Archives"] = new[] { ".zip", ".rar", ".7z", ".tar", ".gz", ".bz2", ".xz", ".iso", ".dmg", ".cab" },
-            ["Executables"] = new[] { ".exe", ".msi", ".bat", ".cmd", ".ps1", ".vbs", ".apk", ".appx", ".wsf" },
-            ["Code"] = new[] { ".cs", ".js", ".ts", ".html", ".htm", ".css", ".scss", ".json", ".xml", ".yaml", ".yml", ".sql", ".py", ".java", ".cpp", ".c", ".h", ".php", ".rb", ".go", ".rs", ".sh" },
-            ["Fonts"] = new[] { ".ttf", ".otf", ".woff", ".woff2", ".eot" }
+            ["Office Files"] = new[] { ".doc", ".docx", ".xls", ".xlsx", ".ppt", ".pptx", ".odt", ".ods", ".odp", ".rtf", ".dot", ".dotx", ".xlt", ".xltx", ".pot", ".potx" },
+            ["PDF Files"] = new[] { ".pdf" },
+            ["Reader Files"] = new[] { ".epub", ".mobi", ".azw", ".azw3", ".djvu", ".xps", ".oxps", ".cbr", ".cbz" },
+            ["Text & Notes"] = new[] { ".txt", ".md", ".markdown", ".log", ".rst", ".tex" },
+            ["JSON Files"] = new[] { ".json", ".jsonc", ".jsonl", ".geojson" },
+            ["Data & Config Files"] = new[] { ".xml", ".yaml", ".yml", ".toml", ".ini", ".env", ".properties", ".config", ".plist", ".csv", ".tsv" },
+            ["Image Files"] = new[] { ".jpg", ".jpeg", ".png", ".gif", ".webp", ".avif", ".jxl", ".bmp", ".ico", ".tiff", ".tif", ".raw", ".cr2", ".cr3", ".nef", ".arw", ".dng", ".heic", ".heif" },
+            ["Photoshop Files"] = new[] { ".psd", ".psb" },
+            ["Vector Files"] = new[] { ".svg", ".ai", ".eps", ".fig", ".sketch", ".xd" },
+            ["Publishing Files"] = new[] { ".indd", ".idml", ".indt", ".pub", ".afpub" },
+            ["3D Files"] = new[] { ".blend", ".c4d", ".gltf", ".glb", ".obj", ".fbx", ".3mf", ".stl", ".ply", ".usdz", ".usdc", ".dae", ".3ds", ".step", ".stp" },
+            ["CAD Drawings"] = new[] { ".dwg", ".dxf", ".dwf" },
+            ["Game Dev Files"] = new[] { ".c3p", ".c2proj", ".godot", ".tscn", ".tres", ".unity", ".unitypackage", ".prefab", ".asset", ".meta", ".uproject", ".umap", ".uasset", ".yyp", ".yy", ".gmx" },
+            ["Code Files"] = new[] { ".cs", ".cpp", ".c", ".h", ".hpp", ".rs", ".go", ".java", ".py", ".ts", ".tsx", ".js", ".jsx", ".vue", ".svelte", ".html", ".css", ".scss", ".less", ".php", ".rb", ".swift", ".kt", ".dart", ".lua", ".sql", ".r", ".m", ".asm" },
+            ["Script Files"] = new[] { ".bat", ".cmd", ".ps1", ".psm1", ".vbs", ".wsf", ".sh", ".bash", ".zsh" },
+            ["Video Files"] = new[] { ".mp4", ".mkv", ".avi", ".mov", ".wmv", ".webm", ".flv", ".m4v", ".ts", ".m2ts", ".3gp" },
+            ["Audio Files"] = new[] { ".mp3", ".wav", ".flac", ".aac", ".ogg", ".wma", ".m4a", ".alac", ".opus", ".mid", ".midi" },
+            ["Zip & Archives"] = new[] { ".zip", ".rar", ".7z", ".tar", ".gz", ".bz2", ".xz", ".iso", ".cab", ".tgz" },
+            ["App Installers"] = new[] { ".exe", ".msi", ".msix", ".appx", ".dmg", ".pkg", ".appimage", ".flatpak", ".deb", ".rpm", ".snap", ".apk", ".aab", ".xapk", ".ipa", ".ipk" },
+            ["Font Files"] = new[] { ".ttf", ".otf", ".woff", ".woff2", ".eot" }
         };
 
         private UserTypeDelta _delta = new();
@@ -87,7 +99,126 @@ namespace FileOrganizer.Services
                 table[cleanExt] = kvp.Value;
             }
 
+            // 4. Apply category renames
+            if (_delta.CategoryRenames.Count > 0)
+            {
+                var keys = new List<string>(table.Keys);
+                foreach (var ext in keys)
+                {
+                    string currentCat = table[ext];
+                    if (_delta.CategoryRenames.TryGetValue(currentCat, out var renamedCat) && !string.IsNullOrWhiteSpace(renamedCat))
+                    {
+                        table[ext] = renamedCat;
+                    }
+                }
+            }
+
             _runtimeLookup = table;
+        }
+
+        public List<string> GetAllCategories()
+        {
+            var set = new SortedSet<string>(StringComparer.OrdinalIgnoreCase);
+            foreach (var k in FactoryCategories.Keys)
+            {
+                if (_delta.CategoryRenames.TryGetValue(k, out var renamed) && !string.IsNullOrWhiteSpace(renamed))
+                    set.Add(renamed);
+                else
+                    set.Add(k);
+            }
+            foreach (var k in _delta.CustomCategories.Keys)
+            {
+                if (_delta.CategoryRenames.TryGetValue(k, out var renamed) && !string.IsNullOrWhiteSpace(renamed))
+                    set.Add(renamed);
+                else
+                    set.Add(k);
+            }
+            foreach (var v in _delta.ExtensionCategoryOverrides.Values) set.Add(v);
+            return new List<string>(set);
+        }
+
+        public void RenameCategory(string currentName, string newName)
+        {
+            if (string.IsNullOrWhiteSpace(currentName) || string.IsNullOrWhiteSpace(newName)) return;
+            string cleanNew = newName.Trim();
+            if (string.Equals(currentName.Trim(), cleanNew, StringComparison.OrdinalIgnoreCase)) return;
+
+            // Find canonical key if already renamed
+            string canonical = currentName.Trim();
+            foreach (var kvp in _delta.CategoryRenames)
+            {
+                if (string.Equals(kvp.Value, currentName.Trim(), StringComparison.OrdinalIgnoreCase))
+                {
+                    canonical = kvp.Key;
+                    break;
+                }
+            }
+
+            _delta.CategoryRenames[canonical] = cleanNew;
+            RebuildLookupTable();
+            SaveDelta();
+        }
+
+        public bool ResetCategoryName(string currentName)
+        {
+            if (string.IsNullOrWhiteSpace(currentName)) return false;
+            string target = currentName.Trim();
+            string? foundKey = null;
+
+            foreach (var kvp in _delta.CategoryRenames)
+            {
+                if (string.Equals(kvp.Key, target, StringComparison.OrdinalIgnoreCase) ||
+                    string.Equals(kvp.Value, target, StringComparison.OrdinalIgnoreCase))
+                {
+                    foundKey = kvp.Key;
+                    break;
+                }
+            }
+
+            if (foundKey != null)
+            {
+                _delta.CategoryRenames.Remove(foundKey);
+                RebuildLookupTable();
+                SaveDelta();
+                return true;
+            }
+            return false;
+        }
+
+        public bool IsCategoryRenamed(string currentName, out string originalName)
+        {
+            originalName = currentName;
+            if (string.IsNullOrWhiteSpace(currentName)) return false;
+            string target = currentName.Trim();
+
+            foreach (var kvp in _delta.CategoryRenames)
+            {
+                if (string.Equals(kvp.Value, target, StringComparison.OrdinalIgnoreCase))
+                {
+                    originalName = kvp.Key;
+                    return true;
+                }
+            }
+            return false;
+        }
+
+        public void SetCategoryOverride(string extension, string targetCategory)
+        {
+            if (string.IsNullOrWhiteSpace(extension) || string.IsNullOrWhiteSpace(targetCategory)) return;
+            string cleanExt = extension.StartsWith('.') ? extension.ToLowerInvariant() : "." + extension.ToLowerInvariant();
+            _delta.ExtensionCategoryOverrides[cleanExt] = targetCategory.Trim();
+            _delta.DisabledFactoryExtensions.Remove(cleanExt);
+            RebuildLookupTable();
+            SaveDelta();
+        }
+
+        public void RemoveCategoryOverride(string extension)
+        {
+            if (string.IsNullOrWhiteSpace(extension)) return;
+            string cleanExt = extension.StartsWith('.') ? extension.ToLowerInvariant() : "." + extension.ToLowerInvariant();
+            _delta.ExtensionCategoryOverrides.Remove(cleanExt);
+            RebuildLookupTable();
+            SaveDelta();
         }
 
         public void LoadDelta()

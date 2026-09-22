@@ -17,10 +17,20 @@ namespace FileOrganizer.Services
             OrganizationMode mode,
             FolderFormat folderFormat,
             string folderPrefix,
-            string folderSuffix)
+            string folderSuffix,
+            string categoryPrefix = "",
+            string categorySuffix = "")
         {
             DateTime itemDate = item.IsCreatedDateActive ? item.CreatedDate : item.ModifiedDate;
             string dateFolder = AppConstants.FormatFolderDate(itemDate, folderFormat, folderPrefix, folderSuffix);
+
+            string GetFormattedCategory()
+            {
+                string baseCat = item.IsDirectory ? AppConstants.DefaultGroupedFolderName : FileTypeService.Instance.GetCategory(item.Extension);
+                if (string.IsNullOrWhiteSpace(categoryPrefix) && string.IsNullOrWhiteSpace(categorySuffix))
+                    return baseCat;
+                return $"{categoryPrefix}{baseCat}{categorySuffix}".Trim();
+            }
 
             switch (mode)
             {
@@ -28,8 +38,7 @@ namespace FileOrganizer.Services
                     return dateFolder;
 
                 case OrganizationMode.Category:
-                    if (item.IsDirectory) return AppConstants.DefaultGroupedFolderName;
-                    return FileTypeService.Instance.GetCategory(item.Extension);
+                    return GetFormattedCategory();
 
                 case OrganizationMode.Extension:
                     if (item.IsDirectory) return AppConstants.DefaultGroupedFolderName;
@@ -37,15 +46,62 @@ namespace FileOrganizer.Services
                     return string.IsNullOrWhiteSpace(ext) ? "No Extension" : ext;
 
                 case OrganizationMode.CategoryAndDate:
-                    string cat = item.IsDirectory ? AppConstants.DefaultGroupedFolderName : FileTypeService.Instance.GetCategory(item.Extension);
-                    return Path.Combine(cat, dateFolder);
+                    return Path.Combine(GetFormattedCategory(), dateFolder);
 
                 case OrganizationMode.DateAndCategory:
-                    string cat2 = item.IsDirectory ? AppConstants.DefaultGroupedFolderName : FileTypeService.Instance.GetCategory(item.Extension);
-                    return Path.Combine(dateFolder, cat2);
+                    return Path.Combine(dateFolder, GetFormattedCategory());
 
                 default:
                     return dateFolder;
+            }
+        }
+
+        private static readonly HashSet<string> VideoExtensions = new(StringComparer.OrdinalIgnoreCase)
+        {
+            ".mp4", ".mkv", ".avi", ".mov", ".wmv", ".webm", ".flv", ".m4v", ".ts", ".m2ts", ".3gp"
+        };
+
+        private static readonly HashSet<string> SubtitleExtensions = new(StringComparer.OrdinalIgnoreCase)
+        {
+            ".srt", ".vtt", ".sub", ".ass", ".ssa", ".idx", ".smi"
+        };
+
+        public static void ApplySubtitleCompanionPairing(List<FileItem> items)
+        {
+            if (items == null || items.Count == 0) return;
+
+            var videoMap = new Dictionary<string, FileItem>(StringComparer.OrdinalIgnoreCase);
+            foreach (var item in items)
+            {
+                if (!item.IsDirectory && VideoExtensions.Contains(item.Extension))
+                {
+                    string baseName = Path.GetFileNameWithoutExtension(item.Name);
+                    videoMap[baseName] = item;
+                }
+            }
+
+            if (videoMap.Count == 0) return;
+
+            foreach (var item in items)
+            {
+                if (!item.IsDirectory && SubtitleExtensions.Contains(item.Extension))
+                {
+                    string subBase = Path.GetFileNameWithoutExtension(item.Name);
+                    // Check exact match (e.g. Movie.srt -> Movie.mp4)
+                    if (videoMap.TryGetValue(subBase, out var parentVideo))
+                    {
+                        item.TargetFolder = parentVideo.TargetFolder;
+                    }
+                    // Check language code match (e.g. Movie.en.srt -> Movie.mp4)
+                    else if (subBase.Contains('.'))
+                    {
+                        string candidate = Path.GetFileNameWithoutExtension(subBase);
+                        if (videoMap.TryGetValue(candidate, out var parentVideoWithLang))
+                        {
+                            item.TargetFolder = parentVideoWithLang.TargetFolder;
+                        }
+                    }
+                }
             }
         }
 

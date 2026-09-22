@@ -23,7 +23,10 @@ namespace FileOrganizer.Models
         public DateSource FolderDateSource { get; set; } = Config.AppConstants.DefaultFolderDateSource;
         public int SchemaVersion { get; set; } = 1;
         public OrganizationMode OrgMode { get; set; } = OrganizationMode.Date;
+        public string CategoryPrefix { get; set; } = Config.AppConstants.DefaultCategoryPrefix;
+        public string CategorySuffix { get; set; } = Config.AppConstants.DefaultCategorySuffix;
         public bool KeepHtmlCompanionsTogether { get; set; } = true;
+        public bool KeepSubtitleCompanionsTogether { get; set; } = Config.AppConstants.DefaultKeepSubtitleCompanionsTogether;
         public int MaxPreviewItems { get; set; } = Config.AppConstants.DefaultMaxPreviewItems;
 
         public static AppSettings LoadFromFile()

@@ -17,9 +17,12 @@ namespace FileOrganizer.Services
         private FolderFormat _folderFormat = AppConstants.DefaultFolderFormat;
         private string _folderPrefix = AppConstants.DefaultFolderPrefix;
         private string _folderSuffix = AppConstants.DefaultFolderSuffix;
+        private string _categoryPrefix = AppConstants.DefaultCategoryPrefix;
+        private string _categorySuffix = AppConstants.DefaultCategorySuffix;
         private bool _use24HourTimestamp = AppConstants.DefaultUse24HourTimestamp;
         private OrganizationMode _organizationMode = OrganizationMode.Date;
         private bool _keepHtmlCompanionsTogether = true;
+        private bool _keepSubtitleCompanionsTogether = true;
 
         public FileOrganizerService(string executablePath, string? workingDirectory = null, string? outputDirectory = null)
         {
@@ -115,7 +118,7 @@ namespace FileOrganizer.Services
                                 IsCreatedDateActive = isCreatedActive,
                                 Size = 0
                             };
-                            fileItem.TargetFolder = TargetFolderResolver.Resolve(fileItem, _organizationMode, _folderFormat, _folderPrefix, _folderSuffix);
+                            fileItem.TargetFolder = TargetFolderResolver.Resolve(fileItem, _organizationMode, _folderFormat, _folderPrefix, _folderSuffix, _categoryPrefix, _categorySuffix);
                             files.Add(fileItem);
                         }
                         else if (File.Exists(itemPath))
@@ -132,7 +135,7 @@ namespace FileOrganizer.Services
                                 IsCreatedDateActive = isCreatedActive,
                                 Size = fileInfo.Length
                             };
-                            fileItem.TargetFolder = TargetFolderResolver.Resolve(fileItem, _organizationMode, _folderFormat, _folderPrefix, _folderSuffix);
+                            fileItem.TargetFolder = TargetFolderResolver.Resolve(fileItem, _organizationMode, _folderFormat, _folderPrefix, _folderSuffix, _categoryPrefix, _categorySuffix);
                             files.Add(fileItem);
                         }
                     }
@@ -151,6 +154,11 @@ namespace FileOrganizer.Services
             if (_keepHtmlCompanionsTogether)
             {
                 TargetFolderResolver.ApplyHtmlCompanionPairing(files);
+            }
+
+            if (_keepSubtitleCompanionsTogether)
+            {
+                TargetFolderResolver.ApplySubtitleCompanionPairing(files);
             }
 
             return files.OrderByDescending(f => f.ModifiedDate).ToList();
@@ -380,7 +388,16 @@ namespace FileOrganizer.Services
             set => _folderSuffix = value ?? string.Empty;
         }
 
-        public void ApplyNamingSettings(FolderFormat format, string prefix, string suffix, bool use24Hour = false, OrganizationMode mode = OrganizationMode.Date, bool keepHtmlCompanions = true)
+        public void ApplyNamingSettings(
+            FolderFormat format,
+            string prefix,
+            string suffix,
+            bool use24Hour = false,
+            OrganizationMode mode = OrganizationMode.Date,
+            bool keepHtmlCompanions = true,
+            string categoryPrefix = "",
+            string categorySuffix = "",
+            bool keepSubtitleCompanions = true)
         {
             _folderFormat = format;
             _folderPrefix = prefix ?? string.Empty;
@@ -388,6 +405,9 @@ namespace FileOrganizer.Services
             _use24HourTimestamp = use24Hour;
             _organizationMode = mode;
             _keepHtmlCompanionsTogether = keepHtmlCompanions;
+            _categoryPrefix = categoryPrefix ?? string.Empty;
+            _categorySuffix = categorySuffix ?? string.Empty;
+            _keepSubtitleCompanionsTogether = keepSubtitleCompanions;
         }
 
         public string FormatTargetFolder(DateTime date)

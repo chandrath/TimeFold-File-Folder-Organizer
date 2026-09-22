@@ -23,9 +23,15 @@ namespace FileOrganizer.Forms
         private ModernButton _btnExport = null!;
         private ModernButton _btnClose = null!;
 
+        private TextBox _txtSearch = null!;
+        private TextBox _txtPrefix = null!;
+        private TextBox _txtSuffix = null!;
+        private AppSettings _settings = null!;
+
         public TypeRulesDialog(bool darkMode)
         {
             _darkMode = darkMode;
+            _settings = AppSettings.LoadFromFile();
             InitializeComponent();
             ApplyTheme();
             LoadRulesList();
@@ -34,8 +40,8 @@ namespace FileOrganizer.Forms
         private void InitializeComponent()
         {
             Text = "File Type & Category Rules";
-            Size = new Size(680, 520);
-            MinimumSize = new Size(580, 420);
+            Size = new Size(720, 560);
+            MinimumSize = new Size(620, 460);
             StartPosition = FormStartPosition.CenterParent;
             Font = new Font("Segoe UI", 9F);
             ShowIcon = false;
@@ -44,13 +50,31 @@ namespace FileOrganizer.Forms
 
             var pnlMain = new Panel { Dock = DockStyle.Fill, Padding = new Padding(16) };
 
+            // Top Header & Search Bar
+            var pnlTop = new Panel { Dock = DockStyle.Top, Height = 68, Padding = new Padding(0, 0, 0, 8) };
             var lblHeader = new Label
             {
                 Text = "Customize how file extensions map to organizational categories.",
                 Dock = DockStyle.Top,
-                Height = 26,
+                Height = 24,
                 Font = new Font("Segoe UI", 9.5F)
             };
+
+            var pnlSearch = new Panel { Dock = DockStyle.Bottom, Height = 34 };
+            var lblSearch = new Label { Text = "🔍 Search Extension / Category:", AutoSize = true, Location = new Point(0, 7) };
+            _txtSearch = new TextBox { Location = new Point(200, 4), Width = 220, PlaceholderText = "e.g. .psd, .c3p, 3D, Code" };
+            _txtSearch.TextChanged += (s, e) => LoadRulesList();
+
+            var lblPre = new Label { Text = "Prefix:", AutoSize = true, Location = new Point(440, 7) };
+            _txtPrefix = new TextBox { Text = _settings.CategoryPrefix, Location = new Point(485, 4), Width = 70, PlaceholderText = "e.g. Cat_" };
+            _txtPrefix.TextChanged += OnPrefixSuffixChanged;
+
+            var lblSuf = new Label { Text = "Suffix:", AutoSize = true, Location = new Point(568, 7) };
+            _txtSuffix = new TextBox { Text = _settings.CategorySuffix, Location = new Point(612, 4), Width = 70, PlaceholderText = "e.g. _Files" };
+            _txtSuffix.TextChanged += OnPrefixSuffixChanged;
+
+            pnlSearch.Controls.AddRange(new Control[] { lblSearch, _txtSearch, lblPre, _txtPrefix, lblSuf, _txtSuffix });
+            pnlTop.Controls.AddRange(new Control[] { lblHeader, pnlSearch });
 
             _lstRules = new ListView
             {
@@ -61,18 +85,63 @@ namespace FileOrganizer.Forms
                 CheckBoxes = true,
                 BorderStyle = BorderStyle.FixedSingle
             };
-            _lstRules.Columns.Add("Extension", 140);
-            _lstRules.Columns.Add("Target Category", 220);
+            _lstRules.Columns.Add("Extension", 150);
+            _lstRules.Columns.Add("Target Category", 240);
             _lstRules.Columns.Add("Status", 160);
             _lstRules.ItemChecked += LstRules_ItemChecked;
+
+            var ctxRules = new ContextMenuStrip { ShowImageMargin = false };
+            if (_darkMode)
+            {
+                ctxRules.Renderer = AppTheme.DarkMenuRenderer;
+                ctxRules.BackColor = AppTheme.GetPalette(_darkMode).MenuBg;
+            }
+
+            var mnuRenameCat = new ToolStripMenuItem("🏷️ Rename Category...", null, (s, e) => RenameSelectedCategory());
+            var mnuResetCat = new ToolStripMenuItem("↺ Revert Category to Factory Name", null, (s, e) => ResetSelectedCategoryName());
+            var mnuRemap = new ToolStripMenuItem("🔀 Remap Extension to Another Category...", null, (s, e) => RemapSelectedExtension());
+            var mnuResetExt = new ToolStripMenuItem("↺ Reset Extension Override", null, (s, e) => ResetSelectedExtensionOverride());
+
+            ctxRules.Items.AddRange(new ToolStripItem[]
+            {
+                mnuRenameCat,
+                mnuResetCat,
+                new ToolStripSeparator(),
+                mnuRemap,
+                mnuResetExt
+            });
+
+            ctxRules.Opening += (s, e) =>
+            {
+                if (_lstRules.SelectedItems.Count == 0)
+                {
+                    e.Cancel = true;
+                    return;
+                }
+
+                var item = _lstRules.SelectedItems[0];
+                string ext = item.Tag as string ?? "";
+                string cat = item.SubItems[1].Text;
+                bool isCatRenamed = _service.IsCategoryRenamed(cat, out string origCat);
+                bool hasOverride = _service.Delta.ExtensionCategoryOverrides.ContainsKey(ext);
+
+                mnuRenameCat.Text = $"🏷️ Rename Category '{cat}'...";
+                mnuResetCat.Visible = isCatRenamed;
+                if (isCatRenamed) mnuResetCat.Text = $"↺ Revert Category to Factory Name ('{origCat}')";
+
+                mnuRemap.Text = $"🔀 Remap {ext} to Another Category...";
+                mnuResetExt.Visible = hasOverride;
+            };
+
+            _lstRules.ContextMenuStrip = ctxRules;
 
             // Bottom Add / Override Bar
             var pnlAdd = new Panel { Dock = DockStyle.Bottom, Height = 48, Padding = new Padding(0, 8, 0, 8) };
             var lblAdd = new Label { Text = "Extension:", AutoSize = true, Location = new Point(0, 14) };
             _txtNewExt = new TextBox { Location = new Point(68, 11), Width = 90, PlaceholderText = ".ext" };
             var lblCat = new Label { Text = "Category:", AutoSize = true, Location = new Point(170, 14) };
-            _cboTargetCategory = new ComboBox { Location = new Point(236, 11), Width = 160, DropDownStyle = ComboBoxStyle.DropDown };
-            var btnAssign = new ModernButton { Text = "Add / Remap", Location = new Point(410, 10), Size = new Size(110, 28), BorderRadius = 6 };
+            _cboTargetCategory = new ComboBox { Location = new Point(236, 11), Width = 170, DropDownStyle = ComboBoxStyle.DropDown };
+            var btnAssign = new ModernButton { Text = "Add / Remap", Location = new Point(420, 10), Size = new Size(110, 28), BorderRadius = 6 };
             btnAssign.Click += BtnAssign_Click;
 
             pnlAdd.Controls.AddRange(new Control[] { lblAdd, _txtNewExt, lblCat, _cboTargetCategory, btnAssign });
@@ -96,8 +165,15 @@ namespace FileOrganizer.Forms
             pnlMain.Controls.Add(_lstRules);
             pnlMain.Controls.Add(pnlAdd);
             pnlMain.Controls.Add(pnlFooter);
-            pnlMain.Controls.Add(lblHeader);
+            pnlMain.Controls.Add(pnlTop);
             Controls.Add(pnlMain);
+        }
+
+        private void OnPrefixSuffixChanged(object? sender, EventArgs e)
+        {
+            _settings.CategoryPrefix = _txtPrefix.Text;
+            _settings.CategorySuffix = _txtSuffix.Text;
+            _settings.SaveToFile();
         }
 
         private void ApplyTheme()
@@ -113,6 +189,22 @@ namespace FileOrganizer.Forms
             _txtNewExt.ForeColor = palette.TextPrimary;
             _cboTargetCategory.BackColor = palette.InputBg;
             _cboTargetCategory.ForeColor = palette.TextPrimary;
+
+            if (_txtSearch != null)
+            {
+                _txtSearch.BackColor = palette.InputBg;
+                _txtSearch.ForeColor = palette.TextPrimary;
+            }
+            if (_txtPrefix != null)
+            {
+                _txtPrefix.BackColor = palette.InputBg;
+                _txtPrefix.ForeColor = palette.TextPrimary;
+            }
+            if (_txtSuffix != null)
+            {
+                _txtSuffix.BackColor = palette.InputBg;
+                _txtSuffix.ForeColor = palette.TextPrimary;
+            }
 
             _btnReset.BackColor = palette.SecondaryButtonBg;
             _btnReset.ForeColor = palette.SecondaryButtonText;
@@ -145,11 +237,21 @@ namespace FileOrganizer.Forms
             foreach (var extList in _service.Delta.CustomCategories.Values)
                 foreach (var ext in extList) allExtensions.Add(ext);
 
+            string query = _txtSearch?.Text.Trim().ToLowerInvariant() ?? string.Empty;
+
             foreach (var ext in allExtensions.OrderBy(e => e))
             {
                 bool isFactory = FileTypeService.FactoryCategories.Values.Any(list => list.Contains(ext, StringComparer.OrdinalIgnoreCase));
                 bool isDisabled = _service.Delta.DisabledFactoryExtensions.Contains(ext);
                 string currentCat = _service.GetCategory(ext);
+
+                // Filter by search query if present
+                if (!string.IsNullOrEmpty(query))
+                {
+                    bool matchExt = ext.ToLowerInvariant().Contains(query);
+                    bool matchCat = currentCat.ToLowerInvariant().Contains(query);
+                    if (!matchExt && !matchCat) continue;
+                }
 
                 string status = isFactory ? (isDisabled ? "Disabled" : "Factory Default") : "Custom User Rule";
                 if (_service.Delta.ExtensionCategoryOverrides.ContainsKey(ext)) status = "User Override";
@@ -223,6 +325,12 @@ namespace FileOrganizer.Forms
             if (res == DialogResult.Yes)
             {
                 _service.ResetToFactoryDefaults();
+                _settings.OrgMode = OrganizationMode.Date;
+                _settings.CategoryPrefix = AppConstants.DefaultCategoryPrefix;
+                _settings.CategorySuffix = AppConstants.DefaultCategorySuffix;
+                _settings.SaveToFile();
+                if (_txtPrefix != null) _txtPrefix.Text = "";
+                if (_txtSuffix != null) _txtSuffix.Text = "";
                 LoadRulesList();
             }
         }
@@ -271,6 +379,73 @@ namespace FileOrganizer.Forms
                     MessageBox.Show($"Import failed: {ex.Message}", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
                 }
             }
+        }
+
+        private void RenameSelectedCategory()
+        {
+            if (_lstRules.SelectedItems.Count == 0) return;
+            string currentCat = _lstRules.SelectedItems[0].SubItems[1].Text;
+
+            var palette = AppTheme.GetPalette(_darkMode);
+            using var prompt = new Form
+            {
+                Text = "Rename Category",
+                Size = new Size(420, 175),
+                StartPosition = FormStartPosition.CenterParent,
+                FormBorderStyle = FormBorderStyle.FixedDialog,
+                MaximizeBox = false,
+                MinimizeBox = false,
+                BackColor = palette.CanvasBg,
+                ForeColor = palette.TextPrimary,
+                Font = new Font("Segoe UI", 9F)
+            };
+            AppTheme.SetWindowDarkTitleBar(prompt.Handle, _darkMode);
+
+            var lbl = new Label { Text = $"Enter new name for category '{currentCat}':", Location = new Point(18, 14), AutoSize = true, ForeColor = palette.TextPrimary };
+            var txt = new TextBox { Text = currentCat, Location = new Point(20, 38), Width = 365, Font = new Font("Segoe UI", 9.5F), BackColor = palette.InputBg, ForeColor = palette.TextPrimary };
+            var btnOk = new Button { Text = "Save", DialogResult = DialogResult.OK, Location = new Point(210, 85), Size = new Size(85, 32), BackColor = AppConstants.ColorPrimary, ForeColor = Color.White, FlatStyle = FlatStyle.Flat };
+            btnOk.FlatAppearance.BorderSize = 0;
+            var btnCancel = new Button { Text = "Cancel", DialogResult = DialogResult.Cancel, Location = new Point(300, 85), Size = new Size(85, 32), BackColor = palette.SecondaryButtonBg, ForeColor = palette.SecondaryButtonText, FlatStyle = FlatStyle.Flat };
+            btnCancel.FlatAppearance.BorderColor = palette.SecondaryButtonBorder;
+
+            prompt.Controls.AddRange([lbl, txt, btnOk, btnCancel]);
+            prompt.AcceptButton = btnOk;
+            prompt.CancelButton = btnCancel;
+
+            if (prompt.ShowDialog(this) == DialogResult.OK && !string.IsNullOrWhiteSpace(txt.Text))
+            {
+                _service.RenameCategory(currentCat, txt.Text.Trim());
+                LoadRulesList();
+            }
+        }
+
+        private void ResetSelectedCategoryName()
+        {
+            if (_lstRules.SelectedItems.Count == 0) return;
+            string currentCat = _lstRules.SelectedItems[0].SubItems[1].Text;
+            if (_service.ResetCategoryName(currentCat))
+            {
+                LoadRulesList();
+            }
+        }
+
+        private void RemapSelectedExtension()
+        {
+            if (_lstRules.SelectedItems.Count == 0) return;
+            string ext = _lstRules.SelectedItems[0].Tag as string ?? "";
+            string currentCat = _lstRules.SelectedItems[0].SubItems[1].Text;
+
+            _txtNewExt.Text = ext;
+            _cboTargetCategory.Text = currentCat;
+            _cboTargetCategory.Focus();
+        }
+
+        private void ResetSelectedExtensionOverride()
+        {
+            if (_lstRules.SelectedItems.Count == 0) return;
+            string ext = _lstRules.SelectedItems[0].Tag as string ?? "";
+            _service.RemoveCategoryOverride(ext);
+            LoadRulesList();
         }
     }
 }
