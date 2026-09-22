@@ -254,9 +254,10 @@ namespace FileOrganizer
 
             _lblSummary.Font = new Font(_lblSummary.Font, FontStyle.Bold);
             _lblSummary.ForeColor = _settings.DarkMode ? Color.FromArgb(52, 211, 153) : Color.FromArgb(4, 120, 87);
+            string label = _settings.OrgMode == OrganizationMode.Category ? "category folder(s)" : (_settings.OrgMode == OrganizationMode.Extension ? "extension folder(s)" : (_settings.OrgMode == OrganizationMode.Date ? "date folder(s)" : "folder(s)"));
             _lblSummary.Text = folderCount > 0
-                ? $"✔ Ready: {total:N0} items ({fileCount:N0} files, {folderCount:N0} folders) → {grouped.Count:N0} target date folder(s)"
-                : $"✔ Ready: {fileCount:N0} file(s) → {grouped.Count:N0} target date folder(s)";
+                ? $"✔ Ready: {total:N0} items ({fileCount:N0} files, {folderCount:N0} folders) → {grouped.Count:N0} target {label}"
+                : $"✔ Ready: {fileCount:N0} file(s) → {grouped.Count:N0} target {label}";
             _btnStart.Enabled = true;
         }
 
@@ -295,7 +296,7 @@ namespace FileOrganizer
 
         private void CheckTimestampSimilarity()
         {
-            if (_organizerService == null || _filesToOrganize.Count < 3)
+            if (_organizerService == null || _filesToOrganize.Count < 3 || _settings.OrgMode == OrganizationMode.Category || _settings.OrgMode == OrganizationMode.Extension)
             {
                 _pnlTimestampWarning.Visible = false;
                 return;

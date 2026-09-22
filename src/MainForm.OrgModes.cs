@@ -21,11 +21,16 @@ namespace FileOrganizer
         private void BtnModeSelector_Click(object? sender, EventArgs e)
         {
             var menu = new ContextMenuStrip();
+
+            var hdrSimple = new ToolStripMenuItem("── Simple (1-Level Folders) ──") { Enabled = false };
             var itemDate = new ToolStripMenuItem("📅 By Date Timeline (Default)", null, (s, a) => SetOrganizationMode(OrganizationMode.Date)) { Checked = _settings.OrgMode == OrganizationMode.Date };
             var itemCat = new ToolStripMenuItem("🗂️ By Smart Category (Images, Documents...)", null, (s, a) => SetOrganizationMode(OrganizationMode.Category)) { Checked = _settings.OrgMode == OrganizationMode.Category };
             var itemExt = new ToolStripMenuItem("🏷️ By File Extension (JPG, PDF...)", null, (s, a) => SetOrganizationMode(OrganizationMode.Extension)) { Checked = _settings.OrgMode == OrganizationMode.Extension };
-            var itemHyb1 = new ToolStripMenuItem("🔀 Hybrid: Category / Date", null, (s, a) => SetOrganizationMode(OrganizationMode.CategoryAndDate)) { Checked = _settings.OrgMode == OrganizationMode.CategoryAndDate };
-            var itemHyb2 = new ToolStripMenuItem("🔄 Hybrid: Date / Category", null, (s, a) => SetOrganizationMode(OrganizationMode.DateAndCategory)) { Checked = _settings.OrgMode == OrganizationMode.DateAndCategory };
+
+            var hdrHybrid = new ToolStripMenuItem("── Hybrid (2-Level Nested) ──") { Enabled = false };
+            var itemHyb1 = new ToolStripMenuItem(@"🔀 Category / Date  (e.g. Images\2026-09)", null, (s, a) => SetOrganizationMode(OrganizationMode.CategoryAndDate)) { Checked = _settings.OrgMode == OrganizationMode.CategoryAndDate };
+            var itemHyb2 = new ToolStripMenuItem(@"🔄 Date / Category  (e.g. 2026-09\Images)", null, (s, a) => SetOrganizationMode(OrganizationMode.DateAndCategory)) { Checked = _settings.OrgMode == OrganizationMode.DateAndCategory };
+
             var itemRules = new ToolStripMenuItem("⚙ Customize File Type Rules...", null, (s, a) =>
             {
                 using var dlg = new TypeRulesDialog(_settings.DarkMode);
@@ -33,7 +38,15 @@ namespace FileOrganizer
                 ReapplyOrganizationMode();
             });
 
-            menu.Items.AddRange(new ToolStripItem[] { itemDate, itemCat, itemExt, itemHyb1, itemHyb2, new ToolStripSeparator(), itemRules });
+            menu.Items.AddRange(new ToolStripItem[]
+            {
+                hdrSimple, itemDate, itemCat, itemExt,
+                new ToolStripSeparator(),
+                hdrHybrid, itemHyb1, itemHyb2,
+                new ToolStripSeparator(),
+                itemRules
+            });
+
             menu.Show(_btnModeSelector, new Point(0, _btnModeSelector.Height + 2));
         }
 
@@ -42,6 +55,10 @@ namespace FileOrganizer
             _settings.OrgMode = mode;
             _settings.SaveToFile();
             if (_btnModeSelector != null) _btnModeSelector.Text = GetModeSelectorText();
+            if (_lblFormatBadge != null)
+            {
+                _lblFormatBadge.Visible = (mode != OrganizationMode.Category && mode != OrganizationMode.Extension);
+            }
             ReapplyOrganizationMode();
         }
 

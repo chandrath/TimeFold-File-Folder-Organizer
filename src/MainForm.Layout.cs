@@ -216,7 +216,8 @@ namespace FileOrganizer
                 AutoSize = true,
                 Height = 26,
                 Padding = new Padding(8, 0, 8, 0),
-                Cursor = Cursors.Hand
+                Cursor = Cursors.Hand,
+                Visible = (_settings.OrgMode != Models.OrganizationMode.Category && _settings.OrgMode != Models.OrganizationMode.Extension)
             };
             _lblFormatBadge.Click += (s, e) => MenuPreferences_Click(s, e);
 
@@ -254,7 +255,7 @@ namespace FileOrganizer
             };
             _btnRefresh.Click += (s, e) => LoadPreview();
 
-            pnlPreviewHeader.Controls.AddRange([_btnRefresh, _lblFormatBadge, _btnModeSelector, _lblPreviewHeader]);
+            pnlPreviewHeader.Controls.AddRange([_btnRefresh, _btnModeSelector, _lblFormatBadge, _lblPreviewHeader]);
 
             _pnlConflicts = new Panel { Dock = DockStyle.Top, Height = 42, BorderStyle = BorderStyle.FixedSingle, BackColor = AppConstants.ColorDangerBg, Visible = false, Padding = new Padding(8, 4, 8, 4), Margin = new Padding(0, 2, 0, 6) };
             _lblConflicts = new Label { Text = "⚠ Conflicts Detected:", Font = new Font("Segoe UI", 9F, FontStyle.Bold), ForeColor = AppConstants.ColorDanger, Dock = DockStyle.Fill, TextAlign = ContentAlignment.MiddleLeft };

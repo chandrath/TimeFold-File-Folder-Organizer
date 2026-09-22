@@ -109,6 +109,7 @@ namespace FileOrganizer.Config
 
         // Output & Logging Prefixes (SSoT)
         public const string SortedFolderPrefix = "Sorted_";
+        public const string DefaultGroupedFolderName = "Grouped Folders";
         public const string CsvLogPrefix = ShortAppName + "_Log_";
         public const string LegacyCsvLogPrefix = "OrganizationLog_";
 

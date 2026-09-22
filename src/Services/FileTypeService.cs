@@ -26,7 +26,7 @@ namespace FileOrganizer.Services
             ["Documents"] = new[] { ".pdf", ".doc", ".docx", ".xls", ".xlsx", ".ppt", ".pptx", ".txt", ".rtf", ".csv", ".odt", ".ods", ".odp", ".epub", ".md", ".log" },
             ["Archives"] = new[] { ".zip", ".rar", ".7z", ".tar", ".gz", ".bz2", ".xz", ".iso", ".dmg", ".cab" },
             ["Executables"] = new[] { ".exe", ".msi", ".bat", ".cmd", ".ps1", ".vbs", ".apk", ".appx", ".wsf" },
-            ["Code & Web"] = new[] { ".cs", ".js", ".ts", ".html", ".htm", ".css", ".scss", ".json", ".xml", ".yaml", ".yml", ".sql", ".py", ".java", ".cpp", ".c", ".h", ".php", ".rb", ".go", ".rs", ".sh" },
+            ["Code"] = new[] { ".cs", ".js", ".ts", ".html", ".htm", ".css", ".scss", ".json", ".xml", ".yaml", ".yml", ".sql", ".py", ".java", ".cpp", ".c", ".h", ".php", ".rb", ".go", ".rs", ".sh" },
             ["Fonts"] = new[] { ".ttf", ".otf", ".woff", ".woff2", ".eot" }
         };
 

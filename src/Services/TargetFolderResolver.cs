@@ -28,20 +28,20 @@ namespace FileOrganizer.Services
                     return dateFolder;
 
                 case OrganizationMode.Category:
-                    if (item.IsDirectory) return "Folders";
+                    if (item.IsDirectory) return AppConstants.DefaultGroupedFolderName;
                     return FileTypeService.Instance.GetCategory(item.Extension);
 
                 case OrganizationMode.Extension:
-                    if (item.IsDirectory) return "Folders";
+                    if (item.IsDirectory) return AppConstants.DefaultGroupedFolderName;
                     string ext = item.Extension.TrimStart('.').ToUpperInvariant();
                     return string.IsNullOrWhiteSpace(ext) ? "No Extension" : ext;
 
                 case OrganizationMode.CategoryAndDate:
-                    string cat = item.IsDirectory ? "Folders" : FileTypeService.Instance.GetCategory(item.Extension);
+                    string cat = item.IsDirectory ? AppConstants.DefaultGroupedFolderName : FileTypeService.Instance.GetCategory(item.Extension);
                     return Path.Combine(cat, dateFolder);
 
                 case OrganizationMode.DateAndCategory:
-                    string cat2 = item.IsDirectory ? "Folders" : FileTypeService.Instance.GetCategory(item.Extension);
+                    string cat2 = item.IsDirectory ? AppConstants.DefaultGroupedFolderName : FileTypeService.Instance.GetCategory(item.Extension);
                     return Path.Combine(dateFolder, cat2);
 
                 default:
