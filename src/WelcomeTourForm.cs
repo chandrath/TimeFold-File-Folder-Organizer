@@ -87,6 +87,21 @@ namespace FileOrganizer
                     }
                 ),
                 new TourSlide(
+                    "🗂️",
+                    "SMART CATEGORIES",
+                    Color.FromArgb(245, 158, 11),
+                    "Organize by File Type, Date, or Both",
+                    "Tailor your organization strategy with categories and 2-level hybrid nesting.",
+                    new[]
+                    {
+                        "Smart Categories: Automatically group files into intuitive categories (Images, Documents, Audio, Video, 3D, Code, Archives, etc.).",
+                        $"Hybrid 2-Level Folders: Combine both dimensions (e.g., Images\\{now:yyyy-MM} or {now:yyyy-MM}\\Images) for deep organization.",
+                        "Custom Type Rules: Remap file extensions, add custom folder prefixes & suffixes, or create your own custom categories.",
+                        "Smart Companion Pairing: Intelligently keep HTML files with their asset folders and subtitle files beside movies.",
+                        "1-Click Switching: Seamlessly toggle between Date, Category, and Hybrid modes directly from the main toolbar."
+                    }
+                ),
+                new TourSlide(
                     "🛡️",
                     "SAFE & REVERSIBLE",
                     Color.FromArgb(16, 185, 129),

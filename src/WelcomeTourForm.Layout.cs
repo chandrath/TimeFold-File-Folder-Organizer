@@ -81,16 +81,16 @@ namespace FileOrganizer
                 Font = new Font("Segoe UI", 9F, FontStyle.Bold),
                 ForeColor = _palette.TextMuted,
                 Anchor = AnchorStyles.Top | AnchorStyles.Right,
-                Location = new Point(440, 18),
-                Size = new Size(80, 20),
+                Location = new Point(400, 18),
+                Size = new Size(110, 20),
                 TextAlign = ContentAlignment.MiddleRight
             };
 
             var pnlDots = new FlowLayoutPanel
             {
                 Anchor = AnchorStyles.Top | AnchorStyles.Right,
-                Location = new Point(526, 17),
-                Size = new Size(116, 22),
+                Location = new Point(516, 17),
+                Size = new Size(126, 22),
                 FlowDirection = FlowDirection.LeftToRight,
                 WrapContents = false
             };
