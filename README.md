@@ -5,7 +5,7 @@
 <h1 align="center">TimeFold: File & Folder Organizer</h1>
 
 <p align="center">
-  <strong>Fast, non-destructive file and folder organizer for Windows that sorts messy directories into clean date-based timelines or smart file-type categories.</strong>
+  <strong>Fast, non-destructive file and folder organizer for Windows that turns messy directories into clean date-based timelines, file-type categories, or structured extension-based folders.</strong>
 </p>
 
 <p align="center">
@@ -17,65 +17,267 @@
 </p>
 
 <p align="center">
-  <img src="docs/assets/timefold-banner.jpg" alt="TimeFold: File and Folder Organizer Showcase" width="100%" />
+  <img src="docs/assets/timefold-banner.jpg" alt="TimeFold file and folder organizer for Windows" width="100%" />
 </p>
 
 ---
 
-## 😫 The Problem TimeFold Solves
+## What TimeFold Does
 
-Do you have folders like **Downloads**, **Screenshots**, **Photos**, or your **Desktop** packed with thousands of loose files?
+TimeFold is a Windows file and folder organizer for people who have too many files in places like **Downloads**, **Screenshots**, **Photos**, or the **Desktop**.
 
-* **Windows Explorer Slows Down:** Opening folders with thousands of files takes forever to load, scroll, or search.
-* **Wasted Time:** Digging through an ocean of unorganized documents and images causes frustration.
-* **Digital Clutter:** Years of mixed downloads and receipts accumulate into an unmanageable mess.
+Instead of manually creating folders and moving files one by one, TimeFold scans a selected folder, shows you the planned destinations, and then organizes the files and supported folders into the structure you choose.
 
-**TimeFold fixes this instantly.** It inspects each item's true timestamp and organizes everything into tidy, chronological folders without altering or deleting any data.
+Imagine your **Downloads** folder has **10,000+ random files**:
+
+```text
+Downloads/
+├── photo123.jpg
+├── invoice.pdf
+├── vacation.mp4
+├── project.zip
+├── screenshot.png
+├── report.docx
+├── presentation.pptx
+├── song.mp3
+├── model.blend
+├── drawing.dwg
+├── vlc-setup.exe
+├── script.py
+└── ... 10,000+ other files
+```
+
+With TimeFold, that same folder can be organized into a predictable structure instead of one large mixed list.
+
+### Organize by file category
+
+TimeFold can group supported files into categories such as **Images, PDF Files, Document Files, Office Files, Video Files, Audio Files, 3D Files, CAD Files, Code Files, App Installers, and Zip & Archives**.
+
+```text
+Downloads/
+├── Images/
+│   ├── photo123.jpg
+│   └── screenshot.png
+│
+├── PDF Files/
+│   └── invoice.pdf
+│
+├── Document Files/
+│   └── report.docx
+│
+├── Office Files/
+│   └── presentation.pptx
+│
+├── Video Files/
+│   └── vacation.mp4
+│
+├── Audio Files/
+│   └── song.mp3
+│
+├── 3D Files/
+│   └── model.blend
+│
+├── CAD Files/
+│   └── drawing.dwg
+│
+├── Code Files/
+│   └── script.py
+│
+├── App Installers/
+│   └── vlc-setup.exe
+│
+└── Zip & Archives/
+    └── project.zip
+```
+
+### Organize by date
+
+TimeFold can also organize files and folders into date-based folders. You can choose the date format in Preferences:
+
+```text
+Month    → 2026-08
+Day      → 2026-08-15
+Quarter  → 2026-Q3
+Year     → 2026
+```
+
+For example, a month-based organization can look like this:
+
+```text
+Downloads/
+├── 2025-01/
+│   ├── invoice_amazon.pdf
+│   ├── IMG_2847.jpg
+│   └── project-report.docx
+│
+├── 2025-02/
+│   └── vacation.mp4
+│
+├── 2025-03/
+│   └── presentation.pptx
+│
+├── 2026-01/
+│   ├── invoice_10482.pdf
+│   ├── IMG_4921.jpg
+│   └── project.zip
+│
+└── 2026-03/
+    ├── resume.docx
+    └── screenshot.png
+```
+
+### Combine date and category
+
+When you want both chronological organization and file-type grouping, TimeFold supports two-level hybrid structures.
+
+**Category / Date**
+
+```text
+Downloads/
+├── Images/
+│   ├── 2026-08/
+│   └── 2026-09/
+│
+├── PDF Files/
+│   ├── 2026-08/
+│   └── 2026-09/
+│
+├── Video Files/
+│   ├── 2026-08/
+│   └── 2026-09/
+│
+└── Zip & Archives/
+    ├── 2026-08/
+    └── 2026-09/
+```
+
+**Date / Category**
+
+```text
+Downloads/
+├── 2026-08/
+│   ├── Images/
+│   ├── PDF Files/
+│   ├── Video Files/
+│   └── Zip & Archives/
+│
+└── 2026-09/
+    ├── Images/
+    ├── PDF Files/
+    ├── Video Files/
+    └── Zip & Archives/
+```
+
+### Organize by file extension
+
+For a more precise structure, TimeFold can organize files by their actual file extension.
+
+```text
+Downloads/
+├── ZIP/
+│   ├── project.zip
+│   └── backup.zip
+│
+├── PSD/
+│   ├── website-design.psd
+│   └── logo.psd
+│
+├── DOCX/
+│   ├── report.docx
+│   └── resume.docx
+│
+├── PDF/
+│   ├── invoice.pdf
+│   └── manual.pdf
+│
+├── JPG/
+│   ├── photo123.jpg
+│   └── IMG_2847.jpg
+│
+├── MP4/
+│   └── vacation.mp4
+│
+└── PY/
+    └── script.py
+```
+
+### One tool, multiple ways to organize
+
+TimeFold gives you several organization strategies, depending on how you want to work:
+
+| Organization method | What it does |
+| --- | --- |
+| **Category** | Groups supported files into categories such as Images, PDF Files, Document Files, Office Files, Video Files, Audio Files, 3D Files, CAD Files, Code Files, App Installers, and Zip & Archives |
+| **Date** | Groups files and folders by Month, Day, Quarter, or Year |
+| **Category / Date** | Uses category as the first folder level and date as the second |
+| **Date / Category** | Uses date as the first folder level and category as the second |
+| **File Extension** | Groups files by their actual extension such as PDF, JPG, DOCX, ZIP, PSD, or PY |
+
+TimeFold is not just a visual sorter. It **actually relocates files and supported folders** into the destination structure generated by your selected organization method.
+
+---
+
+## Why TimeFold Is Useful
+
+A folder with thousands of mixed files can make everyday file management harder:
+
+- **Digital clutter:** Downloads, receipts, screenshots, media, archives, and project files accumulate in one place.
+- **Manual sorting takes time:** Creating folders and moving files individually is repetitive and error-prone.
+- **Harder to find files:** When unrelated file types share the same directory, locating the right item becomes slower.
+- **Large folders need structure:** A predictable hierarchy makes large collections easier to browse and maintain.
+
+TimeFold is designed to reduce that manual work while keeping the organization process visible and reviewable.
+
+---
+
+## How TimeFold Works
+
+TimeFold uses a **preview-first workflow** so you can see what it plans to do before organization begins.
+
+1. **Select Source:** Choose or drag and drop the folder you want to organize.
+2. **Review Preview:** TimeFold scans the directory and shows the planned destinations in the live preview grid.
+3. **Configure Options:** Choose your preferred date format, custom prefixes, or 24-hour timestamps in Preferences.
+4. **Start Organizing:** Start the organization and watch progress in real time as items are moved into their destinations.
+5. **Review the Result:** Open the output folder and use the generated CSV audit log to review the organization run.
 
 ---
 
 ## ✨ Key Features
 
-* **⚡ 1-Click Smart Date Sorting:** Automatically groups files and folders by **Month** (`2026-08`), **Day** (`2026-08-15`), **Quarter** (`2026-Q3`), or **Year** (`2026`).
-* **🗂️ Smart Categories & Hybrid Modes:** Organize files into intuitive categories (*Images, Documents, Video, Audio, 3D Files, Code, Archives*), by raw file extension, or combine both with 2-level hybrid nesting (`Category / Date` and `Date / Category`).
-* **🛡️ 100% Non-Destructive:** TimeFold **never deletes**, alters, or compresses your original files. It only relocates them into neat date folders.
-* **🔍 Full Interactive Preview:** Review every file and its exact destination in a live grid *before* moving a single byte.
-* **📝 Automatic CSV Audit Logs:** Every organization run generates an exact timestamped audit trail so you always know where files went.
-* **🚀 Heavy-Duty Performance:** Seamlessly scans and paginates through **10,000 to 100,000+ files** without freezing your PC.
-* **⚠️ Smart Timestamp Detection:** Automatically detects and alerts you if files share identical timestamps (common with unzipped archives or chat downloads).
-* **📁 Top-Level Folder Support:** Optionally organize loose subfolders alongside files with a single toggle.
-* **🎨 Modern UI with Dark Mode:** Clean desktop interface with full Light / Dark theme support and Windows 11 accent integration.
-* **🖱️ Drag & Drop Ready:** Simply drag and drop any folder into TimeFold to start organizing right away.
-
----
-
-## 🛠️ Tech Stack
-
-* **Runtime & Framework:** .NET 10 (Windows Desktop SDK)
-* **Language:** C# 13
-* **UI Framework:** Windows Forms (High-DPI aware, custom theme engine)
-* **Dependencies:** Zero external NuGet packages (pure .NET standard libraries for maximum speed, security, and portability)
+- **⚡ Smart Date Sorting:** Organize files and folders by **Month**, **Day**, **Quarter**, or **Year**.
+- **🗂️ Smart Categories:** Organize supported file types into **Images, PDF Files, Document Files, Office Files, Video Files, Audio Files, 3D Files, CAD Files, Code Files, App Installers, and Zip & Archives**.
+- **🧩 Hybrid Organization:** Combine date and category using **Category / Date** or **Date / Category** nesting.
+- **🔤 File Extension Mode:** Organize files by their raw file extension for a more precise structure.
+- **🛡️ Non-Destructive Organization:** TimeFold does not delete, alter, or compress your original files. It relocates items into the organized structure you choose.
+- **🔍 Full Interactive Preview:** Review files and their exact destinations in the live preview before moving anything.
+- **📝 Automatic CSV Audit Logs:** Every organization run generates a timestamped audit trail so you can review where items went.
+- **🚀 Large-Folder Support:** Designed to scan and paginate through large collections, including **10,000 to 100,000+ files**.
+- **⚠️ Smart Timestamp Detection:** Detects and alerts you when files share identical timestamps, which can happen with extracted archives or downloaded files.
+- **📁 Top-Level Folder Support:** Optionally organize loose subfolders alongside files with a single toggle.
+- **🎨 Modern UI with Dark Mode:** Clean desktop interface with Light and Dark themes plus Windows 11 accent integration.
+- **🖱️ Drag & Drop:** Drag and drop a folder into TimeFold to start the organization workflow.
 
 ---
 
 ## 🚀 Getting Started
 
-### Option 1: Download Pre-built Release (Recommended)
+### Option 1: Download (Recommended)
 
 1. Go to the [Releases](https://github.com/chandrath/TimeFold-File-Folder-Organizer/releases) page.
 2. Choose the download that fits your needs:
-   * **⭐ ReadyToRun (`TimeFold-win-x64-ReadyToRun.zip`):** Recommended for everyone. Just extract and double-click `TimeFold.exe` — completely standalone with zero prerequisites.
-   * **💻 Lightweight (`TimeFold-win-x64-RequiresDotNet10.zip`):** Ultra-compact 1.5 MB download for developers who already have the .NET 10 Desktop Runtime installed.
 
----
+   - **⭐ ReadyToRun (`TimeFold-win-x64-ReadyToRun.zip`):** Recommended for everyone. Extract it and double-click `TimeFold.exe`. It is completely standalone with zero prerequisites.
+   - **💻 Lightweight (`TimeFold-win-x64-RequiresDotNet10.zip`):** Ultra-compact 1.5 MB download for developers who already have the .NET 10 Desktop Runtime installed.
 
 ### Option 2: Build from Source
 
 #### Prerequisites
-* [Windows 10 / 11](https://www.microsoft.com/windows) (64-bit)
-* [.NET 10 SDK](https://dotnet.microsoft.com/download/dotnet/10.0)
+
+- [Windows 10 / 11](https://www.microsoft.com/windows) (64-bit)
+- [.NET 10 SDK](https://dotnet.microsoft.com/download/dotnet/10.0)
 
 #### Clone & Run
+
 ```bash
 # Clone the repository
 git clone https://github.com/chandrath/TimeFold-File-Folder-Organizer.git
@@ -86,21 +288,23 @@ dotnet run
 ```
 
 #### Build Standalone Single-File Executable
+
 To produce a standalone `.exe` that bundles all runtimes:
+
 ```bash
 dotnet publish TimeFold.csproj -c Release -r win-x64 --self-contained -p:PublishSingleFile=true -p:EnableCompressionInSingleFile=true -p:DebugType=none -o ../publish
 ```
+
 The compiled single-file `TimeFold.exe` will be generated inside the `publish/` directory.
 
 ---
 
-## 📖 How It Works
+## 🛠️ Tech Stack
 
-1. **Select Source:** Choose or drag-and-drop the messy folder you want to organize.
-2. **Review Preview:** TimeFold scans the directory and populates the live preview grid.
-3. **Configure Options:** Pick your preferred date format (Month, Day, Quarter, Year), custom prefixes, or 24-hour timestamps in Preferences.
-4. **Click Start Organizing:** Watch progress in real-time as files move into organized folders.
-5. **Open & Enjoy:** Click "Open Output Folder" or review the generated CSV audit logs.
+- **Runtime & Framework:** .NET 10 (Windows Desktop SDK)
+- **Language:** C# 13
+- **UI Framework:** Windows Forms (High-DPI aware, custom theme engine)
+- **Dependencies:** Zero external NuGet packages (pure .NET standard libraries for maximum speed, security, and portability)
 
 ---
 
