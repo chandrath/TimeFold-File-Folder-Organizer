@@ -279,7 +279,14 @@ namespace FileOrganizer
             _btnDefaults.Click += (s, e) => RestoreDefaults();
 
             _btnTypeRules = new Button { Text = "🗂️ File Types...", UseMnemonic = false, Size = new Size(100, 32), Location = new Point(leftMargin + 220, buttonY), Font = new Font("Segoe UI Emoji", 8.5F) };
-            _btnTypeRules.Click += (s, e) => { using var dlg = new Forms.TypeRulesDialog(_isDarkMode); dlg.ShowDialog(this); };
+            _btnTypeRules.Click += (s, e) =>
+            {
+                using var dlg = new Forms.TypeRulesDialog(_isDarkMode);
+                dlg.ShowDialog(this);
+                var fresh = AppSettings.LoadFromFile();
+                _settings.CategoryPrefix = fresh.CategoryPrefix;
+                _settings.CategorySuffix = fresh.CategorySuffix;
+            };
 
             _btnCancel = new Button { Text = "Cancel", Size = new Size(90, 32), Location = new Point(this.ClientSize.Width - leftMargin - 90, buttonY), DialogResult = DialogResult.Cancel };
             _btnOK = new Button { Text = "Save", Size = new Size(90, 32), Location = new Point(this.ClientSize.Width - leftMargin - 90 - 10 - 90, buttonY), DialogResult = DialogResult.OK };

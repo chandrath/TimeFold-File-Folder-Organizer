@@ -86,7 +86,7 @@ namespace FileOrganizer.Forms
                 BorderStyle = BorderStyle.FixedSingle
             };
             _lstRules.Columns.Add("Extension", 150);
-            _lstRules.Columns.Add("Target Category", 240);
+            _lstRules.Columns.Add("Target Category (Folder)", 240);
             _lstRules.Columns.Add("Status", 160);
             _lstRules.ItemChecked += LstRules_ItemChecked;
 
@@ -121,7 +121,7 @@ namespace FileOrganizer.Forms
 
                 var item = _lstRules.SelectedItems[0];
                 string ext = item.Tag as string ?? "";
-                string cat = item.SubItems[1].Text;
+                string cat = _service.GetCategory(ext);
                 bool isCatRenamed = _service.IsCategoryRenamed(cat, out string origCat);
                 bool hasOverride = _service.Delta.ExtensionCategoryOverrides.ContainsKey(ext);
 
@@ -181,6 +181,21 @@ namespace FileOrganizer.Forms
             _settings.CategoryPrefix = AppConstants.SanitizeFolderName(_txtPrefix.Text);
             _settings.CategorySuffix = AppConstants.SanitizeFolderName(_txtSuffix.Text);
             _settings.SaveToFile();
+            UpdateListCategories();
+        }
+
+        private void UpdateListCategories()
+        {
+            _lstRules.BeginUpdate();
+            foreach (ListViewItem item in _lstRules.Items)
+            {
+                if (item.Tag is string ext)
+                {
+                    string cat = _service.GetCategory(ext);
+                    item.SubItems[1].Text = AppConstants.FormatCategoryFolder(cat, _settings.CategoryPrefix, _settings.CategorySuffix);
+                }
+            }
+            _lstRules.EndUpdate();
         }
 
         private void ApplyTheme()
@@ -264,7 +279,7 @@ namespace FileOrganizer.Forms
                 if (_service.Delta.ExtensionCategoryOverrides.ContainsKey(ext)) status = "User Override";
 
                 var lvi = new ListViewItem(ext) { Checked = !isDisabled };
-                lvi.SubItems.Add(currentCat);
+                lvi.SubItems.Add(AppConstants.FormatCategoryFolder(currentCat, _settings.CategoryPrefix, _settings.CategorySuffix));
                 lvi.SubItems.Add(status);
                 lvi.Tag = ext;
 

@@ -284,5 +284,24 @@ namespace FileOrganizer.Config
 
             return $"{cleanPrefix}{core}{cleanSuffix}";
         }
+
+        public static string FormatCategoryFolder(string category, string prefix = "", string suffix = "")
+        {
+            if (string.IsNullOrWhiteSpace(category)) category = DefaultGroupedFolderName;
+            string cleanPrefix = SanitizeFolderName(prefix);
+            string cleanSuffix = SanitizeFolderName(suffix);
+
+            if (!string.IsNullOrEmpty(cleanPrefix) && !cleanPrefix.EndsWith(" ") && !cleanPrefix.EndsWith("_") && !cleanPrefix.EndsWith("-"))
+            {
+                cleanPrefix += " ";
+            }
+
+            if (!string.IsNullOrEmpty(cleanSuffix) && !cleanSuffix.StartsWith(" ") && !cleanSuffix.StartsWith("_") && !cleanSuffix.StartsWith("-"))
+            {
+                cleanSuffix = " " + cleanSuffix;
+            }
+
+            return $"{cleanPrefix}{category}{cleanSuffix}".Trim();
+        }
     }
 }
