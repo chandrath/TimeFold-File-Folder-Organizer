@@ -64,7 +64,9 @@ namespace FileOrganizer
                 [".txt"] = "Text & Notes",
                 [".ps1"] = "Script Files",
                 [".bat"] = "Script Files",
-                [".sh"] = "Script Files"
+                [".sh"] = "Script Files",
+                [".lnk"] = "Shortcuts",
+                [".url"] = "Web Links"
             };
 
             foreach (var kvp in testMap)

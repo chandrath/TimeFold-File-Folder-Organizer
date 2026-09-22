@@ -39,7 +39,9 @@ namespace FileOrganizer.Services
             ["Audio Files"] = new[] { ".mp3", ".wav", ".flac", ".aac", ".ogg", ".wma", ".m4a", ".alac", ".opus", ".mid", ".midi" },
             ["Zip & Archives"] = new[] { ".zip", ".rar", ".7z", ".tar", ".gz", ".bz2", ".xz", ".iso", ".cab", ".tgz" },
             ["App Installers"] = new[] { ".exe", ".msi", ".msix", ".appx", ".dmg", ".pkg", ".appimage", ".flatpak", ".deb", ".rpm", ".snap", ".apk", ".aab", ".xapk", ".ipa", ".ipk" },
-            ["Font Files"] = new[] { ".ttf", ".otf", ".woff", ".woff2", ".eot" }
+            ["Font Files"] = new[] { ".ttf", ".otf", ".woff", ".woff2", ".eot" },
+            ["Shortcuts"] = new[] { ".lnk" },
+            ["Web Links"] = new[] { ".url", ".website" }
         };
 
         private UserTypeDelta _delta = new();
