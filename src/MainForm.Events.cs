@@ -146,15 +146,14 @@ namespace FileOrganizer
 
         private int _sortColumn = 2;
         private bool _sortAscending = false;
-        private static readonly string[] ColumnBaseHeaders = { "File Name", "Type", "Modified Date", "Created Date", "Target Folder", "Size" };
+        private static readonly string[] ColumnBaseHeaders = { "File Name", "Type", "Modified Date", "Created Date", "🎯 Target Folder", "Size" };
 
         private void UpdateFileList()
         {
             _lstFiles.ListViewItemSorter = null;
             _lstFiles.Items.Clear();
 
-            Color activeColor = _settings.DarkMode ? Color.FromArgb(96, 165, 250) : Color.FromArgb(29, 78, 216);
-            Color mutedColor = _settings.DarkMode ? Color.FromArgb(148, 163, 184) : Color.FromArgb(100, 116, 139);
+            var palette = AppTheme.GetPalette(_settings.DarkMode);
             var boldFont = GetBoldListFont();
 
             int maxPreview = _currentPreviewLimit > 0 ? _currentPreviewLimit : (_settings.MaxPreviewItems > 0 ? _settings.MaxPreviewItems : AppConstants.DefaultMaxPreviewItems);
@@ -169,14 +168,16 @@ namespace FileOrganizer
                 string creText = (file.IsCreatedDateActive ? "✔ " : "   ") + file.CreatedDate.ToString("yyyy-MM-dd HH:mm");
 
                 var subMod = item.SubItems.Add(modText);
-                subMod.ForeColor = file.IsCreatedDateActive ? mutedColor : activeColor;
+                subMod.ForeColor = file.IsCreatedDateActive ? palette.ListDateMuted : palette.ListDateActive;
                 if (!file.IsCreatedDateActive) subMod.Font = boldFont;
 
                 var subCre = item.SubItems.Add(creText);
-                subCre.ForeColor = file.IsCreatedDateActive ? activeColor : mutedColor;
+                subCre.ForeColor = file.IsCreatedDateActive ? palette.ListDateActive : palette.ListDateMuted;
                 if (file.IsCreatedDateActive) subCre.Font = boldFont;
 
-                item.SubItems.Add(file.TargetFolder);
+                var subTarget = item.SubItems.Add($"📁 {file.TargetFolder}");
+                subTarget.ForeColor = palette.ListTargetFolder;
+                subTarget.Font = boldFont;
                 item.SubItems.Add(file.IsDirectory ? "—" : FormatFileSize(file.Size));
                 item.Tag = file;
                 _lstFiles.Items.Add(item);

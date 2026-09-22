@@ -124,6 +124,10 @@ namespace FileOrganizer
             {
                 _lstFiles.BackColor = palette.ListBg;
                 _lstFiles.ForeColor = palette.ListText;
+                if (_filesToOrganize.Count > 0)
+                {
+                    UpdateFileList();
+                }
             }
 
             if (_btnLoadMore != null)

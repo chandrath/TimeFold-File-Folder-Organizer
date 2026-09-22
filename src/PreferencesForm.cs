@@ -50,11 +50,11 @@ namespace FileOrganizer
                 CoreFormat.YearQuarterMonths => $"Year & Quarter with Months (e.g. {year} Q1 ({qm}))",
                 CoreFormat.YearHalf => flipped ? $"Half & Year (e.g. H1 {year})" : $"Year & Half (e.g. {year} H1)",
                 CoreFormat.YearOnly => $"Year (e.g. {year})",
-                CoreFormat.YearNestedMonth => shortMonth ? $"Year / Year & Month (e.g. {year} > {year} Mar)" : $"Year / Year & Month (e.g. {year} > {year} {m})",
-                CoreFormat.YearNestedMonthOnly => shortMonth ? $"Year / Month (e.g. {year} > Mar)" : $"Year / Month (e.g. {year} > {m})",
-                CoreFormat.YearNestedIso => $"Year / ISO Month (e.g. {year} > {year}-03)",
-                CoreFormat.YearNestedQuarter => flipped ? $"Year / Quarter & Year (e.g. {year} > Q1 {year})" : $"Year / Year & Quarter (e.g. {year} > {year} Q1)",
-                CoreFormat.YearNestedHalf => flipped ? $"Year / Half & Year (e.g. {year} > H1 {year})" : $"Year / Year & Half (e.g. {year} > {year} H1)",
+                CoreFormat.YearNestedMonth => shortMonth ? $"Year / Year & Month (e.g. {year} \\ {year} Mar)" : $"Year / Year & Month (e.g. {year} \\ {year} {m})",
+                CoreFormat.YearNestedMonthOnly => shortMonth ? $"Year / Month (e.g. {year} \\ Mar)" : $"Year / Month (e.g. {year} \\ {m})",
+                CoreFormat.YearNestedIso => $"Year / ISO Month (e.g. {year} \\ {year}-03)",
+                CoreFormat.YearNestedQuarter => flipped ? $"Year / Quarter & Year (e.g. {year} \\ Q1 {year})" : $"Year / Year & Quarter (e.g. {year} \\ {year} Q1)",
+                CoreFormat.YearNestedHalf => flipped ? $"Year / Half & Year (e.g. {year} \\ H1 {year})" : $"Year / Year & Half (e.g. {year} \\ {year} H1)",
                 _ => ""
             };
         }

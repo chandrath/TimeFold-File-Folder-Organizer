@@ -40,6 +40,9 @@ namespace FileOrganizer.Config
             public Color WarningText { get; init; }
             public Color DangerBg { get; init; }
             public Color DangerText { get; init; }
+            public Color ListDateActive { get; init; }
+            public Color ListDateMuted { get; init; }
+            public Color ListTargetFolder { get; init; }
         }
 
         public static readonly ThemePalette Light = new()
@@ -70,7 +73,10 @@ namespace FileOrganizer.Config
             WarningBg = Color.FromArgb(254, 243, 199),
             WarningText = Color.FromArgb(146, 64, 14),
             DangerBg = Color.FromArgb(254, 242, 242),
-            DangerText = Color.FromArgb(220, 38, 38)
+            DangerText = Color.FromArgb(220, 38, 38),
+            ListDateActive = Color.FromArgb(29, 78, 216),    // Royal Blue 700
+            ListDateMuted = Color.FromArgb(100, 116, 139),   // Slate 500
+            ListTargetFolder = Color.FromArgb(67, 56, 202)   // Deep Indigo 700
         };
 
         public static readonly ThemePalette Dark = new()
@@ -101,7 +107,10 @@ namespace FileOrganizer.Config
             WarningBg = Color.FromArgb(69, 26, 3),           // Dark Amber
             WarningText = Color.FromArgb(252, 211, 77),
             DangerBg = Color.FromArgb(69, 10, 10),           // Dark Red
-            DangerText = Color.FromArgb(252, 165, 165)
+            DangerText = Color.FromArgb(252, 165, 165),
+            ListDateActive = Color.FromArgb(56, 189, 248),   // Radiant Sky 400
+            ListDateMuted = Color.FromArgb(203, 213, 225),   // Crisp Slate 300
+            ListTargetFolder = Color.FromArgb(251, 191, 36)  // Radiant Amber Gold 400
         };
 
         public static ThemePalette GetPalette(bool isDark) => isDark ? Dark : Light;
