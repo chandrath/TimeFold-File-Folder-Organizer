@@ -23,6 +23,8 @@ namespace FileOrganizer.Services
         private OrganizationMode _organizationMode = OrganizationMode.Date;
         private bool _keepHtmlCompanionsTogether = true;
         private bool _keepSubtitleCompanionsTogether = true;
+        private bool _createSortedSubfolder = AppConstants.DefaultCreateSortedSubfolder;
+        public bool CreateSortedSubfolder { get => _createSortedSubfolder; set => _createSortedSubfolder = value; }
 
         public FileOrganizerService(string executablePath, string? workingDirectory = null, string? outputDirectory = null)
         {
@@ -32,11 +34,7 @@ namespace FileOrganizer.Services
         }
 
         public string WorkingDirectory => _workingDirectory;
-        public string OutputDirectory
-        {
-            get => _outputDirectory;
-            set => _outputDirectory = value;
-        }
+        public string OutputDirectory { get => _outputDirectory; set => _outputDirectory = value; }
 
         public List<FileItem> ScanFiles(bool includeTopLevelFolders, bool ignoreSystemFiles = true, DateSource fileDateSource = DateSource.Modified, DateSource folderDateSource = DateSource.Modified)
         {
@@ -170,40 +168,22 @@ namespace FileOrganizer.Services
                         .ToDictionary(g => g.Key, g => g.ToList());
         }
 
-        public List<string> DetectConflicts(Dictionary<string, List<FileItem>> grouped)
-        {
-            var conflicts = new List<string>();
-
-            foreach (var group in grouped.Values)
-            {
-                var nameGroups = group.GroupBy(f => f.Name);
-                foreach (var nameGroup in nameGroups)
-                {
-                    if (nameGroup.Count() > 1)
-                    {
-                        conflicts.Add($"{nameGroup.Key} (appears {nameGroup.Count()} times in {group.First().TargetFolder})");
-                    }
-                }
-            }
-
-            return conflicts;
-        }
+        public List<string> DetectConflicts(Dictionary<string, List<FileItem>> grouped) => new();
 
         public async Task<OrganizationResult> OrganizeFilesAsync(
             List<FileItem> files,
             IProgress<(int current, int total, string currentFile)> progress,
             CancellationToken cancellationToken,
-            bool generateCsvLog = true)
+            bool generateCsvLog = true,
+            ConflictResolutionStrategy conflictStrategy = ConflictResolutionStrategy.AutoRename,
+            HashSet<string>? collidingFilePaths = null)
         {
-            var result = new OrganizationResult
-            {
-                TotalFiles = files.Count
-            };
+            var result = new OrganizationResult { TotalFiles = files.Count };
+            if (files.Count == 0) return result;
 
-            if (files.Count == 0)
-                return result;
-
-            var sortedFolder = AppConstants.GetSortedFolderName(_outputDirectory, _use24HourTimestamp);
+            var sortedFolder = _createSortedSubfolder
+                ? AppConstants.GetSortedFolderName(_outputDirectory, _use24HourTimestamp)
+                : _outputDirectory;
             string sortedFolderName = Path.GetFileName(sortedFolder);
             string logTimestamp = sortedFolderName.StartsWith(AppConstants.SortedFolderPrefix, StringComparison.OrdinalIgnoreCase)
                 ? sortedFolderName.Substring(AppConstants.SortedFolderPrefix.Length)
@@ -217,21 +197,102 @@ namespace FileOrganizer.Services
                 Directory.CreateDirectory(sortedFolder);
                 var grouped = GroupByMonthYear(files);
 
+                var preExistingDirs = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+                if (Directory.Exists(sortedFolder))
+                {
+                    try
+                    {
+                        foreach (var d in Directory.GetDirectories(sortedFolder))
+                        {
+                            string name = Path.GetFileName(d);
+                            if (!name.StartsWith(AppConstants.SortedFolderPrefix, StringComparison.OrdinalIgnoreCase) &&
+                                !AppConstants.KnownSystemFilesAndDirs.Contains(name))
+                            {
+                                preExistingDirs.Add(name);
+                            }
+                        }
+                    }
+                    catch { }
+                }
+
+                var remappedTopSegments = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
+
                 foreach (var group in grouped)
                 {
-                    if (cancellationToken.IsCancellationRequested)
-                        break;
+                    if (cancellationToken.IsCancellationRequested) break;
 
-                    var monthFolder = Path.Combine(sortedFolder, group.Key);
+                    string effectiveGroupKey = group.Key;
+                    string topSegment = effectiveGroupKey.Split(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar)[0];
+
+                    if (preExistingDirs.Contains(topSegment) && conflictStrategy == ConflictResolutionStrategy.AutoRename)
+                    {
+                        if (!remappedTopSegments.TryGetValue(topSegment, out var safeTop))
+                        {
+                            safeTop = GetSafeDirectoryName(sortedFolder, topSegment);
+                            remappedTopSegments[topSegment] = safeTop;
+                        }
+                        effectiveGroupKey = safeTop + effectiveGroupKey.Substring(topSegment.Length);
+                    }
+
+                    var monthFolder = Path.Combine(sortedFolder, effectiveGroupKey);
                     bool monthFolderCreated = false;
 
-                    foreach (var file in group.Value)
+                    foreach (var file in group.Value.OrderByDescending(f => f.IsDirectory))
                     {
-                        if (cancellationToken.IsCancellationRequested)
-                            break;
+                        if (cancellationToken.IsCancellationRequested) break;
+
+                        if (file.IsDirectory && (preExistingDirs.Contains(file.Name) || remappedTopSegments.ContainsKey(file.Name)))
+                        {
+                            file.DestinationPath = file.FullPath;
+                            file.ErrorMessage = string.Empty;
+                            processedFiles.Add(file);
+                            currentIndex++;
+                            progress?.Report((currentIndex, result.TotalFiles, $"{file.Name} (Preserved untouched)"));
+                            continue;
+                        }
+
+                        if (conflictStrategy == ConflictResolutionStrategy.Skip && collidingFilePaths?.Contains(file.FullPath) == true)
+                        {
+                            file.DestinationPath = string.Empty;
+                            file.ErrorMessage = "Skipped (Collision with existing destination item)";
+                            processedFiles.Add(file);
+                            currentIndex++;
+                            progress?.Report((currentIndex, result.TotalFiles, $"{file.Name} (Skipped)"));
+                            continue;
+                        }
 
                         try
                         {
+                            if (file.IsDirectory && string.Equals(file.Name, group.Key, StringComparison.OrdinalIgnoreCase))
+                            {
+                                if (string.Equals(Path.GetFullPath(file.FullPath).TrimEnd(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar),
+                                                  Path.GetFullPath(monthFolder).TrimEnd(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar),
+                                                  StringComparison.OrdinalIgnoreCase))
+                                {
+                                    file.DestinationPath = monthFolder;
+                                    file.ErrorMessage = string.Empty;
+                                    processedFiles.Add(file);
+                                    result.FilesMoved++;
+                                    currentIndex++;
+                                    progress?.Report((currentIndex, result.TotalFiles, file.Name));
+                                    continue;
+                                }
+
+                                if (!monthFolderCreated && !Directory.Exists(monthFolder))
+                                {
+                                    MoveDirectorySafely(file.FullPath, monthFolder);
+                                    monthFolderCreated = true;
+                                    result.MonthFoldersCreated++;
+                                    file.DestinationPath = monthFolder;
+                                    file.ErrorMessage = string.Empty;
+                                    processedFiles.Add(file);
+                                    result.FilesMoved++;
+                                    currentIndex++;
+                                    progress?.Report((currentIndex, result.TotalFiles, file.Name));
+                                    continue;
+                                }
+                            }
+
                             if (!monthFolderCreated)
                             {
                                 Directory.CreateDirectory(monthFolder);
@@ -322,51 +383,41 @@ namespace FileOrganizer.Services
 
         private static void MoveDirectorySafely(string sourceDir, string destDir)
         {
+            if (string.Equals(Path.GetFullPath(sourceDir).TrimEnd('\\', '/'), Path.GetFullPath(destDir).TrimEnd('\\', '/'), StringComparison.OrdinalIgnoreCase)) return;
             string sourceRoot = Path.GetPathRoot(Path.GetFullPath(sourceDir)) ?? "";
             string destRoot = Path.GetPathRoot(Path.GetFullPath(destDir)) ?? "";
-
-            if (string.Equals(sourceRoot, destRoot, StringComparison.OrdinalIgnoreCase))
-            {
-                Directory.Move(sourceDir, destDir);
-            }
-            else
-            {
-                CopyDirectoryRecursively(sourceDir, destDir);
-                Directory.Delete(sourceDir, true);
-            }
+            if (string.Equals(sourceRoot, destRoot, StringComparison.OrdinalIgnoreCase)) Directory.Move(sourceDir, destDir);
+            else { CopyDirectoryRecursively(sourceDir, destDir); Directory.Delete(sourceDir, true); }
         }
 
         private static void CopyDirectoryRecursively(string sourceDir, string targetDir)
         {
             Directory.CreateDirectory(targetDir);
-
             foreach (var file in Directory.GetFiles(sourceDir))
-            {
-                var destFile = Path.Combine(targetDir, Path.GetFileName(file));
-                File.Copy(file, destFile, true);
-            }
-
+                File.Copy(file, Path.Combine(targetDir, Path.GetFileName(file)), true);
             foreach (var dir in Directory.GetDirectories(sourceDir))
-            {
-                var destSubDir = Path.Combine(targetDir, Path.GetFileName(dir));
-                CopyDirectoryRecursively(dir, destSubDir);
-            }
+                CopyDirectoryRecursively(dir, Path.Combine(targetDir, Path.GetFileName(dir)));
+        }
+
+        private static string GetSafeDirectoryName(string parentDir, string baseName)
+        {
+            int counter = 1;
+            string candidate;
+            do { candidate = $"{baseName} ({counter++})"; }
+            while (Directory.Exists(Path.Combine(parentDir, candidate)));
+            return candidate;
         }
 
         private static string GetSafePath(string directory, string fileName)
         {
             var nameWithoutExt = Path.GetFileNameWithoutExtension(fileName);
             var extension = Path.GetExtension(fileName);
-            var counter = 1;
-
+            int counter = 1;
             string newPath;
             do
             {
-                var newFileName = $"{nameWithoutExt}_({counter}){extension}";
-                newPath = Path.Combine(directory, newFileName);
-                counter++;
+                newPath = Path.Combine(directory, $"{nameWithoutExt}_({counter++}){extension}");
             } while (File.Exists(newPath) || Directory.Exists(newPath));
-
             return newPath;
         }
 
@@ -397,7 +448,8 @@ namespace FileOrganizer.Services
             bool keepHtmlCompanions = true,
             string categoryPrefix = "",
             string categorySuffix = "",
-            bool keepSubtitleCompanions = true)
+            bool keepSubtitleCompanions = true,
+            bool createSortedSubfolder = true)
         {
             _folderFormat = format;
             _folderPrefix = prefix ?? string.Empty;
@@ -408,6 +460,7 @@ namespace FileOrganizer.Services
             _categoryPrefix = categoryPrefix ?? string.Empty;
             _categorySuffix = categorySuffix ?? string.Empty;
             _keepSubtitleCompanionsTogether = keepSubtitleCompanions;
+            _createSortedSubfolder = createSortedSubfolder;
         }
 
         public string FormatTargetFolder(DateTime date)

@@ -45,6 +45,15 @@ namespace FileOrganizer
 
         private void ChkUseSourceAsOutput_CheckedChanged(object? sender, EventArgs e) => UpdateOutputFolder();
 
+        private void ChkCreateSubfolder_CheckedChanged(object? sender, EventArgs e)
+        {
+            if (_settings.CreateSortedSubfolder == _chkCreateSubfolder.Checked) return;
+            _settings.CreateSortedSubfolder = _chkCreateSubfolder.Checked;
+            _settings.SaveToFile();
+            if (_organizerService != null) _organizerService.CreateSortedSubfolder = _chkCreateSubfolder.Checked;
+            UpdateOutputFolder();
+        }
+
         private void ChkIncludeFolders_CheckedChanged(object? sender, EventArgs e)
         {
             if (_settings.IncludeTopLevelFolders == _chkIncludeFolders.Checked) return;
@@ -70,26 +79,18 @@ namespace FileOrganizer
 
         private void PnlSourceDrop_DragDrop(object? sender, DragEventArgs e)
         {
-            var palette = AppTheme.GetPalette(_settings.DarkMode);
-            _pnlSourceDrop.BackColor = palette.DropZoneBg;
-
-            if (e.Data != null && e.Data.GetDataPresent(DataFormats.FileDrop))
+            _pnlSourceDrop.BackColor = AppTheme.GetPalette(_settings.DarkMode).DropZoneBg;
+            if (e.Data?.GetDataPresent(DataFormats.FileDrop) == true)
             {
                 var files = (string[]?)e.Data.GetData(DataFormats.FileDrop);
-                if (files != null && files.Length > 0)
+                if (files?.Length > 0)
                 {
-                    var path = files[0];
-                    if (Directory.Exists(path))
-                    {
-                        SetSourceFolder(path);
-                    }
+                    string path = files[0];
+                    if (Directory.Exists(path)) SetSourceFolder(path);
                     else if (File.Exists(path))
                     {
                         string? dir = Path.GetDirectoryName(path);
-                        if (!string.IsNullOrEmpty(dir) && Directory.Exists(dir))
-                        {
-                            SetSourceFolder(dir);
-                        }
+                        if (!string.IsNullOrEmpty(dir) && Directory.Exists(dir)) SetSourceFolder(dir);
                     }
                 }
             }
@@ -106,9 +107,9 @@ namespace FileOrganizer
                 _sortColumn = 2;
                 _sortAscending = false;
                 UpdateColumnHeaderSortIndicators();
+                CheckConflicts();
                 UpdateFileList();
                 UpdateSummary();
-                CheckConflicts();
                 CheckTimestampSimilarity();
             }
             catch (Exception ex)
@@ -119,7 +120,7 @@ namespace FileOrganizer
 
         private int _sortColumn = 2;
         private bool _sortAscending = false;
-        private static readonly string[] ColumnBaseHeaders = { "File Name", "Type", "Modified Date", "Created Date", "📁 Target Folder", "Size" };
+        private static readonly string[] ColumnBaseHeaders = { "File Name", "Type", "Modified Date", "Created Date", "📁 Target Folder", "Status", "Size" };
 
         private void UpdateFileList()
         {
@@ -151,6 +152,14 @@ namespace FileOrganizer
                 var subTarget = item.SubItems.Add($"📁 {file.TargetFolder}");
                 subTarget.ForeColor = palette.ListTargetFolder;
                 subTarget.Font = boldFont;
+
+                var conflict = _currentConflicts.FirstOrDefault(c => c.Item == file);
+                var subStatus = item.SubItems.Add(conflict?.ShortStatus ?? "✓ Ready");
+                subStatus.ForeColor = conflict != null
+                    ? (_settings.DarkMode ? Color.FromArgb(248, 113, 113) : Color.FromArgb(220, 38, 38))
+                    : (_settings.DarkMode ? Color.FromArgb(52, 211, 153) : Color.FromArgb(22, 101, 52));
+                if (conflict != null) subStatus.Font = boldFont;
+
                 item.SubItems.Add(file.IsDirectory ? "—" : FormatFileSize(file.Size));
                 item.Tag = file;
                 _lstFiles.Items.Add(item);
@@ -173,7 +182,6 @@ namespace FileOrganizer
                     _btnLoadMore.Text = $"➕ Load 1,000 More ({remaining:N0} remaining)";
                     _pnlLoadMore.Visible = true;
                     _pnlLoadMore.SendToBack();
-                    _lstFiles.BringToFront();
                 }
             }
             else if (_pnlLoadMore != null) _pnlLoadMore.Visible = false;
@@ -205,7 +213,7 @@ namespace FileOrganizer
 
         private void AutoFitColumns()
         {
-            if (_isAdjustingColumns || _lstFiles == null || _lstFiles.Columns.Count < 6 || _filesToOrganize.Count == 0) return;
+            if (_isAdjustingColumns || _lstFiles == null || _lstFiles.Columns.Count < 7 || _filesToOrganize.Count == 0) return;
             _isAdjustingColumns = true;
             _lstFiles.BeginUpdate();
             try
@@ -229,11 +237,14 @@ namespace FileOrganizer
                 _lstFiles.Columns[4].Width = Math.Max(maxTargetW, 90);
 
                 _lstFiles.Columns[5].AutoResize(ColumnHeaderAutoResizeStyle.ColumnContent);
-                _lstFiles.Columns[5].Width = Math.Max(_lstFiles.Columns[5].Width + 8, TextRenderer.MeasureText(ColumnBaseHeaders[5], _lstFiles.Font).Width + 14);
+                _lstFiles.Columns[5].Width = Math.Max(_lstFiles.Columns[5].Width + 10, TextRenderer.MeasureText(ColumnBaseHeaders[5], _lstFiles.Font).Width + 16);
 
-                int otherW = _lstFiles.Columns[1].Width + _lstFiles.Columns[2].Width + _lstFiles.Columns[3].Width + _lstFiles.Columns[4].Width + _lstFiles.Columns[5].Width;
+                _lstFiles.Columns[6].AutoResize(ColumnHeaderAutoResizeStyle.ColumnContent);
+                _lstFiles.Columns[6].Width = Math.Max(_lstFiles.Columns[6].Width + 8, TextRenderer.MeasureText(ColumnBaseHeaders[6], _lstFiles.Font).Width + 14);
+
+                int otherW = _lstFiles.Columns[1].Width + _lstFiles.Columns[2].Width + _lstFiles.Columns[3].Width + _lstFiles.Columns[4].Width + _lstFiles.Columns[5].Width + _lstFiles.Columns[6].Width;
                 int availW = _lstFiles.ClientSize.Width - SystemInformation.VerticalScrollBarWidth;
-                _lstFiles.Columns[0].Width = Math.Max(200, availW - otherW);
+                _lstFiles.Columns[0].Width = Math.Max(180, availW - otherW);
             }
             finally
             {
@@ -277,37 +288,33 @@ namespace FileOrganizer
             }
         }
 
+        private void ShowConflictDialog()
+        {
+            if (_currentConflicts.Count == 0) return;
+            using var dlg = new FileOrganizer.Forms.ConflictDialog(_currentConflicts, _settings.DarkMode);
+            dlg.ShowDialog(this);
+        }
+
         private void CheckConflicts()
         {
             if (_organizerService == null || _filesToOrganize.Count == 0)
             {
+                _currentConflicts.Clear();
                 _pnlConflicts.Visible = false;
                 return;
             }
 
             var grouped = _organizerService.GroupByMonthYear(_filesToOrganize);
-            var conflicts = _organizerService.DetectConflicts(grouped);
+            string outputDir = GetBaseOutputFolder();
+            _currentConflicts = FileOrganizer.Services.ConflictDetector.Detect(
+                _filesToOrganize, grouped, outputDir, _settings.CreateSortedSubfolder, _settings.Use24HourTimestamp);
 
-            if (conflicts.Count > 0)
+            _pnlConflicts.Visible = _currentConflicts.Count > 0;
+            if (_pnlConflicts.Visible)
             {
-                var sb = new StringBuilder();
-                sb.AppendLine($"⚠ Conflicts Detected: {conflicts.Count}");
-                foreach (var conflict in conflicts.Take(5))
-                {
-                    sb.AppendLine($"• {conflict}");
-                }
-                if (conflicts.Count > 5)
-                {
-                    sb.AppendLine($"• ... and {conflicts.Count - 5} more");
-                }
-                sb.Append("→ Conflicting files will be automatically renamed");
-                _lblConflicts.Text = sb.ToString();
-                _pnlConflicts.Visible = true;
+                _lblConflicts.Text = $"⚠ {_currentConflicts.Count} Collision/Conflict(s) Detected. Click here to review details →";
             }
-            else
-            {
-                _pnlConflicts.Visible = false;
-            }
+            _pnlCenterSection.PerformLayout();
         }
 
         private void CheckTimestampSimilarity()
@@ -315,6 +322,7 @@ namespace FileOrganizer
             if (_organizerService == null || _filesToOrganize.Count < 3 || _settings.OrgMode == OrganizationMode.Category || _settings.OrgMode == OrganizationMode.Extension)
             {
                 _pnlTimestampWarning.Visible = false;
+                _pnlCenterSection.PerformLayout();
                 return;
             }
 
@@ -322,29 +330,21 @@ namespace FileOrganizer
             if (grouped.Count == 0)
             {
                 _pnlTimestampWarning.Visible = false;
+                _pnlCenterSection.PerformLayout();
                 return;
             }
 
             var dominant = grouped.OrderByDescending(g => g.Value.Count).First();
             double ratio = (double)dominant.Value.Count / _filesToOrganize.Count;
-
-            if (ratio >= AppConstants.TimestampSimilarityThreshold)
-            {
-                int percent = (int)(ratio * 100);
-                _lblTimestampWarning.Text = $"⚠ Notice: {percent}% of items share the same date/period and will be organized into '{dominant.Key}'.";
-                _pnlTimestampWarning.Visible = true;
-            }
-            else
-            {
-                _pnlTimestampWarning.Visible = false;
-            }
+            bool isSimilar = ratio >= AppConstants.TimestampSimilarityThreshold;
+            _lblTimestampWarning.Text = isSimilar ? $"⚠ Notice: {(int)(ratio * 100)}% of items share the same date/period and will be organized into '{dominant.Key}'." : "";
+            _pnlTimestampWarning.Visible = isSimilar;
+            _pnlCenterSection.PerformLayout();
         }
 
         private async void BtnStart_Click(object? sender, EventArgs e)
         {
-            if (_organizerService == null || _filesToOrganize.Count == 0)
-                return;
-
+            if (_organizerService == null) return;
             if (string.IsNullOrEmpty(_txtSourceFolder.Text) || !Directory.Exists(_txtSourceFolder.Text))
             {
                 MessageBox.Show("Please select a valid source folder.", "Invalid Source", MessageBoxButtons.OK, MessageBoxIcon.Warning);
@@ -358,24 +358,38 @@ namespace FileOrganizer
                 return;
             }
 
+            if (!AppConstants.CheckDirectoryWritePermission(outputDir, this)) return;
+
+            LoadPreview();
+            if (_filesToOrganize.Count == 0) return;
+
+            ConflictResolutionStrategy conflictStrategy = ConflictResolutionStrategy.AutoRename;
+            if (_currentConflicts.Count > 0)
+            {
+                using var dlg = new FileOrganizer.Forms.ConflictDialog(_currentConflicts, _settings.DarkMode);
+                if (dlg.ShowDialog(this) != DialogResult.OK) return;
+                conflictStrategy = dlg.SelectedStrategy;
+            }
+
             string warningExtra = _pnlTimestampWarning.Visible
                 ? "\n\n⚠ Warning: Almost all items share identical or similar timestamps (common with downloaded ZIPs or chat media) and will be organized into a single folder."
                 : "";
 
-            string previewOutputDir = AppConstants.GetSortedFolderPreviewPath(outputDir, _settings.Use24HourTimestamp);
+            string previewOutputDir = _settings.CreateSortedSubfolder
+                ? AppConstants.GetSortedFolderPreviewPath(outputDir, _settings.Use24HourTimestamp)
+                : outputDir;
+            string destDesc = _settings.CreateSortedSubfolder ? "a Sorted folder in the output location" : "the output location directly";
             var result = MessageBox.Show(
                 $"You are about to organize {_filesToOrganize.Count} item(s) into date-based folders.\n\n" +
                 $"Source: {_txtSourceFolder.Text}\n" +
                 $"Output: {previewOutputDir}" +
                 warningExtra +
-                "\n\nThis will move files from the source location to a Sorted folder in the output location.\n\n" +
-                "Continue?",
+                $"\n\nThis will move files from the source location to {destDesc}.\n\nContinue?",
                 "Confirm Organization",
                 MessageBoxButtons.YesNo,
                 _pnlTimestampWarning.Visible ? MessageBoxIcon.Warning : MessageBoxIcon.Question);
 
-            if (result != DialogResult.Yes)
-                return;
+            if (result != DialogResult.Yes) return;
 
             _pnlMain.Visible = false;
             _pnlProgress.Visible = true;
@@ -383,9 +397,7 @@ namespace FileOrganizer
 
             _progressBar.Value = 0;
             _txtStatus.Clear();
-            _txtStatus.AppendText("Starting organization...\r\n");
-            _txtStatus.AppendText($"Source directory: {_organizerService.WorkingDirectory}\r\n");
-            _txtStatus.AppendText($"Output directory: {_organizerService.OutputDirectory}\r\n\r\n");
+            _txtStatus.AppendText($"Starting organization...\r\nSource: {_organizerService.WorkingDirectory}\r\nOutput: {_organizerService.OutputDirectory}\r\n\r\n");
 
             _cancellationTokenSource = new CancellationTokenSource();
             var progress = new Progress<(int current, int total, string currentFile)>(p =>
@@ -404,11 +416,14 @@ namespace FileOrganizer
 
             try
             {
+                var collidingPaths = new HashSet<string>(_currentConflicts.Select(c => c.Item.FullPath), StringComparer.OrdinalIgnoreCase);
                 var orgResult = await _organizerService.OrganizeFilesAsync(
                     _filesToOrganize,
                     progress,
                     _cancellationTokenSource.Token,
-                    _settings.GenerateCsvLog);
+                    _settings.GenerateCsvLog,
+                    conflictStrategy,
+                    collidingPaths);
 
                 ShowCompletion(orgResult);
             }
@@ -429,18 +444,9 @@ namespace FileOrganizer
 
         private void BtnCancel_Click(object? sender, EventArgs e)
         {
-            if (_cancellationTokenSource != null)
+            if (_cancellationTokenSource != null && MessageBox.Show("Are you sure you want to cancel? Partial progress will be saved.", "Cancel Organization", MessageBoxButtons.YesNo, MessageBoxIcon.Question) == DialogResult.Yes)
             {
-                var result = MessageBox.Show(
-                    "Are you sure you want to cancel? Partial progress will be saved.",
-                    "Cancel Organization",
-                    MessageBoxButtons.YesNo,
-                    MessageBoxIcon.Question);
-
-                if (result == DialogResult.Yes)
-                {
-                    _cancellationTokenSource.Cancel();
-                }
+                _cancellationTokenSource.Cancel();
             }
         }
 
@@ -455,14 +461,8 @@ namespace FileOrganizer
             summaryBuilder.AppendLine("ORGANIZATION RESULTS");
             summaryBuilder.AppendLine($"  ✔ Items Organized:     {result.FilesMoved} of {result.TotalFiles} successfully processed");
             summaryBuilder.AppendLine($"  📁 Folders Created:     {result.MonthFoldersCreated} date-based folder(s)");
-            if (result.ConflictsResolved > 0)
-            {
-                summaryBuilder.AppendLine($"  🛡 Name Conflicts:      {result.ConflictsResolved} safely auto-renamed");
-            }
-            if (result.Errors > 0)
-            {
-                summaryBuilder.AppendLine($"  ⚠ Errors Encountered:  {result.Errors}");
-            }
+            if (result.ConflictsResolved > 0) summaryBuilder.AppendLine($"  🛡 Name Conflicts:      {result.ConflictsResolved} safely auto-renamed");
+            if (result.Errors > 0) summaryBuilder.AppendLine($"  ⚠ Errors Encountered:  {result.Errors}");
             summaryBuilder.AppendLine();
             summaryBuilder.AppendLine("OUTPUT FOLDER");
             summaryBuilder.AppendLine($"  📂 {(string.IsNullOrWhiteSpace(result.SortedFolderPath) ? "Not available" : result.SortedFolderPath)}");

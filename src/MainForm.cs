@@ -37,11 +37,10 @@ namespace FileOrganizer
         private Label _lblTitle = null!;
         private TextBox _txtSourceFolder = null!;
         private ModernButton _btnBrowseSource = null!;
-        private ModernButton _btnRecentFolders = null!;
-        private ModernButton _btnUseCurrentFolder = null!;
+        private ModernButton _btnRecentFolders = null!, _btnUseCurrentFolder = null!;
         private Panel _pnlSourceDrop = null!;
         private CheckBox _chkUseSourceAsOutput = null!;
-        private CheckBox _chkIncludeFolders = null!;
+        private CheckBox _chkIncludeFolders = null!, _chkCreateSubfolder = null!;
         private TextBox _txtOutputFolder = null!;
         private string _customOutputFolder = "";
         private ModernButton _btnBrowseOutput = null!;
@@ -51,16 +50,10 @@ namespace FileOrganizer
         private bool _shouldAutoFitColumns;
         private ModernButton _lblFormatBadge = null!;
         private ModernButton _btnModeSelector = null!;
-        private Panel _pnlEmptyState = null!;
-        private Label _lblSummary = null!;
-        private Panel _pnlConflicts = null!;
-        private Label _lblConflicts = null!;
-        private Panel _pnlTimestampWarning = null!;
-        private Label _lblTimestampWarning = null!;
-        private ModernButton _btnStart = null!;
-        private ModernButton _btnThemeToggle = null!;
-        private Panel _pnlLoadMore = null!;
-        private ModernButton _btnLoadMore = null!;
+        private Panel _pnlEmptyState = null!, _pnlConflicts = null!, _pnlTimestampWarning = null!, _pnlLoadMore = null!;
+        private Label _lblSummary = null!, _lblConflicts = null!, _lblTimestampWarning = null!;
+        private ModernButton _btnStart = null!, _btnThemeToggle = null!, _btnLoadMore = null!;
+        private List<ConflictInfo> _currentConflicts = new();
         private int _currentPreviewLimit;
 
         // UI Controls - Progress Panel
@@ -71,11 +64,9 @@ namespace FileOrganizer
         private ModernButton _btnCancel = null!;
 
         // UI Controls - Complete Panel
-        private Panel _pnlComplete = null!;
+        private Panel _pnlComplete = null!, _pnlCompleteActions = null!;
         private Label _lblCompleteSummary = null!;
-        private Panel _pnlCompleteActions = null!;
-        private ModernButton _btnOpenFolder = null!;
-        private ModernButton _btnStartNewProject = null!;
+        private ModernButton _btnOpenFolder = null!, _btnStartNewProject = null!, _btnExitApp = null!;
 
         // Theme-responsive Labels & Panels
         private Label _lblSubtitle = null!;
@@ -147,12 +138,14 @@ namespace FileOrganizer
             _toolTip.SetToolTip(_pnlSourceDrop, "Drag and drop any folder or files here to inspect (or click Browse)");
             _toolTip.SetToolTip(_lblDropHint, _toolTip.GetToolTip(_pnlSourceDrop));
             _toolTip.SetToolTip(_chkUseSourceAsOutput, "Create the sorted date folders directly inside the source folder");
-            _toolTip.SetToolTip(_chkIncludeFolders, "When checked, moves loose folders as units alongside files. When unchecked, folders are skipped");
+            _toolTip.SetToolTip(_chkIncludeFolders, "Moves whole folders intact into the target date/category. It NEVER extracts or flattens files inside them.");
+            _toolTip.SetToolTip(_chkCreateSubfolder, "When checked, creates a timestamped 'Sorted_...' parent folder. When unchecked, organizes directly in the destination");
             _toolTip.SetToolTip(_btnBrowseOutput, "Choose a different destination folder for the sorted date folders");
             _toolTip.SetToolTip(_txtOutputFolder, "Selected destination folder for organized files");
             _toolTip.SetToolTip(_lblFormatBadge, "Current folder naming pattern. Click to customize in Preferences");
             _toolTip.SetToolTip(_btnRefresh, "Scan and refresh the organization plan (F5)");
             _toolTip.SetToolTip(_btnStart, "Move files & folders into their date-based timeline folders");
+            _toolTip.SetToolTip(_btnExitApp, "Exit TimeFold application");
 
             _cellToolTip = new ToolTip { ShowAlways = true, InitialDelay = 150, AutoPopDelay = 6000, ReshowDelay = 100 };
             _lstFiles.MouseMove += LstFiles_MouseMove;
@@ -169,12 +162,11 @@ namespace FileOrganizer
                     _settings.FolderFormat, _settings.FolderPrefix, _settings.FolderSuffix,
                     _settings.Use24HourTimestamp, _settings.OrgMode,
                     _settings.KeepHtmlCompanionsTogether, _settings.CategoryPrefix,
-                    _settings.CategorySuffix, _settings.KeepSubtitleCompanionsTogether);
+                    _settings.CategorySuffix, _settings.KeepSubtitleCompanionsTogether,
+                    _settings.CreateSortedSubfolder);
             }
-            if (_chkIncludeFolders != null && _chkIncludeFolders.Checked != _settings.IncludeTopLevelFolders)
-            {
-                _chkIncludeFolders.Checked = _settings.IncludeTopLevelFolders;
-            }
+            if (_chkIncludeFolders != null && _chkIncludeFolders.Checked != _settings.IncludeTopLevelFolders) _chkIncludeFolders.Checked = _settings.IncludeTopLevelFolders;
+            if (_chkCreateSubfolder != null && _chkCreateSubfolder.Checked != _settings.CreateSortedSubfolder) _chkCreateSubfolder.Checked = _settings.CreateSortedSubfolder;
             if (_btnModeSelector != null) _btnModeSelector.Text = GetModeSelectorText();
             UpdateFormatBadge();
             UpdateOutputFolder();
@@ -228,7 +220,8 @@ namespace FileOrganizer
                     _settings.KeepHtmlCompanionsTogether,
                     _settings.CategoryPrefix,
                     _settings.CategorySuffix,
-                    _settings.KeepSubtitleCompanionsTogether);
+                    _settings.KeepSubtitleCompanionsTogether,
+                    _settings.CreateSortedSubfolder);
                 _shouldAutoFitColumns = true;
                 UpdateOutputFolder();
                 LoadPreview();
@@ -303,11 +296,13 @@ namespace FileOrganizer
             string baseDir = GetBaseOutputFolder();
             if (!string.IsNullOrEmpty(baseDir) && Directory.Exists(baseDir))
             {
-                string preview = AppConstants.GetSortedFolderPreviewPath(baseDir, _settings.Use24HourTimestamp);
+                string preview = _settings.CreateSortedSubfolder
+                    ? AppConstants.GetSortedFolderPreviewPath(baseDir, _settings.Use24HourTimestamp)
+                    : baseDir;
                 _txtOutputFolder.Text = preview;
                 _txtOutputFolder.SelectionStart = _txtOutputFolder.Text.Length;
                 _txtOutputFolder.ScrollToCaret();
-                _toolTip?.SetToolTip(_txtOutputFolder, $"Output Destination (will create):\n{preview}");
+                _toolTip?.SetToolTip(_txtOutputFolder, _settings.CreateSortedSubfolder ? $"Output Destination (will create):\n{preview}" : $"Output Destination (direct into folder):\n{baseDir}");
                 if (_organizerService != null)
                 {
                     _organizerService.OutputDirectory = baseDir;
@@ -318,6 +313,7 @@ namespace FileOrganizer
                 _txtOutputFolder.Text = "";
                 _toolTip?.SetToolTip(_txtOutputFolder, "Selected destination folder for organized files");
             }
+            CheckConflicts();
         }
 
         private void MenuFileNew_Click(object? sender, EventArgs e) => ResetForm();

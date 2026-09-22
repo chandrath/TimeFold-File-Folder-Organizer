@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Drawing;
 using System.Globalization;
 using System.IO;
+using System.Windows.Forms;
 using FileOrganizer.Models;
 
 namespace FileOrganizer.Config
@@ -107,6 +108,41 @@ namespace FileOrganizer.Config
             }
         }
 
+        public static bool CheckDirectoryWritePermission(string targetDir, IWin32Window? owner = null)
+        {
+            try
+            {
+                if (!Directory.Exists(targetDir)) Directory.CreateDirectory(targetDir);
+                string testFile = Path.Combine(targetDir, $".tf_perm_{Guid.NewGuid():N}.tmp");
+                File.WriteAllText(testFile, "test");
+                File.Delete(testFile);
+                return true;
+            }
+            catch (UnauthorizedAccessException)
+            {
+                var choice = MessageBox.Show(
+                    owner,
+                    $"Windows denied write access to folder:\n{targetDir}\n\n" +
+                    "This usually occurs when Windows Controlled Folder Access (Ransomware Protection) protects personal folders (Documents, Desktop, etc.).\n\n" +
+                    "Would you like to open Windows Security to allow TimeFold?",
+                    "Write Permission Denied",
+                    MessageBoxButtons.YesNo,
+                    MessageBoxIcon.Warning);
+
+                if (choice == DialogResult.Yes)
+                {
+                    try { System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo("windowsdefender://ransomwareprotection") { UseShellExecute = true }); }
+                    catch { System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo("ms-settings:windowsdefender") { UseShellExecute = true }); }
+                }
+                return false;
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show(owner, $"Unable to write to destination folder:\n{ex.Message}", "Permission Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                return false;
+            }
+        }
+
         // Output & Logging Prefixes (SSoT)
         public const string SortedFolderPrefix = "Sorted_";
         public const string DefaultGroupedFolderName = "Grouped Folders";
@@ -123,6 +159,7 @@ namespace FileOrganizer.Config
         public const bool DefaultAutoLoadExeDirectoryOnStartup = false;
         public const bool DefaultDarkMode = false;
         public const bool DefaultHasSeenWelcomeTour = false;
+        public const bool DefaultCreateSortedSubfolder = true;
         public const int MaxRecentFolders = 5;
         public const FolderFormat DefaultFolderFormat = FolderFormat.YearMonth;
         public const string DefaultFolderPrefix = "";

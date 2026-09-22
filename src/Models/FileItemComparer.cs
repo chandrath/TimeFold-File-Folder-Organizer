@@ -20,7 +20,8 @@ namespace FileOrganizer.Models
                 2 => (x, y) => DateTime.Compare(x.ModifiedDate, y.ModifiedDate),
                 3 => (x, y) => DateTime.Compare(x.CreatedDate, y.CreatedDate),
                 4 => (x, y) => string.Compare(x.TargetFolder, y.TargetFolder, StringComparison.CurrentCultureIgnoreCase),
-                5 => CompareSize,
+                5 => (x, y) => string.Compare(x.TargetFolder, y.TargetFolder, StringComparison.CurrentCultureIgnoreCase),
+                6 => CompareSize,
                 _ => (x, y) => DateTime.Compare(x.ModifiedDate, y.ModifiedDate)
             };
 
@@ -46,7 +47,8 @@ namespace FileOrganizer.Models
                 2 => DateTime.Compare(f1.ModifiedDate, f2.ModifiedDate),
                 3 => DateTime.Compare(f1.CreatedDate, f2.CreatedDate),
                 4 => string.Compare(f1.TargetFolder, f2.TargetFolder, StringComparison.CurrentCultureIgnoreCase),
-                5 => CompareSize(f1, f2),
+                5 => string.Compare(f1.TargetFolder, f2.TargetFolder, StringComparison.CurrentCultureIgnoreCase),
+                6 => CompareSize(f1, f2),
                 _ => 0
             };
 

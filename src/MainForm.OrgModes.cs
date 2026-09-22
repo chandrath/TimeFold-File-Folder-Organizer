@@ -80,7 +80,8 @@ namespace FileOrganizer
                     _settings.KeepHtmlCompanionsTogether,
                     _settings.CategoryPrefix,
                     _settings.CategorySuffix,
-                    _settings.KeepSubtitleCompanionsTogether);
+                    _settings.KeepSubtitleCompanionsTogether,
+                    _settings.CreateSortedSubfolder);
             }
 
             if (_filesToOrganize != null && _filesToOrganize.Count > 0)

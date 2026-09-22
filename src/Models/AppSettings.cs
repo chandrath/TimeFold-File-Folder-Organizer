@@ -28,6 +28,7 @@ namespace FileOrganizer.Models
         public bool KeepHtmlCompanionsTogether { get; set; } = Config.AppConstants.DefaultKeepHtmlCompanionsTogether;
         public bool KeepSubtitleCompanionsTogether { get; set; } = Config.AppConstants.DefaultKeepSubtitleCompanionsTogether;
         public int MaxPreviewItems { get; set; } = Config.AppConstants.DefaultMaxPreviewItems;
+        public bool CreateSortedSubfolder { get; set; } = Config.AppConstants.DefaultCreateSortedSubfolder;
 
         public static AppSettings LoadFromFile()
         {

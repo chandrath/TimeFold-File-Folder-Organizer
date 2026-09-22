@@ -80,7 +80,7 @@ namespace FileOrganizer
             _cmbFolderDateSource.SelectedIndex = (int)_settings.FolderDateSource;
             currentY += 30;
 
-            _chkIncludeFolders = new CheckBox { Text = "Include Folders (Move whole folders alongside files)", Location = new Point(leftMargin, currentY), Size = new Size(contentWidth, 24), Checked = _settings.IncludeTopLevelFolders };
+            _chkIncludeFolders = new CheckBox { Text = "Also organize folders (keeps contents intact)", Location = new Point(leftMargin, currentY), Size = new Size(contentWidth, 24), Checked = _settings.IncludeTopLevelFolders };
             currentY += spacing;
 
             _chkIgnoreSystemFiles = new CheckBox { Text = "Ignore Windows system files & protected folders (desktop.ini, Thumbs.db, $RECYCLE.BIN)", UseMnemonic = false, Location = new Point(leftMargin, currentY), Size = new Size(contentWidth, 24), Checked = _settings.IgnoreSystemFiles };

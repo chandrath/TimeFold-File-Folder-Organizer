@@ -38,9 +38,7 @@ namespace FileOrganizer
             _menuFileExit = new ToolStripMenuItem("Exit", null, MenuFileExit_Click);
             _menuFile.DropDownItems.AddRange(new ToolStripItem[] { _menuFileNew, _menuFileRecent, new ToolStripSeparator(), _menuFileExit });
 
-            _menuPreferences = new ToolStripMenuItem("Preferences");
-            _menuPreferences.Click += MenuPreferences_Click;
-
+            _menuPreferences = new ToolStripMenuItem("Preferences", null, MenuPreferences_Click);
             _menuHelp = new ToolStripMenuItem("Help");
             var menuTour = new ToolStripMenuItem("💡 Quick Tour & Guide...", null, MenuWelcomeTour_Click);
             _menuAbout = new ToolStripMenuItem("About", null, MenuAbout_Click);
@@ -55,13 +53,7 @@ namespace FileOrganizer
             _pnlMain = new Panel { Dock = DockStyle.Fill, BackColor = AppConstants.ColorSurfaceBg };
 
             // 1. Pinned Footer Section
-            _pnlFooterSection = new Panel
-            {
-                Dock = DockStyle.Bottom,
-                Height = 68,
-                Padding = new Padding(AppConstants.DefaultPadding + 6, 10, AppConstants.DefaultPadding + 6, 10),
-                BackColor = Color.White
-            };
+            _pnlFooterSection = new Panel { Dock = DockStyle.Bottom, Height = 68, Padding = new Padding(AppConstants.DefaultPadding + 6, 10, AppConstants.DefaultPadding + 6, 10), BackColor = Color.White };
             _pnlFooterSection.Paint += (s, pe) =>
             {
                 var palette = AppTheme.GetPalette(_settings.DarkMode);
@@ -178,14 +170,17 @@ namespace FileOrganizer
                 pe.Graphics.DrawRectangle(pen, 1, 1, _pnlSourceDrop.Width - 3, _pnlSourceDrop.Height - 3);
             };
 
-            _chkUseSourceAsOutput = new CheckBox { Text = "Use source folder as output destination (default)", Font = new Font("Segoe UI", 9F), ForeColor = Color.FromArgb(55, 65, 81), AutoSize = true, Checked = true, Margin = new Padding(0, 0, 16, 0) };
+            _chkUseSourceAsOutput = new CheckBox { Text = "Use source folder as destination (default)", Font = new Font("Segoe UI", 9F), ForeColor = Color.FromArgb(55, 65, 81), AutoSize = true, Checked = true, Margin = new Padding(0, 0, 14, 0) };
             _chkUseSourceAsOutput.CheckedChanged += ChkUseSourceAsOutput_CheckedChanged;
 
-            _chkIncludeFolders = new CheckBox { Text = "Include subfolders (move loose folders alongside files)", Font = new Font("Segoe UI", 9F), ForeColor = Color.FromArgb(55, 65, 81), AutoSize = true, Checked = _settings.IncludeTopLevelFolders, Margin = Padding.Empty };
+            _chkCreateSubfolder = new CheckBox { Text = "Create 'Sorted_...' subfolder", Font = new Font("Segoe UI", 9F), ForeColor = Color.FromArgb(55, 65, 81), AutoSize = true, Checked = _settings.CreateSortedSubfolder, Margin = new Padding(0, 0, 14, 0) };
+            _chkCreateSubfolder.CheckedChanged += ChkCreateSubfolder_CheckedChanged;
+
+            _chkIncludeFolders = new CheckBox { Text = "Also organize folders (keeps contents intact)", Font = new Font("Segoe UI", 9F), ForeColor = Color.FromArgb(55, 65, 81), AutoSize = true, Checked = _settings.IncludeTopLevelFolders, Margin = Padding.Empty, Cursor = Cursors.Hand };
             _chkIncludeFolders.CheckedChanged += ChkIncludeFolders_CheckedChanged;
 
             var pnlOptionsRow = new FlowLayoutPanel { Dock = DockStyle.Top, AutoSize = true, FlowDirection = FlowDirection.LeftToRight, WrapContents = false, Margin = new Padding(0, 0, 0, 4) };
-            pnlOptionsRow.Controls.AddRange([_chkUseSourceAsOutput, _chkIncludeFolders]);
+            pnlOptionsRow.Controls.AddRange([_chkUseSourceAsOutput, _chkCreateSubfolder, _chkIncludeFolders]);
 
             var pnlOutputRow = new TableLayoutPanel { Dock = DockStyle.Top, ColumnCount = 2, Height = 34, Margin = new Padding(0, 0, 0, 4) };
             pnlOutputRow.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 100));
@@ -254,8 +249,10 @@ namespace FileOrganizer
             // Visual order from left to right: [Refresh] -> [Mode/Category] -> [Date Format]
             pnlPreviewHeader.Controls.AddRange([_btnRefresh, _btnModeSelector, _lblFormatBadge, _lblPreviewHeader]);
 
-            _pnlConflicts = new Panel { Dock = DockStyle.Top, Height = 42, BorderStyle = BorderStyle.FixedSingle, BackColor = AppConstants.ColorDangerBg, Visible = false, Padding = new Padding(8, 4, 8, 4), Margin = new Padding(0, 2, 0, 6) };
-            _lblConflicts = new Label { Text = "⚠ Conflicts Detected:", Font = new Font("Segoe UI", 9F, FontStyle.Bold), ForeColor = AppConstants.ColorDanger, Dock = DockStyle.Fill, TextAlign = ContentAlignment.MiddleLeft };
+            _pnlConflicts = new Panel { Dock = DockStyle.Top, Height = 40, BorderStyle = BorderStyle.FixedSingle, BackColor = AppConstants.ColorDangerBg, Visible = false, Padding = new Padding(8, 4, 8, 4), Margin = new Padding(0, 2, 0, 6), Cursor = Cursors.Hand };
+            _lblConflicts = new Label { Text = "⚠ Conflicts Detected:", Font = new Font("Segoe UI", 9F, FontStyle.Bold), ForeColor = AppConstants.ColorDanger, Dock = DockStyle.Fill, TextAlign = ContentAlignment.MiddleLeft, Cursor = Cursors.Hand };
+            _pnlConflicts.Click += (s, e) => ShowConflictDialog();
+            _lblConflicts.Click += (s, e) => ShowConflictDialog();
             _pnlConflicts.Controls.Add(_lblConflicts);
 
             _pnlTimestampWarning = new Panel { Dock = DockStyle.Top, Height = 36, BorderStyle = BorderStyle.FixedSingle, BackColor = Color.FromArgb(254, 243, 199), Visible = false, Padding = new Padding(8, 4, 8, 4), Margin = new Padding(0, 2, 0, 4) };
@@ -263,7 +260,7 @@ namespace FileOrganizer
             _pnlTimestampWarning.Controls.Add(_lblTimestampWarning);
 
             _lstFiles = new ListView { Dock = DockStyle.Fill, View = View.Details, FullRowSelect = true, GridLines = true, MultiSelect = false, BorderStyle = BorderStyle.FixedSingle, BackColor = Color.White, Font = new Font("Segoe UI", 9F), Visible = false };
-            _lstFiles.Columns.AddRange([new ColumnHeader { Text = "File Name", Width = 260 }, new ColumnHeader { Text = "Type", Width = 44 }, new ColumnHeader { Text = "Modified Date", Width = 122 }, new ColumnHeader { Text = "Created Date", Width = 114 }, new ColumnHeader { Text = "📁 Target Folder", Width = 140 }, new ColumnHeader { Text = "Size", Width = 54 }]);
+            _lstFiles.Columns.AddRange([new ColumnHeader { Text = "File Name", Width = 230 }, new ColumnHeader { Text = "Type", Width = 44 }, new ColumnHeader { Text = "Modified Date", Width = 116 }, new ColumnHeader { Text = "Created Date", Width = 110 }, new ColumnHeader { Text = "📁 Target Folder", Width = 130 }, new ColumnHeader { Text = "Status", Width = 100 }, new ColumnHeader { Text = "Size", Width = 50 }]);
             _lstFiles.ColumnClick += LstFiles_ColumnClick;
             _lstFiles.Click += LstFiles_Click;
 
@@ -288,9 +285,15 @@ namespace FileOrganizer
                 );
             };
 
-            _pnlCenterSection.Controls.AddRange([_pnlEmptyState, _lstFiles, _pnlLoadMore, _pnlTimestampWarning, _pnlConflicts, pnlPreviewHeader]);
+            var pnlPreviewTop = new Panel { Dock = DockStyle.Top, AutoSize = true, AutoSizeMode = AutoSizeMode.GrowAndShrink, BackColor = Color.Transparent };
+            pnlPreviewTop.Controls.AddRange([_pnlTimestampWarning, _pnlConflicts, pnlPreviewHeader]);
+            pnlPreviewHeader.SendToBack();
+            _pnlConflicts.BringToFront();
+            _pnlTimestampWarning.BringToFront();
+
+            _pnlCenterSection.Controls.AddRange([_pnlEmptyState, _lstFiles, _pnlLoadMore, pnlPreviewTop]);
+            pnlPreviewTop.SendToBack();
             _pnlLoadMore.SendToBack();
-            _lstFiles.BringToFront();
             _pnlEmptyState.BringToFront();
 
             _pnlMain.Controls.Add(_pnlCenterSection);
@@ -374,19 +377,19 @@ namespace FileOrganizer
             };
             _pnlDetailsCard.Controls.Add(_lblCompleteSummary);
 
-            // Action Buttons Container (Side-by-Side)
+            // Action Buttons Container (Stacked: Primary Green above, Blue + Red below)
             _pnlCompleteActions = new Panel
             {
                 Dock = DockStyle.Top,
-                Height = 65,
+                Height = 100,
                 Margin = new Padding(0, 4, 0, 10)
             };
 
             _btnOpenFolder = new ModernButton
             {
                 Text = "📂 Open Output Folder",
-                Size = new Size(230, 46),
-                BackColor = AppConstants.ColorPrimary,
+                Size = new Size(260, 44),
+                BackColor = AppConstants.ColorSuccess,
                 ForeColor = Color.White,
                 Font = new Font("Segoe UI", 10.5F, FontStyle.Bold),
                 BorderRadius = 10,
@@ -397,18 +400,29 @@ namespace FileOrganizer
             _btnStartNewProject = new ModernButton
             {
                 Text = "🔄 Organize Another Folder",
-                Size = new Size(230, 46),
-                BackColor = AppConstants.ColorSuccess,
+                Size = new Size(190, 36),
+                BackColor = AppConstants.ColorPrimary,
                 ForeColor = Color.White,
-                Font = new Font("Segoe UI", 10.5F, FontStyle.Bold),
-                BorderRadius = 10,
+                Font = new Font("Segoe UI", 9.5F, FontStyle.Bold),
+                BorderRadius = 8,
                 Cursor = Cursors.Hand
             };
             _btnStartNewProject.Click += BtnStartNewProject_Click;
 
+            _btnExitApp = new ModernButton
+            {
+                Text = "✕ Exit",
+                Size = new Size(90, 36),
+                BackColor = Color.FromArgb(239, 68, 68),
+                ForeColor = Color.White,
+                Font = new Font("Segoe UI", 9.5F, FontStyle.Bold),
+                BorderRadius = 8,
+                Cursor = Cursors.Hand
+            };
+            _btnExitApp.Click += (s, e) => Application.Exit();
+
             _pnlCompleteActions.Resize += (s, e) => CenterCompletionButtons();
-            _pnlCompleteActions.Controls.Add(_btnOpenFolder);
-            _pnlCompleteActions.Controls.Add(_btnStartNewProject);
+            _pnlCompleteActions.Controls.AddRange([_btnOpenFolder, _btnStartNewProject, _btnExitApp]);
 
             completeContainer.Controls.Add(_lblCompleteTitle);
             completeContainer.Controls.Add(_lblCompleteSubtitle);
@@ -459,25 +473,16 @@ namespace FileOrganizer
 
         private void CenterCompletionButtons()
         {
-            if (_pnlCompleteActions == null || _btnOpenFolder == null || _btnStartNewProject == null) return;
-            int totalWidth = _btnOpenFolder.Width + 16 + _btnStartNewProject.Width;
+            if (_pnlCompleteActions == null || _btnOpenFolder == null || _btnStartNewProject == null || _btnExitApp == null) return;
             int availableWidth = _pnlCompleteActions.ClientSize.Width;
             if (availableWidth <= 0) return;
 
-            if (availableWidth >= totalWidth)
-            {
-                int startX = Math.Max(0, (availableWidth - totalWidth) / 2);
-                _btnOpenFolder.Location = new Point(startX, 6);
-                _btnStartNewProject.Location = new Point(startX + _btnOpenFolder.Width + 16, 6);
-                _pnlCompleteActions.Height = 58;
-            }
-            else
-            {
-                int startX = Math.Max(0, (availableWidth - _btnOpenFolder.Width) / 2);
-                _btnOpenFolder.Location = new Point(startX, 0);
-                _btnStartNewProject.Location = new Point(startX, _btnOpenFolder.Bottom + 10);
-                _pnlCompleteActions.Height = 110;
-            }
+            _btnOpenFolder.Location = new Point(Math.Max(0, (availableWidth - _btnOpenFolder.Width) / 2), 4);
+            int row2Width = _btnStartNewProject.Width + 10 + _btnExitApp.Width;
+            int startX2 = Math.Max(0, (availableWidth - row2Width) / 2);
+            _btnStartNewProject.Location = new Point(startX2, 54);
+            _btnExitApp.Location = new Point(startX2 + _btnStartNewProject.Width + 10, 54);
+            _pnlCompleteActions.Height = 100;
         }
 
         private void MainForm_Resize(object? sender, EventArgs e) => UpdateMainLayout();

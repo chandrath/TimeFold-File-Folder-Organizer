@@ -20,7 +20,7 @@ namespace FileOrganizer
         private ToolStripMenuItem _menuItemChangeCategory = null!;
         private ToolStripMenuItem _menuItemRename = null!;
         private ToolStripMenuItem _menuItemDelete = null!;
-        private ToolStripMenuItem _menuItemAutoFit = null!;
+        private ToolStripMenuItem _menuItemAutoFit = null!, _menuItemToggleStatus = null!;
         private ToolStripSeparator _sepTargetFolder = null!;
         private ToolStripSeparator _sepFileOps = null!;
         private ToolStripSeparator _sepAutoFit = null!;
@@ -39,6 +39,7 @@ namespace FileOrganizer
             _menuItemRename = new ToolStripMenuItem("✏ Rename File...", null, (s, e) => RenameSelectedFile());
             _menuItemDelete = new ToolStripMenuItem("🗑 Delete (Recycle Bin)", null, (s, e) => DeleteSelectedFile());
             _menuItemAutoFit = new ToolStripMenuItem("↔ Auto-fit All Columns", null, (s, e) => AutoFitColumns());
+            _menuItemToggleStatus = new ToolStripMenuItem("👁 Toggle Status Column", null, (s, e) => ToggleStatusColumn());
 
             _sepTargetFolder = new ToolStripSeparator();
             _sepFileOps = new ToolStripSeparator();
@@ -47,6 +48,7 @@ namespace FileOrganizer
             _ctxFileMenu.Items.AddRange(new ToolStripItem[]
             {
                 _menuItemAutoFit,
+                _menuItemToggleStatus,
                 _sepAutoFit,
                 _menuItemRenameCategory,
                 _menuItemResetCategoryName,
@@ -76,6 +78,7 @@ namespace FileOrganizer
                     if (_filesToOrganize.Count == 0) { e.Cancel = true; return; }
                     foreach (ToolStripItem it in _ctxFileMenu.Items) it.Visible = false;
                     _menuItemAutoFit.Visible = true;
+                    _menuItemToggleStatus.Visible = true;
                     return;
                 }
 
@@ -435,6 +438,16 @@ namespace FileOrganizer
             prompt.CancelButton = btnCancel;
 
             return prompt.ShowDialog() == DialogResult.OK ? cbo.Text.Trim() : null;
+        }
+
+        private void ToggleStatusColumn()
+        {
+            if (_lstFiles.Columns.Count > 5)
+            {
+                bool isHidden = _lstFiles.Columns[5].Width == 0;
+                _lstFiles.Columns[5].Width = isHidden ? 100 : 0;
+                _menuItemToggleStatus.Text = isHidden ? "👁 Hide Status Column" : "👁 Show Status Column";
+            }
         }
     }
 }

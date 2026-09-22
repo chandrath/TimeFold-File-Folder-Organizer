@@ -82,14 +82,9 @@ namespace FileOrganizer
             }
 
             // 7. Output Configuration
-            if (_chkUseSourceAsOutput != null)
-            {
-                _chkUseSourceAsOutput.ForeColor = palette.TextPrimary;
-            }
-            if (_chkIncludeFolders != null)
-            {
-                _chkIncludeFolders.ForeColor = palette.TextPrimary;
-            }
+            if (_chkUseSourceAsOutput != null) _chkUseSourceAsOutput.ForeColor = palette.TextPrimary;
+            if (_chkCreateSubfolder != null) _chkCreateSubfolder.ForeColor = palette.TextPrimary;
+            if (_chkIncludeFolders != null) _chkIncludeFolders.ForeColor = palette.TextPrimary;
             UpdateOutputFolder();
 
             if (_btnBrowseOutput != null)
