@@ -37,8 +37,8 @@ namespace FileOrganizer.Config
         });
 
         public static string BuildNumber => _lazyBuildNumber.Value;
-        public const string AppTagline = "Effortlessly organize files & folders into a clean date-based timeline";
-        public const string AppDescription = AppTagline;
+        public const string AppTagline = "Effortlessly organize files & folders into clean date-based timelines or smart categories";
+        public const string AppDescription = "Fast, non-destructive file and folder organizer for Windows that sorts messy directories into clean date-based timelines or smart file-type categories.";
         public const string Author = "Shree";
         public const string RepositoryUrl = "https://github.com/chandrath/TimeFold-File-Folder-Organizer";
         public const string LicenseText = "GNU General Public License v3.0 (GPLv3) - Free and Open Source";

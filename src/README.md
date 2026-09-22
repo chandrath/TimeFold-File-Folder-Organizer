@@ -5,7 +5,7 @@
 <h1 align="center">TimeFold: File & Folder Organizer</h1>
 
 <p align="center">
-  <strong>Effortlessly organize chaotic folders into a clean, date-based timeline in just one click.</strong>
+  <strong>Fast, non-destructive file and folder organizer for Windows that sorts messy directories into clean date-based timelines or smart file-type categories.</strong>
 </p>
 
 <p align="center">
@@ -33,6 +33,7 @@ Do you have folders like **Downloads**, **Screenshots**, **Photos**, or your **D
 ## ✨ Key Features
 
 * **⚡ 1-Click Smart Date Sorting:** Automatically groups files and folders by **Month** (`2026-08`), **Day** (`2026-08-15`), **Quarter** (`2026-Q3`), or **Year** (`2026`).
+* **🗂️ Smart Categories & Hybrid Modes:** Organize files into intuitive categories (*Images, Documents, Video, Audio, 3D Files, Code, Archives*), by raw file extension, or combine both with 2-level hybrid nesting (`Category / Date` and `Date / Category`).
 * **🛡️ 100% Non-Destructive:** TimeFold **never deletes**, alters, or compresses your original files. It only relocates them into neat date folders.
 * **🔍 Full Interactive Preview:** Review every file and its exact destination in a live grid *before* moving a single byte.
 * **📝 Automatic CSV Audit Logs:** Every organization run generates an exact timestamped audit trail so you always know where files went.
