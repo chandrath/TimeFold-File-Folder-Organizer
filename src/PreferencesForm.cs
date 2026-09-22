@@ -203,7 +203,7 @@ namespace FileOrganizer
                 CoreFormat.YearQuarter or CoreFormat.YearQuarterMonths => (new DateTime(currentYear, 2, 1), new DateTime(currentYear, 5, 1), new DateTime(currentYear, 8, 1), new DateTime(currentYear, 11, 1)),
                 CoreFormat.YearHalf => (new DateTime(currentYear - 1, 3, 1), new DateTime(currentYear - 1, 9, 1), new DateTime(currentYear, 3, 1), new DateTime(currentYear, 9, 1)),
                 CoreFormat.YearOnly => (new DateTime(currentYear - 3, 1, 1), new DateTime(currentYear - 2, 1, 1), new DateTime(currentYear - 1, 1, 1), new DateTime(currentYear, 1, 1)),
-                CoreFormat.YearNestedMonth or CoreFormat.YearNestedMonthOnly or CoreFormat.YearNestedIso => (new DateTime(currentYear, 1, 15), new DateTime(currentYear, 3, 15), new DateTime(currentYear, 6, 15), new DateTime(currentYear, 9, 15)),
+                CoreFormat.YearNestedMonth or CoreFormat.YearNestedMonthOnly or CoreFormat.YearNestedIso => (new DateTime(currentYear, 1, 15), new DateTime(currentYear, 2, 15), new DateTime(currentYear, 3, 15), new DateTime(currentYear, 4, 15)),
                 CoreFormat.YearNestedQuarter => (new DateTime(currentYear, 2, 1), new DateTime(currentYear, 5, 1), new DateTime(currentYear, 8, 1), new DateTime(currentYear, 11, 1)),
                 CoreFormat.YearNestedHalf => (new DateTime(currentYear - 1, 3, 1), new DateTime(currentYear - 1, 9, 1), new DateTime(currentYear, 3, 1), new DateTime(currentYear, 9, 1)),
                 _ => (new DateTime(currentYear, 1, 15), new DateTime(currentYear, 2, 15), new DateTime(currentYear, 3, 15), new DateTime(currentYear, 4, 15))
