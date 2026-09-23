@@ -325,10 +325,12 @@ namespace FileOrganizer
             using var prefsForm = new PreferencesForm(_settings);
             if (prefsForm.ShowDialog() == DialogResult.OK)
             {
-                (_settings = prefsForm.Settings).SaveToFile();
+                var newSettings = prefsForm.Settings;
+                bool needsRescan = _settings.RequiresRescan(newSettings);
+                (_settings = newSettings).SaveToFile();
                 ApplySettings();
                 ApplyTheme(_settings.DarkMode);
-                LoadPreview();
+                if (needsRescan) LoadPreview();
             }
         }
 

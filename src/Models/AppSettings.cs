@@ -121,6 +121,23 @@ namespace FileOrganizer.Models
             RecentFolders.Clear();
             SaveToFile();
         }
+
+        public bool RequiresRescan(AppSettings other)
+        {
+            return IncludeTopLevelFolders != other.IncludeTopLevelFolders
+                || IgnoreSystemFiles != other.IgnoreSystemFiles
+                || FileDateSource != other.FileDateSource
+                || FolderDateSource != other.FolderDateSource
+                || FolderFormat != other.FolderFormat
+                || FolderPrefix != other.FolderPrefix
+                || FolderSuffix != other.FolderSuffix
+                || MaxPreviewItems != other.MaxPreviewItems
+                || OrgMode != other.OrgMode
+                || CategoryPrefix != other.CategoryPrefix
+                || CategorySuffix != other.CategorySuffix
+                || KeepHtmlCompanionsTogether != other.KeepHtmlCompanionsTogether
+                || KeepSubtitleCompanionsTogether != other.KeepSubtitleCompanionsTogether;
+        }
     }
     
     public enum FolderFormat

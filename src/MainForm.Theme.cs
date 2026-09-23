@@ -1,7 +1,9 @@
 using System;
 using System.Drawing;
+using System.Linq;
 using System.Windows.Forms;
 using FileOrganizer.Config;
+using FileOrganizer.Models;
 
 namespace FileOrganizer
 {
@@ -121,7 +123,7 @@ namespace FileOrganizer
                 _lstFiles.ForeColor = palette.ListText;
                 if (_filesToOrganize.Count > 0)
                 {
-                    UpdateFileList();
+                    UpdateFileListTheme();
                 }
             }
 
@@ -239,6 +241,51 @@ namespace FileOrganizer
                     menuItem.DropDown.BackColor = palette.MenuBg;
                     SetMenuColors(menuItem.DropDownItems, palette);
                 }
+            }
+        }
+
+        private void UpdateFileListTheme()
+        {
+            if (_lstFiles == null || _lstFiles.Items.Count == 0) return;
+
+            var palette = AppTheme.GetPalette(_settings.DarkMode);
+            _lstFiles.BeginUpdate();
+            try
+            {
+                _lstFiles.BackColor = palette.ListBg;
+                _lstFiles.ForeColor = palette.ListText;
+
+                foreach (ListViewItem item in _lstFiles.Items)
+                {
+                    if (item.Tag is "LOAD_MORE")
+                    {
+                        item.ForeColor = _settings.DarkMode ? Color.FromArgb(147, 197, 253) : Color.FromArgb(37, 99, 235);
+                        continue;
+                    }
+
+                    if (item.Tag is FileItem file && item.SubItems.Count >= 6)
+                    {
+                        item.ForeColor = palette.ListText;
+                        item.SubItems[1].ForeColor = palette.ListText;
+                        item.SubItems[2].ForeColor = file.IsCreatedDateActive ? palette.ListDateMuted : palette.ListDateActive;
+                        item.SubItems[3].ForeColor = file.IsCreatedDateActive ? palette.ListDateActive : palette.ListDateMuted;
+                        item.SubItems[4].ForeColor = palette.ListTargetFolder;
+
+                        bool isConflict = _currentConflicts.Any(c => c.Item == file);
+                        item.SubItems[5].ForeColor = isConflict
+                            ? (_settings.DarkMode ? Color.FromArgb(248, 113, 113) : Color.FromArgb(220, 38, 38))
+                            : (_settings.DarkMode ? Color.FromArgb(52, 211, 153) : Color.FromArgb(22, 101, 52));
+
+                        if (item.SubItems.Count > 6)
+                        {
+                            item.SubItems[6].ForeColor = palette.ListText;
+                        }
+                    }
+                }
+            }
+            finally
+            {
+                _lstFiles.EndUpdate();
             }
         }
     }
