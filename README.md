@@ -9,11 +9,11 @@
 </p>
 
 <p align="center">
-  <img src="https://img.shields.io/badge/Platform-Windows%2010%20%7C%2011-0078D6?logo=windows&logoColor=white" alt="Platform" />
-  <img src="https://img.shields.io/badge/.NET-10.0-512BD4?logo=dotnet&logoColor=white" alt=".NET 10" />
-  <img src="https://img.shields.io/badge/Architecture-x64-blue" alt="Architecture" />
-  <img src="https://img.shields.io/badge/License-GPLv3-green" alt="License" />
-  <img src="https://img.shields.io/badge/Release-Standalone%20Single%20File-success" alt="Single File" />
+  <a href="https://www.microsoft.com/windows"><img src="https://img.shields.io/badge/Platform-Windows%2010%20%7C%2011-0078D6?logo=windows&logoColor=white" alt="Platform" /></a>
+  <a href="https://dotnet.microsoft.com/download/dotnet/10.0"><img src="https://img.shields.io/badge/.NET-10.0-512BD4?logo=dotnet&logoColor=white" alt=".NET 10" /></a>
+  <a href="https://github.com/chandrath/TimeFold-File-Folder-Organizer/releases/latest"><img src="https://img.shields.io/badge/Architecture-x64-blue" alt="Architecture" /></a>
+  <a href="LICENSE"><img src="https://img.shields.io/badge/License-GPLv3-green" alt="License" /></a>
+  <a href="https://github.com/chandrath/TimeFold-File-Folder-Organizer/releases/latest"><img src="https://img.shields.io/badge/Release-Standalone%20Single%20File-success" alt="Single File" /></a>
 </p>
 
 <p align="center">
@@ -263,7 +263,7 @@ TimeFold uses a **preview-first workflow** so you can see what it plans to do be
 
 ### Option 1: Download (Recommended)
 
-1. Go to the [Releases](https://github.com/chandrath/TimeFold-File-Folder-Organizer/releases) page.
+1. Go to the [Releases](https://github.com/chandrath/TimeFold-File-Folder-Organizer/releases/latest) page.
 2. Choose the download that fits your needs:
 
    - **⭐ ReadyToRun (`TimeFold-win-x64-ReadyToRun.zip`):** Recommended for everyone. Extract it and double-click `TimeFold.exe`. It is completely standalone with zero prerequisites.
