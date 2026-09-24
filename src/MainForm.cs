@@ -241,15 +241,11 @@ namespace FileOrganizer
                 var item = new ToolStripMenuItem(label) { ToolTipText = path };
                 item.Click += (s, e) =>
                 {
-                    if (Directory.Exists(path))
-                    {
-                        SetSourceFolder(path);
-                    }
+                    if (Directory.Exists(path)) SetSourceFolder(path);
                     else
                     {
                         MessageBox.Show($"The folder could not be found:\n\n{path}\n\nIt may have been moved, deleted, or on an unplugged drive.", "Folder Not Found", MessageBoxButtons.OK, MessageBoxIcon.Warning);
-                        _settings.RemoveRecentFolder(path);
-                        UpdateRecentMenus();
+                        _settings.RemoveRecentFolder(path); UpdateRecentMenus();
                     }
                 };
                 items.Add(item);
@@ -257,11 +253,7 @@ namespace FileOrganizer
 
             items.Add(new ToolStripSeparator());
             var clearItem = new ToolStripMenuItem("🗑 Clear Recent History");
-            clearItem.Click += (s, e) =>
-            {
-                _settings.ClearRecentFolders();
-                UpdateRecentMenus();
-            };
+            clearItem.Click += (s, e) => { _settings.ClearRecentFolders(); UpdateRecentMenus(); };
             items.Add(clearItem);
         }
 
@@ -432,7 +424,11 @@ namespace FileOrganizer
             if (_lastTooltipCell == (itemIndex, subIndex) && (now - _lastTooltipShownTick < 8000)) return;
 
             string? newText = null;
-            if (subIndex == 2) // Modified Date
+            if (subIndex == 1 && file.IsGitRepository)
+            {
+                newText = "📦 Git Repository (Folder)\nFolder containing a .git or .github repository structure.\n• Kept intact as a whole folder (contents are never touched).\n• In Date mode, organized into date timeline folder.\n• In Category modes, isolated into 'Git Repos'.";
+            }
+            else if (subIndex == 2) // Modified Date
             {
                 newText = !file.IsCreatedDateActive
                     ? $"✔ Active Date (Modified)\nUsed to organize this item into target folder '{file.TargetFolder}'.\nTip: Change date source rules in Settings > Preferences"

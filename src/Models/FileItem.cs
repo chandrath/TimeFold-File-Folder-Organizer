@@ -21,6 +21,6 @@ namespace FileOrganizer.Models
         public string ErrorMessage { get; set; } = string.Empty;
 
         public string Extension => Path.GetExtension(Name);
-        public string TypeDisplay => IsDirectory ? (IsGitRepository ? "Git Repo" : "Folder") : (string.IsNullOrEmpty(Path.GetExtension(Name)) ? "File" : Path.GetExtension(Name).TrimStart('.').ToUpperInvariant());
+        public string TypeDisplay => IsDirectory ? (IsGitRepository ? "Git Repo (Folder)" : "Folder") : (string.IsNullOrEmpty(Path.GetExtension(Name)) ? "File" : Path.GetExtension(Name).TrimStart('.').ToUpperInvariant());
     }
 }
