@@ -251,6 +251,7 @@ TimeFold uses a **preview-first workflow** so you can see what it plans to do be
 - **🛡️ Non-Destructive Organization:** TimeFold does not delete, alter, or compress your original files. It relocates items into the organized structure you choose.
 - **🔍 Full Interactive Preview:** Review files and their exact destinations in the live preview before moving anything.
 - **📝 Automatic CSV Audit Logs:** Every organization run generates a timestamped audit trail so you can review where items went.
+- **↩️ Undo Operation (Beta):** Safely roll back your last organization run with robust collision protection, restoring items to their original locations and cleaning up session audit logs *(currently in beta while undergoing further real-world testing)*.
 - **🚀 Large-Folder Support:** Designed to scan and paginate through large collections, including **10,000 to 100,000+ files**.
 - **⚠️ Smart Timestamp Detection:** Detects and alerts you when files share identical timestamps, which can happen with extracted archives or downloaded files.
 - **📁 Top-Level Folder Support:** Optionally organize loose subfolders alongside files with a single toggle.
