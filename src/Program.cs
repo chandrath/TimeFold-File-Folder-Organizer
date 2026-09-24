@@ -117,6 +117,38 @@ namespace FileOrganizer
                 return 8;
             }
 
+            // Level 2 Single-Wrapper Git Repository Detection Tests
+            string gitTestRoot = System.IO.Path.Combine(System.IO.Path.GetTempPath(), "TimeFold_GitTest_" + Guid.NewGuid().ToString("N"));
+            try
+            {
+                string dirL1 = System.IO.Path.Combine(gitTestRoot, "RepoL1");
+                System.IO.Directory.CreateDirectory(System.IO.Path.Combine(dirL1, ".github"));
+
+                string dirL2 = System.IO.Path.Combine(gitTestRoot, "WrapperL2");
+                string childL2 = System.IO.Path.Combine(dirL2, "InnerRepo");
+                System.IO.Directory.CreateDirectory(System.IO.Path.Combine(childL2, ".github"));
+
+                string dirMulti = System.IO.Path.Combine(gitTestRoot, "Workspace");
+                string multiChild1 = System.IO.Path.Combine(dirMulti, "ProjectA");
+                string multiChild2 = System.IO.Path.Combine(dirMulti, "ProjectB");
+                System.IO.Directory.CreateDirectory(System.IO.Path.Combine(multiChild1, ".github"));
+                System.IO.Directory.CreateDirectory(multiChild2);
+
+                bool isL1 = Services.FileOrganizerService.IsGitRepository(dirL1);
+                bool isL2 = Services.FileOrganizerService.IsGitRepository(dirL2);
+                bool isMulti = Services.FileOrganizerService.IsGitRepository(dirMulti);
+
+                if (!isL1 || !isL2 || isMulti)
+                {
+                    Console.WriteLine($"[FAIL] Git repo detection test failed: L1={isL1}, L2={isL2}, Multi={isMulti}");
+                    return 9;
+                }
+            }
+            finally
+            {
+                try { if (System.IO.Directory.Exists(gitTestRoot)) System.IO.Directory.Delete(gitTestRoot, true); } catch { }
+            }
+
             // Undo Service Sanity Test
             string tempDir = System.IO.Path.Combine(System.IO.Path.GetTempPath(), "TimeFold_UndoSanity_" + Guid.NewGuid().ToString("N"));
             string srcDir = System.IO.Path.Combine(tempDir, "Source");
