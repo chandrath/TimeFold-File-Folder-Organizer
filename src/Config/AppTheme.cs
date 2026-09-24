@@ -143,6 +143,9 @@ namespace FileOrganizer.Config
             public override Color ImageMarginGradientBegin => Color.FromArgb(30, 41, 59);
             public override Color ImageMarginGradientMiddle => Color.FromArgb(30, 41, 59);
             public override Color ImageMarginGradientEnd => Color.FromArgb(30, 41, 59);
+            public override Color CheckBackground => Color.FromArgb(37, 99, 235);
+            public override Color CheckSelectedBackground => Color.FromArgb(29, 78, 216);
+            public override Color CheckPressedBackground => Color.FromArgb(30, 58, 138);
             public override Color SeparatorDark => Color.FromArgb(51, 65, 85);
             public override Color SeparatorLight => Color.Transparent;
             public override Color MenuStripGradientBegin => Color.FromArgb(30, 41, 59);

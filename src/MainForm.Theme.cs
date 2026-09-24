@@ -87,6 +87,10 @@ namespace FileOrganizer
             if (_chkUseSourceAsOutput != null) _chkUseSourceAsOutput.ForeColor = palette.TextPrimary;
             if (_chkCreateSubfolder != null) _chkCreateSubfolder.ForeColor = palette.TextPrimary;
             if (_chkIncludeFolders != null) _chkIncludeFolders.ForeColor = palette.TextPrimary;
+            if (_btnFolderRules != null)
+            {
+                _btnFolderRules.ForeColor = isDark ? Color.FromArgb(248, 250, 252) : Color.FromArgb(71, 85, 105);
+            }
             UpdateOutputFolder();
 
             if (_btnBrowseOutput != null)

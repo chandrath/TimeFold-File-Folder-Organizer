@@ -240,7 +240,9 @@ namespace FileOrganizer
         private void RestoreDefaults()
         {
             _chkIncludeFolders.Checked = AppConstants.DefaultIncludeTopLevelFolders;
+            _chkGroupGitRepositories.Checked = AppConstants.DefaultGroupGitRepositories;
             _settings.IncludeTopLevelFolders = AppConstants.DefaultIncludeTopLevelFolders;
+            _settings.GroupGitRepositories = AppConstants.DefaultGroupGitRepositories;
             _settings.CreateSortedSubfolder = AppConstants.DefaultCreateSortedSubfolder;
             _settings.UseSourceAsOutput = AppConstants.DefaultUseSourceAsOutput;
             _chkIgnoreSystemFiles.Checked = AppConstants.DefaultIgnoreSystemFiles;
@@ -286,6 +288,7 @@ namespace FileOrganizer
         private void BtnOK_Click(object? sender, EventArgs e)
         {
             _settings.IncludeTopLevelFolders = _chkIncludeFolders.Checked;
+            _settings.GroupGitRepositories = _chkGroupGitRepositories.Checked;
             _settings.IgnoreSystemFiles = _chkIgnoreSystemFiles.Checked;
             _settings.FileDateSource = (DateSource)_cmbFileDateSource.SelectedIndex;
             _settings.FolderDateSource = (DateSource)_cmbFolderDateSource.SelectedIndex;

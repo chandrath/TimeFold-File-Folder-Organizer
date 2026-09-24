@@ -7,6 +7,7 @@ namespace FileOrganizer.Models
     public class AppSettings
     {
         public bool IncludeTopLevelFolders { get; set; } = Config.AppConstants.DefaultIncludeTopLevelFolders;
+        public bool GroupGitRepositories { get; set; } = Config.AppConstants.DefaultGroupGitRepositories;
         public bool IgnoreSystemFiles { get; set; } = Config.AppConstants.DefaultIgnoreSystemFiles;
         public bool ShowDetailedProgress { get; set; } = Config.AppConstants.DefaultShowDetailedProgress;
         public bool ShowOnTop { get; set; } = Config.AppConstants.DefaultShowOnTop;
@@ -136,7 +137,8 @@ namespace FileOrganizer.Models
                 || CategoryPrefix != other.CategoryPrefix
                 || CategorySuffix != other.CategorySuffix
                 || KeepHtmlCompanionsTogether != other.KeepHtmlCompanionsTogether
-                || KeepSubtitleCompanionsTogether != other.KeepSubtitleCompanionsTogether;
+                || KeepSubtitleCompanionsTogether != other.KeepSubtitleCompanionsTogether
+                || GroupGitRepositories != other.GroupGitRepositories;
         }
     }
     

@@ -19,14 +19,25 @@ namespace FileOrganizer.Services
             string folderPrefix,
             string folderSuffix,
             string categoryPrefix = "",
-            string categorySuffix = "")
+            string categorySuffix = "",
+            bool groupGitRepositories = true)
         {
             DateTime itemDate = item.IsCreatedDateActive ? item.CreatedDate : item.ModifiedDate;
             string dateFolder = AppConstants.FormatFolderDate(itemDate, folderFormat, folderPrefix, folderSuffix);
 
             string GetFormattedCategory()
             {
-                string baseCat = item.IsDirectory ? AppConstants.DefaultGroupedFolderName : FileTypeService.Instance.GetCategory(item.Extension);
+                string baseCat;
+                if (item.IsDirectory)
+                {
+                    baseCat = (item.IsGitRepository && groupGitRepositories)
+                        ? FileTypeService.Instance.ResolveCategoryName(AppConstants.DefaultGitReposFolderName)
+                        : AppConstants.DefaultGroupedFolderName;
+                }
+                else
+                {
+                    baseCat = FileTypeService.Instance.GetCategory(item.Extension);
+                }
                 return AppConstants.FormatCategoryFolder(baseCat, categoryPrefix, categorySuffix);
             }
 

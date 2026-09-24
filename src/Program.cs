@@ -102,6 +102,21 @@ namespace FileOrganizer
                 return 3;
             }
 
+            // Git Repository Detection & Mode Isolation Tests
+            var gitRepo = new Models.FileItem { Name = "my-repo", FullPath = @"C:\Source\my-repo", IsDirectory = true, IsGitRepository = true, ModifiedDate = new DateTime(2026, 9, 24) };
+            string gitCat = Services.TargetFolderResolver.Resolve(gitRepo, Models.OrganizationMode.Category, Models.FolderFormat.YearMonth, "", "");
+            string gitDate = Services.TargetFolderResolver.Resolve(gitRepo, Models.OrganizationMode.Date, Models.FolderFormat.YearMonth, "", "");
+            string gitExt = Services.TargetFolderResolver.Resolve(gitRepo, Models.OrganizationMode.Extension, Models.FolderFormat.YearMonth, "", "");
+            string gitHyb1 = Services.TargetFolderResolver.Resolve(gitRepo, Models.OrganizationMode.CategoryAndDate, Models.FolderFormat.YearMonth, "", "");
+            string gitHyb2 = Services.TargetFolderResolver.Resolve(gitRepo, Models.OrganizationMode.DateAndCategory, Models.FolderFormat.YearMonth, "", "");
+            string gitDisabled = Services.TargetFolderResolver.Resolve(gitRepo, Models.OrganizationMode.Category, Models.FolderFormat.YearMonth, "", "", "", "", false);
+
+            if (gitCat != "Git Repos" || !gitDate.StartsWith("2026") || gitExt != "Grouped Folders" || !gitHyb1.StartsWith("Git Repos") || !gitHyb2.EndsWith("Git Repos") || gitDisabled != "Grouped Folders")
+            {
+                Console.WriteLine($"[FAIL] Git repo resolver routing failed: Cat='{gitCat}', Date='{gitDate}', Ext='{gitExt}', Hyb1='{gitHyb1}', Hyb2='{gitHyb2}', Disabled='{gitDisabled}'");
+                return 8;
+            }
+
             // Undo Service Sanity Test
             string tempDir = System.IO.Path.Combine(System.IO.Path.GetTempPath(), "TimeFold_UndoSanity_" + Guid.NewGuid().ToString("N"));
             string srcDir = System.IO.Path.Combine(tempDir, "Source");

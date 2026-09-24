@@ -169,15 +169,21 @@ namespace FileOrganizer
 
             _chkUseSourceAsOutput = new CheckBox { Text = "Use source folder as destination (default)", Font = new Font("Segoe UI", 9F), ForeColor = Color.FromArgb(55, 65, 81), AutoSize = true, Checked = _settings.UseSourceAsOutput, Margin = new Padding(0, 0, 14, 0) };
             _chkUseSourceAsOutput.CheckedChanged += ChkUseSourceAsOutput_CheckedChanged;
-
             _chkCreateSubfolder = new CheckBox { Text = "Create 'Sorted_...' subfolder", Font = new Font("Segoe UI", 9F), ForeColor = Color.FromArgb(55, 65, 81), AutoSize = true, Checked = _settings.CreateSortedSubfolder, Margin = new Padding(0, 0, 14, 0) };
             _chkCreateSubfolder.CheckedChanged += ChkCreateSubfolder_CheckedChanged;
 
             _chkIncludeFolders = new CheckBox { Text = "Also organize folders (keeps contents intact)", Font = new Font("Segoe UI", 9F), ForeColor = Color.FromArgb(55, 65, 81), AutoSize = true, Checked = _settings.IncludeTopLevelFolders, Margin = Padding.Empty, Cursor = Cursors.Hand };
             _chkIncludeFolders.CheckedChanged += ChkIncludeFolders_CheckedChanged;
+            _btnFolderRules = new Label { Text = "▾", Font = new Font("Segoe UI", 10.5F, FontStyle.Bold), AutoSize = true, ForeColor = Color.FromArgb(71, 85, 105), Margin = new Padding(2, 2, 0, 0), Cursor = Cursors.Hand, Enabled = _settings.IncludeTopLevelFolders };
+            _btnFolderRules.Click += BtnFolderRules_Click;
+            _btnFolderRules.MouseEnter += (s, e) => { if (_btnFolderRules.Enabled) _btnFolderRules.ForeColor = _settings.DarkMode ? Color.FromArgb(96, 165, 250) : AppConstants.ColorPrimary; };
+            _btnFolderRules.MouseLeave += (s, e) => { if (_btnFolderRules.Enabled) _btnFolderRules.ForeColor = _settings.DarkMode ? Color.FromArgb(248, 250, 252) : Color.FromArgb(71, 85, 105); };
 
-            var pnlOptionsRow = new FlowLayoutPanel { Dock = DockStyle.Top, AutoSize = true, FlowDirection = FlowDirection.LeftToRight, WrapContents = false, Margin = new Padding(0, 0, 0, 4) };
-            pnlOptionsRow.Controls.AddRange([_chkUseSourceAsOutput, _chkCreateSubfolder, _chkIncludeFolders]);
+            var pnlFolderGroup = new FlowLayoutPanel { AutoSize = true, AutoSizeMode = AutoSizeMode.GrowAndShrink, FlowDirection = FlowDirection.LeftToRight, WrapContents = false, Margin = Padding.Empty, BackColor = Color.Transparent };
+            pnlFolderGroup.Controls.AddRange([_chkIncludeFolders, _btnFolderRules]);
+
+            var pnlOptionsRow = new FlowLayoutPanel { Dock = DockStyle.Top, AutoSize = true, FlowDirection = FlowDirection.LeftToRight, WrapContents = true, Margin = new Padding(0, 0, 0, 4) };
+            pnlOptionsRow.Controls.AddRange([_chkUseSourceAsOutput, _chkCreateSubfolder, pnlFolderGroup]);
 
             var pnlOutputRow = new TableLayoutPanel { Dock = DockStyle.Top, ColumnCount = 2, Height = 34, Margin = new Padding(0, 0, 0, 4) };
             pnlOutputRow.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 100));

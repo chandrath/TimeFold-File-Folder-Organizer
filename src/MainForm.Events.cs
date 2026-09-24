@@ -62,6 +62,7 @@ namespace FileOrganizer
         {
             if (_settings.IncludeTopLevelFolders == _chkIncludeFolders.Checked) return;
             _settings.IncludeTopLevelFolders = _chkIncludeFolders.Checked;
+            if (_btnFolderRules != null) _btnFolderRules.Enabled = _chkIncludeFolders.Checked;
             _settings.SaveToFile();
             LoadPreview();
         }

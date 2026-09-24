@@ -118,6 +118,13 @@ namespace FileOrganizer.Services
             _runtimeLookup = table;
         }
 
+        public string ResolveCategoryName(string rawCategory)
+        {
+            if (_delta.CategoryRenames.TryGetValue(rawCategory, out var renamed) && !string.IsNullOrWhiteSpace(renamed))
+                return renamed;
+            return rawCategory;
+        }
+
         public List<string> GetAllCategories()
         {
             var set = new SortedSet<string>(StringComparer.OrdinalIgnoreCase);
@@ -136,6 +143,7 @@ namespace FileOrganizer.Services
                     set.Add(k);
             }
             foreach (var v in _delta.ExtensionCategoryOverrides.Values) set.Add(v);
+            set.Add(ResolveCategoryName(AppConstants.DefaultGitReposFolderName));
             return new List<string>(set);
         }
 

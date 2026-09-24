@@ -248,6 +248,7 @@ namespace FileOrganizer.Forms
 
             var categories = new HashSet<string>(FileTypeService.FactoryCategories.Keys, StringComparer.OrdinalIgnoreCase);
             foreach (var customCat in _service.Delta.CustomCategories.Keys) categories.Add(customCat);
+            categories.Add(_service.ResolveCategoryName(AppConstants.DefaultGitReposFolderName));
             foreach (var cat in categories.OrderBy(c => c)) _cboTargetCategory.Items.Add(cat);
             if (_cboTargetCategory.Items.Count > 0) _cboTargetCategory.SelectedIndex = 0;
 

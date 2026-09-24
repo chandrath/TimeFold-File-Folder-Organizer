@@ -175,13 +175,9 @@ namespace FileOrganizer.Controls
 
             if (!string.IsNullOrEmpty(this.Text))
             {
-                TextRenderer.DrawText(
-                    g,
-                    this.Text,
-                    this.Font,
-                    rect,
-                    currentText,
-                    TextFormatFlags.HorizontalCenter | TextFormatFlags.VerticalCenter | TextFormatFlags.SingleLine | TextFormatFlags.WordEllipsis);
+                var flags = TextFormatFlags.HorizontalCenter | TextFormatFlags.VerticalCenter | TextFormatFlags.SingleLine;
+                if (this.Text.Length > 2) flags |= TextFormatFlags.WordEllipsis;
+                TextRenderer.DrawText(g, this.Text, this.Font, rect, currentText, flags);
             }
 
             PaintOverlay?.Invoke(g, rect);

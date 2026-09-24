@@ -8,7 +8,7 @@ namespace FileOrganizer
 {
     public partial class PreferencesForm
     {
-        private CheckBox _chkIncludeFolders = null!;
+        private CheckBox _chkIncludeFolders = null!, _chkGroupGitRepositories = null!;
         private CheckBox _chkIgnoreSystemFiles = null!;
         private CheckBox _chkShowProgress = null!;
         private CheckBox _chkShowOnTop = null!;
@@ -81,6 +81,10 @@ namespace FileOrganizer
             currentY += 30;
 
             _chkIncludeFolders = new CheckBox { Text = "Also organize folders (keeps contents intact)", Location = new Point(leftMargin, currentY), Size = new Size(contentWidth, 24), Checked = _settings.IncludeTopLevelFolders };
+            currentY += 24;
+
+            _chkGroupGitRepositories = new CheckBox { Text = "    └ Group Git Repositories into dedicated folder (Category modes)", Location = new Point(leftMargin, currentY), Size = new Size(contentWidth, 24), Checked = _settings.GroupGitRepositories, Enabled = _settings.IncludeTopLevelFolders };
+            _chkIncludeFolders.CheckedChanged += (s, e) => _chkGroupGitRepositories.Enabled = _chkIncludeFolders.Checked;
             currentY += spacing;
 
             _chkIgnoreSystemFiles = new CheckBox { Text = "Ignore Windows system files & protected folders (desktop.ini, Thumbs.db, $RECYCLE.BIN)", UseMnemonic = false, Location = new Point(leftMargin, currentY), Size = new Size(contentWidth, 24), Checked = _settings.IgnoreSystemFiles };
@@ -322,7 +326,7 @@ namespace FileOrganizer
             _btnOK.Click += BtnOK_Click;
 
             this.Controls.AddRange([
-                lblOrgHeader, _chkIncludeFolders, _chkIgnoreSystemFiles, lblFileDate, lblFolderDate, _cmbFileDateSource, _cmbFolderDateSource,
+                lblOrgHeader, _chkIncludeFolders, _chkGroupGitRepositories, _chkIgnoreSystemFiles, lblFileDate, lblFolderDate, _cmbFileDateSource, _cmbFolderDateSource,
                 lblNamingHeader, _cmbFormat, _btnFlipOrder, _chkShortMonth, lblPrefix, lblSuffix, _txtPrefix, _txtSuffix,
                 _pnlLivePreview,
                 lblAppearanceHeader, _btnThemeLight, _btnThemeDark,

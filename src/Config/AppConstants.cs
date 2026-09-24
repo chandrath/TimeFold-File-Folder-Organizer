@@ -149,11 +149,13 @@ namespace FileOrganizer.Config
         // Output & Logging Prefixes (SSoT)
         public const string SortedFolderPrefix = "Sorted_";
         public const string DefaultGroupedFolderName = "Grouped Folders";
+        public const string DefaultGitReposFolderName = "Git Repos";
         public const string CsvLogPrefix = ShortAppName + "_Log_";
         public const string LegacyCsvLogPrefix = "OrganizationLog_";
 
         // Default User Preferences
         public const bool DefaultIncludeTopLevelFolders = true;
+        public const bool DefaultGroupGitRepositories = true;
         public const bool DefaultIgnoreSystemFiles = true;
         public const bool DefaultShowDetailedProgress = true;
         public const bool DefaultShowOnTop = false;

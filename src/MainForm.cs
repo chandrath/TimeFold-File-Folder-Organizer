@@ -44,6 +44,7 @@ namespace FileOrganizer
         private TextBox _txtOutputFolder = null!;
         private string _customOutputFolder = "";
         private ModernButton _btnBrowseOutput = null!;
+        private Label _btnFolderRules = null!;
         private ListView _lstFiles = null!;
         private ContextMenuStrip _ctxFileMenu = null!;
         private ModernButton _btnRefresh = null!;
@@ -130,6 +131,7 @@ namespace FileOrganizer
             _toolTip.SetToolTip(_txtOutputFolder, "Selected destination folder for organized files");
             _toolTip.SetToolTip(_lblFormatBadge, "Current folder naming pattern. Click to customize in Preferences");
             _toolTip.SetToolTip(_btnModeSelector, "Switch organization mode (Date-Based, File Type, or Smart Hybrid)");
+            _toolTip.SetToolTip(_btnFolderRules, "Folder Organization Rules: Git repository detection in Category modes");
             _toolTip.SetToolTip(_btnRefresh, "Scan and refresh the organization plan (F5)");
             _toolTip.SetToolTip(_btnStart, "Move files & folders into their date-based timeline folders");
             _toolTip.SetToolTip(_btnExitApp, "Exit TimeFold application");
@@ -150,10 +152,11 @@ namespace FileOrganizer
                     _settings.Use24HourTimestamp, _settings.OrgMode,
                     _settings.KeepHtmlCompanionsTogether, _settings.CategoryPrefix,
                     _settings.CategorySuffix, _settings.KeepSubtitleCompanionsTogether,
-                    _settings.CreateSortedSubfolder);
+                    _settings.CreateSortedSubfolder, _settings.GroupGitRepositories);
             }
             if (_chkUseSourceAsOutput != null && _chkUseSourceAsOutput.Checked != _settings.UseSourceAsOutput) _chkUseSourceAsOutput.Checked = _settings.UseSourceAsOutput;
             if (_chkIncludeFolders != null && _chkIncludeFolders.Checked != _settings.IncludeTopLevelFolders) _chkIncludeFolders.Checked = _settings.IncludeTopLevelFolders;
+            if (_btnFolderRules != null) _btnFolderRules.Enabled = _settings.IncludeTopLevelFolders;
             if (_chkCreateSubfolder != null && _chkCreateSubfolder.Checked != _settings.CreateSortedSubfolder) _chkCreateSubfolder.Checked = _settings.CreateSortedSubfolder;
             if (_btnModeSelector != null) _btnModeSelector.Text = GetModeSelectorText();
             UpdateFormatBadge();
@@ -200,16 +203,10 @@ namespace FileOrganizer
                 UpdateRecentMenus();
                 _organizerService = new FileOrganizerService(_executablePath, folder);
                 _organizerService.ApplyNamingSettings(
-                    _settings.FolderFormat,
-                    _settings.FolderPrefix,
-                    _settings.FolderSuffix,
-                    _settings.Use24HourTimestamp,
-                    _settings.OrgMode,
-                    _settings.KeepHtmlCompanionsTogether,
-                    _settings.CategoryPrefix,
-                    _settings.CategorySuffix,
-                    _settings.KeepSubtitleCompanionsTogether,
-                    _settings.CreateSortedSubfolder);
+                    _settings.FolderFormat, _settings.FolderPrefix, _settings.FolderSuffix,
+                    _settings.Use24HourTimestamp, _settings.OrgMode, _settings.KeepHtmlCompanionsTogether,
+                    _settings.CategoryPrefix, _settings.CategorySuffix, _settings.KeepSubtitleCompanionsTogether,
+                    _settings.CreateSortedSubfolder, _settings.GroupGitRepositories);
                 _shouldAutoFitColumns = true;
                 UpdateOutputFolder();
                 LoadPreview();

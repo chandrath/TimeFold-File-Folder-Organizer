@@ -81,7 +81,8 @@ namespace FileOrganizer
                     _settings.CategoryPrefix,
                     _settings.CategorySuffix,
                     _settings.KeepSubtitleCompanionsTogether,
-                    _settings.CreateSortedSubfolder);
+                    _settings.CreateSortedSubfolder,
+                    _settings.GroupGitRepositories);
             }
 
             if (_filesToOrganize != null && _filesToOrganize.Count > 0)
@@ -95,7 +96,8 @@ namespace FileOrganizer
                         _settings.FolderPrefix,
                         _settings.FolderSuffix,
                         _settings.CategoryPrefix,
-                        _settings.CategorySuffix);
+                        _settings.CategorySuffix,
+                        _settings.GroupGitRepositories);
                 }
                 if (_settings.KeepHtmlCompanionsTogether)
                 {
@@ -109,6 +111,80 @@ namespace FileOrganizer
                 UpdateSummary();
                 CheckConflicts();
             }
+        }
+
+        private void BtnFolderRules_Click(object? sender, EventArgs e)
+        {
+            if (_btnFolderRules == null) return;
+            var menu = new ContextMenuStrip { MinimumSize = new Size(390, 0) };
+            var palette = AppTheme.GetPalette(_settings.DarkMode);
+            if (_settings.DarkMode)
+            {
+                menu.Renderer = AppTheme.DarkMenuRenderer;
+                menu.BackColor = palette.MenuBg;
+            }
+
+            var hdr = new ToolStripLabel("⚙ Folder Organization Rules")
+            {
+                Font = new Font(this.Font, FontStyle.Bold),
+                ForeColor = _settings.DarkMode ? palette.TextPrimary : Color.FromArgb(30, 41, 59)
+            };
+
+            var itemGit = new ToolStripMenuItem("Group Git Repositories into dedicated folder", null, (s, a) =>
+            {
+                _settings.GroupGitRepositories = !_settings.GroupGitRepositories;
+                _settings.SaveToFile();
+                ReapplyOrganizationMode();
+            }) { Checked = _settings.GroupGitRepositories, CheckOnClick = true };
+
+            menu.Items.AddRange(new ToolStripItem[] { hdr, new ToolStripSeparator(), itemGit, new ToolStripSeparator() });
+
+            bool isCategoryMode = _settings.OrgMode == OrganizationMode.Category
+                || _settings.OrgMode == OrganizationMode.CategoryAndDate
+                || _settings.OrgMode == OrganizationMode.DateAndCategory;
+
+            if (_settings.DarkMode) SetMenuColors(menu.Items, palette);
+
+            if (isCategoryMode)
+            {
+                var lblActive = new ToolStripLabel("  🟢 Currently Active (Category Mode)")
+                {
+                    Font = new Font(this.Font, FontStyle.Bold),
+                    ForeColor = _settings.DarkMode ? Color.FromArgb(52, 211, 153) : Color.FromArgb(16, 185, 129)
+                };
+                var lblActiveDesc = new ToolStripLabel("  Direct subfolders with .git or .github are isolated into 'Git Repos'.")
+                {
+                    Font = new Font(this.Font.FontFamily, this.Font.Size - 0.5f, FontStyle.Regular),
+                    ForeColor = _settings.DarkMode ? Color.FromArgb(156, 163, 175) : Color.FromArgb(100, 116, 139)
+                };
+                menu.Items.AddRange(new ToolStripItem[] { lblActive, lblActiveDesc });
+            }
+            else
+            {
+                var lblInactive = new ToolStripLabel("  ℹ️ Currently Inactive (Date Timeline Mode)")
+                {
+                    Font = new Font(this.Font, FontStyle.Bold),
+                    ForeColor = _settings.DarkMode ? Color.FromArgb(251, 191, 36) : Color.FromArgb(217, 119, 6)
+                };
+                var lblDesc1 = new ToolStripLabel("  Git repository grouping only applies to category-based modes.")
+                {
+                    Font = new Font(this.Font.FontFamily, this.Font.Size - 0.5f, FontStyle.Regular),
+                    ForeColor = _settings.DarkMode ? Color.FromArgb(156, 163, 175) : Color.FromArgb(100, 116, 139)
+                };
+                var lblDesc2 = new ToolStripLabel("  In Date Timeline mode, all folders are organized purely by date.")
+                {
+                    Font = new Font(this.Font.FontFamily, this.Font.Size - 0.5f, FontStyle.Regular),
+                    ForeColor = _settings.DarkMode ? Color.FromArgb(156, 163, 175) : Color.FromArgb(100, 116, 139)
+                };
+                var tipSwitch = new ToolStripMenuItem("  👉 Switch to By Smart Category to activate", null, (s, a) => SetOrganizationMode(OrganizationMode.Category))
+                {
+                    Font = new Font(this.Font, FontStyle.Bold),
+                    ForeColor = _settings.DarkMode ? Color.FromArgb(96, 165, 250) : AppConstants.ColorPrimary
+                };
+                menu.Items.AddRange(new ToolStripItem[] { lblInactive, lblDesc1, lblDesc2, tipSwitch });
+            }
+
+            menu.Show(_btnFolderRules, new Point(0, _btnFolderRules.Height + 2));
         }
 
         private void MenuTypeRules_Click(object? sender, EventArgs e)

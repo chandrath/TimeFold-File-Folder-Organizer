@@ -15,14 +15,11 @@ namespace FileOrganizer.Services
         private readonly string _executablePath;
         private string _outputDirectory;
         private FolderFormat _folderFormat = AppConstants.DefaultFolderFormat;
-        private string _folderPrefix = AppConstants.DefaultFolderPrefix;
-        private string _folderSuffix = AppConstants.DefaultFolderSuffix;
-        private string _categoryPrefix = AppConstants.DefaultCategoryPrefix;
-        private string _categorySuffix = AppConstants.DefaultCategorySuffix;
-        private bool _use24HourTimestamp = AppConstants.DefaultUse24HourTimestamp;
+        private string _folderPrefix = AppConstants.DefaultFolderPrefix, _folderSuffix = AppConstants.DefaultFolderSuffix;
+        private string _categoryPrefix = AppConstants.DefaultCategoryPrefix, _categorySuffix = AppConstants.DefaultCategorySuffix;
+        private bool _use24HourTimestamp = AppConstants.DefaultUse24HourTimestamp, _groupGitRepositories = AppConstants.DefaultGroupGitRepositories;
         private OrganizationMode _organizationMode = OrganizationMode.Date;
-        private bool _keepHtmlCompanionsTogether = true;
-        private bool _keepSubtitleCompanionsTogether = true;
+        private bool _keepHtmlCompanionsTogether = true, _keepSubtitleCompanionsTogether = true;
         private bool _createSortedSubfolder = AppConstants.DefaultCreateSortedSubfolder;
         public bool CreateSortedSubfolder { get => _createSortedSubfolder; set => _createSortedSubfolder = value; }
 
@@ -111,12 +108,13 @@ namespace FileOrganizer.Services
                                 FullPath = itemPath,
                                 Name = dirInfo.Name,
                                 IsDirectory = true,
+                                IsGitRepository = IsGitRepository(itemPath),
                                 ModifiedDate = dirInfo.LastWriteTime,
                                 CreatedDate = dirInfo.CreationTime,
                                 IsCreatedDateActive = isCreatedActive,
                                 Size = 0
                             };
-                            fileItem.TargetFolder = TargetFolderResolver.Resolve(fileItem, _organizationMode, _folderFormat, _folderPrefix, _folderSuffix, _categoryPrefix, _categorySuffix);
+                            fileItem.TargetFolder = TargetFolderResolver.Resolve(fileItem, _organizationMode, _folderFormat, _folderPrefix, _folderSuffix, _categoryPrefix, _categorySuffix, _groupGitRepositories);
                             files.Add(fileItem);
                         }
                         else if (File.Exists(itemPath))
@@ -449,7 +447,8 @@ namespace FileOrganizer.Services
             string categoryPrefix = "",
             string categorySuffix = "",
             bool keepSubtitleCompanions = true,
-            bool createSortedSubfolder = true)
+            bool createSortedSubfolder = true,
+            bool groupGitRepositories = true)
         {
             _folderFormat = format;
             _folderPrefix = prefix ?? string.Empty;
@@ -461,7 +460,10 @@ namespace FileOrganizer.Services
             _categorySuffix = categorySuffix ?? string.Empty;
             _keepSubtitleCompanionsTogether = keepSubtitleCompanions;
             _createSortedSubfolder = createSortedSubfolder;
+            _groupGitRepositories = groupGitRepositories;
         }
+
+        private static bool IsGitRepository(string dirPath) => Directory.Exists(Path.Combine(dirPath, ".git")) || File.Exists(Path.Combine(dirPath, ".git")) || Directory.Exists(Path.Combine(dirPath, ".github"));
 
         public string FormatTargetFolder(DateTime date)
         {
