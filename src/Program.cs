@@ -126,7 +126,10 @@ namespace FileOrganizer
                     ModifiedDate = DateTime.Now
                 };
 
-                var session = Services.UndoService.RecordSession(srcDir, outDir, sortedDir, new[] { item }, new[] { monthDir, sortedDir });
+                string dummyLog = System.IO.Path.Combine(outDir, "TimeFold_Log_Test.csv");
+                System.IO.File.WriteAllText(dummyLog, "timestamp,orig,dest");
+
+                var session = Services.UndoService.RecordSession(srcDir, outDir, sortedDir, new[] { item }, new[] { monthDir, sortedDir }, dummyLog);
                 var preflight = Services.UndoService.PreflightCheck(session);
                 if (preflight.ReadyToRestore != 1)
                 {
@@ -145,6 +148,12 @@ namespace FileOrganizer
                 {
                     Console.WriteLine("[FAIL] Undo pruning failed: empty month directory was not cleaned up");
                     return 6;
+                }
+
+                if (System.IO.File.Exists(dummyLog))
+                {
+                    Console.WriteLine("[FAIL] Undo log cleanup failed: specific CSV log was not deleted");
+                    return 7;
                 }
             }
             finally

@@ -82,7 +82,9 @@ namespace FileOrganizer
                 _organizerService.WorkingDirectory,
                 _organizerService.OutputDirectory,
                 result.SortedFolderPath,
-                _filesToOrganize);
+                _filesToOrganize,
+                null,
+                result.CsvLogPath);
             UpdateUndoUIState();
         }
 

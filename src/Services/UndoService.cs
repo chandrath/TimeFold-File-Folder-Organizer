@@ -85,7 +85,8 @@ namespace FileOrganizer.Services
             string outputDirectory,
             string sortedFolderPath,
             IEnumerable<FileItem> processedFiles,
-            IEnumerable<string>? createdFolders = null)
+            IEnumerable<string>? createdFolders = null,
+            string? csvLogPath = null)
         {
             var movedItems = new List<UndoEntry>();
             var folders = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
@@ -129,6 +130,7 @@ namespace FileOrganizer.Services
                 SourceDirectory = sourceDirectory,
                 OutputDirectory = outputDirectory,
                 SortedFolderPath = sortedFolderPath,
+                CsvLogPath = csvLogPath ?? string.Empty,
                 MovedItems = movedItems,
                 CreatedFolders = folders.ToList()
             };
@@ -285,9 +287,28 @@ namespace FileOrganizer.Services
                 catch { }
             }
 
-            // Step 3: Clear session if all valid items were restored
+            // Step 3: Remove the specific generated CSV log file if all items were restored
             if (result.RestoredCount > 0 && result.FailureCount == 0)
             {
+                if (!string.IsNullOrEmpty(session.CsvLogPath) && File.Exists(session.CsvLogPath))
+                {
+                    try { File.Delete(session.CsvLogPath); } catch { }
+                }
+
+                // If sorted folder was holding only the log and is now empty, prune it
+                if (!string.IsNullOrEmpty(session.SortedFolderPath) && Directory.Exists(session.SortedFolderPath))
+                {
+                    try
+                    {
+                        if (Directory.GetFileSystemEntries(session.SortedFolderPath).Length == 0)
+                        {
+                            Directory.Delete(session.SortedFolderPath, false);
+                            result.PrunedFoldersCount++;
+                        }
+                    }
+                    catch { }
+                }
+
                 ClearSession();
             }
 

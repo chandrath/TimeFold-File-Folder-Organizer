@@ -18,6 +18,7 @@ namespace FileOrganizer.Models
         public string SourceDirectory { get; set; } = string.Empty;
         public string OutputDirectory { get; set; } = string.Empty;
         public string SortedFolderPath { get; set; } = string.Empty;
+        public string CsvLogPath { get; set; } = string.Empty;
         public List<UndoEntry> MovedItems { get; set; } = new();
         public List<string> CreatedFolders { get; set; } = new();
     }
