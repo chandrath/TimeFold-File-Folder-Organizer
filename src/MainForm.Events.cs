@@ -425,6 +425,7 @@ namespace FileOrganizer
                     conflictStrategy,
                     collidingPaths);
 
+                RecordUndoSession(orgResult);
                 ShowCompletion(orgResult);
             }
             catch (OperationCanceledException)

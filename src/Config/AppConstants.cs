@@ -84,6 +84,9 @@ namespace FileOrganizer.Config
         public static string GetCustomTypesFilePath() =>
             Path.Combine(GetConfigDirectoryPath(), "custom_types.json");
 
+        public static string GetUndoManifestFilePath() =>
+            Path.Combine(GetConfigDirectoryPath(), "last_undo.json");
+
         public static void OpenConfigLocation()
         {
             string dir = GetConfigDirectoryPath();

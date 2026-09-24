@@ -400,7 +400,7 @@ namespace FileOrganizer
             _btnStartNewProject = new ModernButton
             {
                 Text = "🔄 Organize Another Folder",
-                Size = new Size(190, 36),
+                Size = new Size(225, 36),
                 BackColor = AppConstants.ColorPrimary,
                 ForeColor = Color.White,
                 Font = new Font("Segoe UI", 9.5F, FontStyle.Bold),

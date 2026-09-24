@@ -175,6 +175,7 @@ namespace FileOrganizer
             if (_lblCompleteSubtitle != null) _lblCompleteSubtitle.ForeColor = palette.TextMuted;
             if (_pnlDetailsCard != null) _pnlDetailsCard.BackColor = palette.CardBg;
             if (_lblCompleteSummary != null) _lblCompleteSummary.ForeColor = palette.TextPrimary;
+            if (_btnUndo != null) _btnUndo.BackColor = isDark ? Color.FromArgb(99, 102, 241) : Color.FromArgb(79, 70, 229);
 
             if (_btnThemeToggle != null)
             {

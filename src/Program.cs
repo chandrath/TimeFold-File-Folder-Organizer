@@ -102,7 +102,58 @@ namespace FileOrganizer
                 return 3;
             }
 
-            Console.WriteLine("[PASS] All category, subtitle pairing, and prefix/suffix tests passed!");
+            // Undo Service Sanity Test
+            string tempDir = System.IO.Path.Combine(System.IO.Path.GetTempPath(), "TimeFold_UndoSanity_" + Guid.NewGuid().ToString("N"));
+            string srcDir = System.IO.Path.Combine(tempDir, "Source");
+            string outDir = System.IO.Path.Combine(tempDir, "Output");
+            string sortedDir = System.IO.Path.Combine(outDir, "Sorted_Test");
+            string monthDir = System.IO.Path.Combine(sortedDir, "2026 January");
+
+            try
+            {
+                System.IO.Directory.CreateDirectory(srcDir);
+                System.IO.Directory.CreateDirectory(monthDir);
+
+                string origPath = System.IO.Path.Combine(srcDir, "doc.txt");
+                string destPath = System.IO.Path.Combine(monthDir, "doc.txt");
+                System.IO.File.WriteAllText(destPath, "TimeFold Undo Test Content");
+
+                var item = new Models.FileItem
+                {
+                    Name = "doc.txt",
+                    FullPath = origPath,
+                    DestinationPath = destPath,
+                    ModifiedDate = DateTime.Now
+                };
+
+                var session = Services.UndoService.RecordSession(srcDir, outDir, sortedDir, new[] { item }, new[] { monthDir, sortedDir });
+                var preflight = Services.UndoService.PreflightCheck(session);
+                if (preflight.ReadyToRestore != 1)
+                {
+                    Console.WriteLine($"[FAIL] Undo preflight failed: ReadyToRestore was {preflight.ReadyToRestore}");
+                    return 4;
+                }
+
+                var undoResult = Services.UndoService.UndoAsync(session, null, System.Threading.CancellationToken.None).GetAwaiter().GetResult();
+                if (undoResult.RestoredCount != 1 || !System.IO.File.Exists(origPath))
+                {
+                    Console.WriteLine("[FAIL] Undo execution failed: file was not restored to original path");
+                    return 5;
+                }
+
+                if (System.IO.Directory.Exists(monthDir))
+                {
+                    Console.WriteLine("[FAIL] Undo pruning failed: empty month directory was not cleaned up");
+                    return 6;
+                }
+            }
+            finally
+            {
+                Services.UndoService.ClearSession();
+                try { if (System.IO.Directory.Exists(tempDir)) System.IO.Directory.Delete(tempDir, true); } catch { }
+            }
+
+            Console.WriteLine("[PASS] All category, subtitle pairing, prefix/suffix, and Undo (Beta) tests passed!");
             return 0;
         }
     }

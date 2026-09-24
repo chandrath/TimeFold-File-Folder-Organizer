@@ -89,12 +89,12 @@ namespace FileOrganizer
             InitializeOrganizer();
         }
 
-        private ToolTip _toolTip = null!;
-        private ToolTip _cellToolTip = null!;
+        private ToolTip _toolTip = null!, _cellToolTip = null!;
 
         private void InitializeOrganizer()
         {
             SetupToolTips();
+            InitializeUndoUI();
             ApplySettings();
             ApplyTheme(_settings.DarkMode);
             UpdateRecentMenus();
