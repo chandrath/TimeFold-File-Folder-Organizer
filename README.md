@@ -51,7 +51,7 @@ With TimeFold, that same folder can be organized into a predictable structure in
 
 ### Organize by file category
 
-TimeFold can group supported files into categories such as **Images, PDF Files, Document Files, Office Files, Video Files, Audio Files, 3D Files, CAD Files, Code Files, App Installers, and Zip & Archives**.
+TimeFold can group supported files into categories such as **Images, PDF Files, Document Files, Office Files, Video Files, Audio Files, 3D Files, CAD Files, Code Files, App Installers, Zip & Archives, and Git Repos**.
 
 ```text
 Downloads/
@@ -86,8 +86,11 @@ Downloads/
 ├── App Installers/
 │   └── vlc-setup.exe
 │
-└── Zip & Archives/
-    └── project.zip
+├── Zip & Archives/
+│   └── project.zip
+│
+└── Git Repos/
+    └── my-web-app/
 ```
 
 ### Organize by date
@@ -207,7 +210,7 @@ TimeFold gives you several organization strategies, depending on how you want to
 
 | Organization method | What it does |
 | --- | --- |
-| **Category** | Groups supported files into categories such as Images, PDF Files, Document Files, Office Files, Video Files, Audio Files, 3D Files, CAD Files, Code Files, App Installers, and Zip & Archives |
+| **Category** | Groups supported files into categories such as Images, PDF Files, Document Files, Office Files, Video Files, Audio Files, 3D Files, CAD Files, Code Files, App Installers, Zip & Archives, and Git Repos |
 | **Date** | Groups files and folders by Month, Day, Quarter, or Year |
 | **Category / Date** | Uses category as the first folder level and date as the second |
 | **Date / Category** | Uses date as the first folder level and category as the second |
@@ -245,13 +248,14 @@ TimeFold uses a **preview-first workflow** so you can see what it plans to do be
 ## ✨ Key Features
 
 - **⚡ Smart Date Sorting:** Organize files and folders by **Month**, **Day**, **Quarter**, or **Year**.
-- **🗂️ Smart Categories:** Organize supported file types into **Images, PDF Files, Document Files, Office Files, Video Files, Audio Files, 3D Files, CAD Files, Code Files, App Installers, and Zip & Archives**.
+- **🗂️ Smart Categories:** Organize supported files into **Images, PDF Files, Document Files, Office Files, Video Files, Audio Files, 3D Files, CAD Files, Code Files, App Installers, Zip & Archives, and Git Repos**.
 - **🧩 Hybrid Organization:** Combine date and category using **Category / Date** or **Date / Category** nesting.
 - **🔤 File Extension Mode:** Organize files by their raw file extension for a more precise structure.
-- **🛡️ Non-Destructive Organization:** TimeFold does not delete, alter, or compress your original files. It relocates items into the organized structure you choose.
+- **🛡️ Non-Destructive Organization:** TimeFold does not delete, alter, or compress your original files. It relocates items cleanly into the organized structure you choose, and never extracts or touches files inside existing subfolders.
+- **↩️ Undo Operation (Beta):** Safely roll back your last organization run with robust collision protection, restoring items to their original locations and cleaning up session audit logs *(currently in beta while undergoing further real-world testing)*.
 - **🔍 Full Interactive Preview:** Review files and their exact destinations in the live preview before moving anything.
 - **📝 Automatic CSV Audit Logs:** Every organization run generates a timestamped audit trail so you can review where items went.
-- **↩️ Undo Operation (Beta):** Safely roll back your last organization run with robust collision protection, restoring items to their original locations and cleaning up session audit logs *(currently in beta while undergoing further real-world testing)*.
+- **📦 Safe Git Repository Detection:** Automatically identifies Git repositories (containing `.git` or `.github`, including single-wrapper root folders) and keeps them 100% intact. Routes them to a dedicated `Git Repos` folder in Category modes, or places them on the chronological timeline in Date mode.
 - **🚀 Large-Folder Support:** Designed to scan and paginate through large collections, including **10,000 to 100,000+ files**.
 - **⚠️ Smart Timestamp Detection:** Detects and alerts you when files share identical timestamps, which can happen with extracted archives or downloaded files.
 - **📁 Top-Level Folder Support:** Optionally organize loose subfolders alongside files with a single toggle.
