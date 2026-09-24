@@ -159,9 +159,6 @@ namespace FileOrganizer
             _pnlSourceDrop.Controls.Add(_lblDropHint);
             _pnlSourceDrop.Click += (s, e) => BtnBrowseSource_Click(s, e);
             _lblDropHint.Click += (s, e) => BtnBrowseSource_Click(s, e);
-            _pnlSourceDrop.DragEnter += PnlSourceDrop_DragEnter;
-            _pnlSourceDrop.DragLeave += PnlSourceDrop_DragLeave;
-            _pnlSourceDrop.DragDrop += PnlSourceDrop_DragDrop;
             _pnlSourceDrop.Paint += (s, pe) =>
             {
                 pe.Graphics.SmoothingMode = System.Drawing.Drawing2D.SmoothingMode.AntiAlias;
@@ -443,17 +440,22 @@ namespace FileOrganizer
 
             InitializeContextMenu();
             this.KeyPreview = true;
-            this.KeyDown += (s, e) =>
-            {
-                if (e.KeyCode == Keys.F5)
-                {
-                    e.Handled = true;
-                    LoadPreview();
-                }
-            };
-
+            this.KeyDown += (s, e) => { if (e.KeyCode == Keys.F5) { e.Handled = true; LoadPreview(); } };
             this.Load += MainForm_Load;
             this.Resize += MainForm_Resize;
+            EnableDropTarget(this);
+        }
+
+        private void EnableDropTarget(Control ctrl)
+        {
+            ctrl.AllowDrop = true;
+            ctrl.DragEnter += PnlSourceDrop_DragEnter;
+            ctrl.DragLeave += PnlSourceDrop_DragLeave;
+            ctrl.DragDrop += PnlSourceDrop_DragDrop;
+            foreach (Control child in ctrl.Controls)
+            {
+                if (child != _pnlProgress && child != _menuStrip) EnableDropTarget(child);
+            }
         }
 
         private void MainForm_Load(object? sender, EventArgs e) => UpdateMainLayout();
@@ -476,10 +478,8 @@ namespace FileOrganizer
             if (_pnlCompleteActions == null || _btnOpenFolder == null || _btnStartNewProject == null || _btnExitApp == null) return;
             int availableWidth = _pnlCompleteActions.ClientSize.Width;
             if (availableWidth <= 0) return;
-
             _btnOpenFolder.Location = new Point(Math.Max(0, (availableWidth - _btnOpenFolder.Width) / 2), 4);
-            int row2Width = _btnStartNewProject.Width + 10 + _btnExitApp.Width;
-            int startX2 = Math.Max(0, (availableWidth - row2Width) / 2);
+            int startX2 = Math.Max(0, (availableWidth - (_btnStartNewProject.Width + 10 + _btnExitApp.Width)) / 2);
             _btnStartNewProject.Location = new Point(startX2, 54);
             _btnExitApp.Location = new Point(startX2 + _btnStartNewProject.Width + 10, 54);
             _pnlCompleteActions.Height = 100;

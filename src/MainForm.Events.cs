@@ -68,28 +68,26 @@ namespace FileOrganizer
 
         private void PnlSourceDrop_DragEnter(object? sender, DragEventArgs e)
         {
+            if (_pnlProgress.Visible) { e.Effect = DragDropEffects.None; return; }
+            bool isValid = e.Data?.GetDataPresent(DataFormats.FileDrop) == true && ((string[]?)e.Data.GetData(DataFormats.FileDrop))?.Length >= 1;
+            e.Effect = isValid ? DragDropEffects.Copy : DragDropEffects.None;
             var palette = AppTheme.GetPalette(_settings.DarkMode);
-            if (e.Data?.GetDataPresent(DataFormats.FileDrop) == true && ((string[]?)e.Data.GetData(DataFormats.FileDrop))?.Length >= 1)
-            {
-                e.Effect = DragDropEffects.Copy;
-                _pnlSourceDrop.BackColor = palette.DropZoneHoverBg;
-                return;
-            }
-            e.Effect = DragDropEffects.None;
-            _pnlSourceDrop.BackColor = palette.DangerBg;
+            if (_pnlSourceDrop != null) _pnlSourceDrop.BackColor = isValid ? palette.DropZoneHoverBg : palette.DangerBg;
         }
 
         private void PnlSourceDrop_DragLeave(object? sender, EventArgs e) => _pnlSourceDrop.BackColor = AppTheme.GetPalette(_settings.DarkMode).DropZoneBg;
 
         private void PnlSourceDrop_DragDrop(object? sender, DragEventArgs e)
         {
-            _pnlSourceDrop.BackColor = AppTheme.GetPalette(_settings.DarkMode).DropZoneBg;
+            if (_pnlProgress.Visible) return;
+            if (_pnlSourceDrop != null) _pnlSourceDrop.BackColor = AppTheme.GetPalette(_settings.DarkMode).DropZoneBg;
             if (e.Data?.GetDataPresent(DataFormats.FileDrop) == true)
             {
                 var files = (string[]?)e.Data.GetData(DataFormats.FileDrop);
                 if (files?.Length > 0)
                 {
                     string path = files[0];
+                    if (_pnlComplete.Visible) ResetForm();
                     if (Directory.Exists(path)) SetSourceFolder(path);
                     else if (File.Exists(path))
                     {

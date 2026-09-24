@@ -56,30 +56,16 @@ namespace FileOrganizer
         private List<ConflictInfo> _currentConflicts = new();
         private int _currentPreviewLimit;
 
-        // UI Controls - Progress Panel
-        private Panel _pnlProgress = null!;
+        // UI Controls - Progress & Complete Panels
+        private Panel _pnlProgress = null!, _pnlComplete = null!, _pnlCompleteActions = null!, _pnlDetailsCard = null!;
         private ProgressBar _progressBar = null!;
-        private Label _lblProgress = null!;
+        private Label _lblProgress = null!, _lblProgressTitle = null!, _lblCompleteSummary = null!, _lblCompleteTitle = null!, _lblCompleteSubtitle = null!;
         private TextBox _txtStatus = null!;
-        private ModernButton _btnCancel = null!;
+        private ModernButton _btnCancel = null!, _btnOpenFolder = null!, _btnStartNewProject = null!, _btnExitApp = null!;
 
-        // UI Controls - Complete Panel
-        private Panel _pnlComplete = null!, _pnlCompleteActions = null!;
-        private Label _lblCompleteSummary = null!;
-        private ModernButton _btnOpenFolder = null!, _btnStartNewProject = null!, _btnExitApp = null!;
-
-        // Theme-responsive Labels & Panels
-        private Label _lblSubtitle = null!;
-        private Label _lblSourceTitle = null!;
-        private Label _lblDropHint = null!;
-        private Label _lblPreviewHeader = null!;
-        private Label _lblEmptyIcon = null!;
-        private Label _lblEmptyTitle = null!;
-        private Label _lblEmptyDesc = null!;
-        private Label _lblProgressTitle = null!;
-        private Label _lblCompleteTitle = null!;
-        private Label _lblCompleteSubtitle = null!;
-        private Panel _pnlDetailsCard = null!;
+        // Theme-responsive Labels
+        private Label _lblSubtitle = null!, _lblSourceTitle = null!, _lblDropHint = null!, _lblPreviewHeader = null!;
+        private Label _lblEmptyIcon = null!, _lblEmptyTitle = null!, _lblEmptyDesc = null!;
 
         public MainForm()
         {
@@ -143,11 +129,12 @@ namespace FileOrganizer
             _toolTip.SetToolTip(_btnBrowseOutput, "Choose a different destination folder for the sorted date folders");
             _toolTip.SetToolTip(_txtOutputFolder, "Selected destination folder for organized files");
             _toolTip.SetToolTip(_lblFormatBadge, "Current folder naming pattern. Click to customize in Preferences");
+            _toolTip.SetToolTip(_btnModeSelector, "Switch organization mode (Date-Based, File Type, or Smart Hybrid)");
             _toolTip.SetToolTip(_btnRefresh, "Scan and refresh the organization plan (F5)");
             _toolTip.SetToolTip(_btnStart, "Move files & folders into their date-based timeline folders");
             _toolTip.SetToolTip(_btnExitApp, "Exit TimeFold application");
 
-            _cellToolTip = new ToolTip { ShowAlways = true, InitialDelay = 150, AutoPopDelay = 6000, ReshowDelay = 100 };
+            _cellToolTip = new ToolTip { ShowAlways = true };
             _lstFiles.MouseMove += LstFiles_MouseMove;
             _lstFiles.MouseLeave += LstFiles_MouseLeave;
         }
@@ -388,10 +375,8 @@ namespace FileOrganizer
 
         private void LstFiles_Click(object? sender, EventArgs e)
         {
-            if (_lstFiles.SelectedItems.Count > 0 && _lstFiles.SelectedItems[0].Tag is "LOAD_MORE")
-            {
-                BtnLoadMore_Click(sender, e);
-            }
+            ClearListToolTip();
+            if (_lstFiles.SelectedItems.Count > 0 && _lstFiles.SelectedItems[0].Tag is "LOAD_MORE") BtnLoadMore_Click(sender, e);
         }
 
         private void UpdatePreviewHeaderCount(int displayed, int total)
@@ -431,7 +416,7 @@ namespace FileOrganizer
 
         private Font? _boldListFont;
         private Font GetBoldListFont() => _boldListFont ??= new Font(_lstFiles.Font, FontStyle.Bold);
-        private string? _currentListToolTipText;
+        private long _lastTooltipShownTick;
         private (int ItemIndex, int SubIndex) _lastTooltipCell = (-1, -1);
 
         private void LstFiles_MouseMove(object? sender, MouseEventArgs e)
@@ -446,8 +431,8 @@ namespace FileOrganizer
             int subIndex = hit.Item.SubItems.IndexOf(hit.SubItem);
             int itemIndex = hit.Item.Index;
 
-            if (_lastTooltipCell == (itemIndex, subIndex)) return;
-            _lastTooltipCell = (itemIndex, subIndex);
+            long now = Environment.TickCount64;
+            if (_lastTooltipCell == (itemIndex, subIndex) && (now - _lastTooltipShownTick < 8000)) return;
 
             string? newText = null;
             if (subIndex == 2) // Modified Date
@@ -462,11 +447,23 @@ namespace FileOrganizer
                     ? $"✔ Active Date (Created)\nUsed to organize this item into target folder '{file.TargetFolder}'.\nTip: Change date source rules in Settings > Preferences"
                     : $"Inactive Date (Created)\nOriginal file timestamp (not used for folder placement).\nTip: Change date source rules in Settings > Preferences";
             }
+            else if (subIndex == 4) // Target Folder
+            {
+                string outputBase = GetBaseOutputFolder();
+                string subPath = _settings.CreateSortedSubfolder
+                    ? Path.Combine(AppConstants.GetSortedFolderPreviewPattern(_settings.Use24HourTimestamp), file.TargetFolder)
+                    : file.TargetFolder;
+                string notice = _settings.CreateSortedSubfolder
+                    ? "✔ 'Create Sorted Subfolder' is ON:\nIsolates files inside a clean timestamped folder."
+                    : "ℹ 'Create Sorted Subfolder' is OFF:\nFiles will be placed directly in output folder.";
+                newText = $"📁 Planned Destination:\n{Path.Combine(outputBase, subPath)}\n\n{notice}";
+            }
 
             if (newText != null)
             {
-                _currentListToolTipText = newText;
-                _cellToolTip.Show(newText, _lstFiles, e.Location.X + 16, e.Location.Y + 20, 5000);
+                _lastTooltipCell = (itemIndex, subIndex);
+                _lastTooltipShownTick = now;
+                _cellToolTip.Show(newText, _lstFiles, e.Location.X + 16, e.Location.Y + 24, 8000);
             }
             else
             {
@@ -474,14 +471,18 @@ namespace FileOrganizer
             }
         }
 
-        private void LstFiles_MouseLeave(object? sender, EventArgs e) => ClearListToolTip();
+        private void LstFiles_MouseLeave(object? sender, EventArgs e)
+        {
+            Point mousePos = _lstFiles.PointToClient(Cursor.Position);
+            if (!_lstFiles.ClientRectangle.Contains(mousePos)) ClearListToolTip();
+        }
 
         private void ClearListToolTip()
         {
-            if (_lastTooltipCell != (-1, -1) || _currentListToolTipText != null)
+            if (_lastTooltipCell != (-1, -1))
             {
                 _lastTooltipCell = (-1, -1);
-                _currentListToolTipText = null;
+                _lastTooltipShownTick = 0;
                 _cellToolTip.Hide(_lstFiles);
             }
         }
