@@ -304,6 +304,16 @@ The compiled single-file `TimeFold.exe` will be generated inside the `publish/` 
 
 ---
 
+## 🗺️ Roadmap
+
+- [ ] **Native Windows on ARM (ARM64):** Alongside our current x64 (Intel/AMD) release, provide a dedicated native ARM64 build for Snapdragon X and Surface devices with maximum battery efficiency and zero emulation overhead.
+- [ ] **macOS Desktop App:** Native graphical application for macOS (Apple Silicon M-series & Intel).
+- [ ] **Linux Desktop App:** Native desktop release for popular Linux distributions (Ubuntu, Fedora, Arch).
+- [ ] **Custom Category Builder:** Create your own custom category rules and custom extension groupings directly from the UI.
+- [ ] **Localization:** Multilingual interface support for international users.
+
+---
+
 ## 🛠️ Tech Stack
 
 - **Runtime & Framework:** .NET 10 (Windows Desktop SDK)
