@@ -131,7 +131,11 @@ namespace FileOrganizer.Services
 
             foreach (var f in processedFiles)
             {
-                if (!string.IsNullOrEmpty(f.DestinationPath) && string.IsNullOrEmpty(f.ErrorMessage))
+                if (!string.IsNullOrEmpty(f.DestinationPath) &&
+                    string.IsNullOrEmpty(f.ErrorMessage) &&
+                    !string.Equals(Path.GetFullPath(f.FullPath).TrimEnd('\\', '/'),
+                                   Path.GetFullPath(f.DestinationPath).TrimEnd('\\', '/'),
+                                   StringComparison.OrdinalIgnoreCase))
                 {
                     movedItems.Add(new UndoEntry
                     {
@@ -190,6 +194,13 @@ namespace FileOrganizer.Services
                     checkTarget = Path.Combine(customRestoreDir, rel);
                 }
 
+                if (string.Equals(Path.GetFullPath(item.DestinationPath).TrimEnd('\\', '/'),
+                                  Path.GetFullPath(checkTarget).TrimEnd('\\', '/'),
+                                  StringComparison.OrdinalIgnoreCase))
+                {
+                    continue;
+                }
+
                 bool origExists = item.IsDirectory
                     ? Directory.Exists(checkTarget)
                     : File.Exists(checkTarget);
@@ -242,6 +253,14 @@ namespace FileOrganizer.Services
                     {
                         string rel = Path.GetRelativePath(session.SourceDirectory, item.OriginalPath);
                         targetPath = Path.Combine(customRestoreDir, rel);
+                    }
+
+                    if (string.Equals(Path.GetFullPath(item.DestinationPath).TrimEnd('\\', '/'),
+                                      Path.GetFullPath(targetPath).TrimEnd('\\', '/'),
+                                      StringComparison.OrdinalIgnoreCase))
+                    {
+                        result.RestoredCount++;
+                        continue;
                     }
 
                     bool origOccupied = item.IsDirectory ? Directory.Exists(targetPath) : File.Exists(targetPath);

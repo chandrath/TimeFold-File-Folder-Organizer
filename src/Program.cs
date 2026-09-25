@@ -227,6 +227,17 @@ namespace FileOrganizer
                 return 9;
             }
 
+            // Verify Untouched Item Undo Exemption (Prevents false self-collision)
+            var untouchedItem = new Models.FileItem { FullPath = @"C:\Source\Untouched", DestinationPath = @"C:\Source\Untouched", IsDirectory = true };
+            var movedItem = new Models.FileItem { FullPath = @"C:\Source\Moved", DestinationPath = @"C:\Output\Moved", IsDirectory = true };
+            var filterSession = Services.UndoService.RecordSession(@"C:\Source", @"C:\Output", "", new[] { untouchedItem, movedItem });
+            if (filterSession.MovedItems.Count != 1 || filterSession.MovedItems[0].OriginalPath != @"C:\Source\Moved")
+            {
+                Console.WriteLine($"[FAIL] Undo untouched item filter failed: count was {filterSession.MovedItems.Count}");
+                return 10;
+            }
+            Services.UndoService.ClearSession();
+
             Console.WriteLine("[PASS] All category, subtitle pairing, prefix/suffix, and Undo (Beta) tests passed!");
             return 0;
         }
