@@ -32,6 +32,7 @@ namespace FileOrganizer.Services
 
         public string WorkingDirectory => _workingDirectory;
         public string OutputDirectory { get => _outputDirectory; set => _outputDirectory = value; }
+        public OrganizationResult? LastResult { get; private set; }
 
         public List<FileItem> ScanFiles(bool includeTopLevelFolders, bool ignoreSystemFiles = true, DateSource fileDateSource = DateSource.Modified, DateSource folderDateSource = DateSource.Modified)
         {
@@ -177,6 +178,7 @@ namespace FileOrganizer.Services
             HashSet<string>? collidingFilePaths = null)
         {
             var result = new OrganizationResult { TotalFiles = files.Count };
+            LastResult = result;
             if (files.Count == 0) return result;
 
             var sortedFolder = _createSortedSubfolder

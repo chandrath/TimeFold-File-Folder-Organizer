@@ -425,6 +425,10 @@ namespace FileOrganizer
             }
             catch (OperationCanceledException)
             {
+                if (_organizerService?.LastResult != null && _organizerService.LastResult.FilesMoved > 0)
+                {
+                    RecordUndoSession(_organizerService.LastResult);
+                }
                 MessageBox.Show("Organization was cancelled. Any processed files have been logged.", "Cancelled", MessageBoxButtons.OK, MessageBoxIcon.Information);
                 LoadPreview();
             }

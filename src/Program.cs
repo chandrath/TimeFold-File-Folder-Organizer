@@ -281,6 +281,41 @@ namespace FileOrganizer
                 try { if (System.IO.Directory.Exists(orgTestDir)) System.IO.Directory.Delete(orgTestDir, true); } catch { }
             }
 
+            // Verify Cancellation preserves LastResult for Undo
+            string cancelTestDir = System.IO.Path.Combine(System.IO.Path.GetTempPath(), "TimeFold_CancelTest_" + Guid.NewGuid().ToString("N"));
+            try
+            {
+                System.IO.Directory.CreateDirectory(cancelTestDir);
+                string testFile1 = System.IO.Path.Combine(cancelTestDir, "test1.txt");
+                System.IO.File.WriteAllText(testFile1, "hello");
+
+                var item1 = new Models.FileItem { Name = "test1.txt", FullPath = testFile1, TargetFolder = "TXT" };
+                var cts = new System.Threading.CancellationTokenSource();
+                cts.Cancel();
+
+                var cancelOrganizer = new Services.FileOrganizerService(
+                    System.IO.Path.Combine(cancelTestDir, "TimeFold.exe"),
+                    cancelTestDir, cancelTestDir);
+
+                try
+                {
+                    cancelOrganizer.OrganizeFilesAsync(
+                        new List<Models.FileItem> { item1 },
+                        null!, cts.Token, false).GetAwaiter().GetResult();
+                }
+                catch (OperationCanceledException) { }
+
+                if (cancelOrganizer.LastResult == null)
+                {
+                    Console.WriteLine("[FAIL] Cancellation test failed: LastResult was null");
+                    return 12;
+                }
+            }
+            finally
+            {
+                try { if (System.IO.Directory.Exists(cancelTestDir)) System.IO.Directory.Delete(cancelTestDir, true); } catch { }
+            }
+
             Console.WriteLine("[PASS] All category, subtitle pairing, prefix/suffix, Undo, and Folder Organization tests passed!");
             return 0;
         }
