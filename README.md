@@ -264,6 +264,20 @@ TimeFold uses a **preview-first workflow** so you can see what it plans to do be
 
 ---
 
+## 🎬 Video Walkthrough
+
+See TimeFold in action organizing directories, managing smart categories, routing Git repositories, and rolling back operations:
+
+<p align="center">
+  <a href="https://youtu.be/3CNbwjIt8SA" target="_blank">
+    <img src="https://img.youtube.com/vi/3CNbwjIt8SA/maxresdefault.jpg" alt="Watch TimeFold Video Walkthrough" width="100%" />
+  </a>
+  <br />
+  <em>▶️ Click above to watch the full walkthrough on YouTube: <a href="https://youtu.be/3CNbwjIt8SA"><strong>https://youtu.be/3CNbwjIt8SA</strong></a></em>
+</p>
+
+---
+
 ## 🚀 Getting Started
 
 ### Option 1: Download (Recommended)
@@ -320,6 +334,16 @@ The compiled single-file `TimeFold.exe` will be generated inside the `publish/` 
 - **Language:** C# 13
 - **UI Framework:** Windows Forms (High-DPI aware, custom theme engine)
 - **Dependencies:** Zero external NuGet packages (pure .NET standard libraries for maximum speed, security, and portability)
+
+---
+
+## 🤝 Contributing & Issues
+
+Contributions, feedback, and suggestions make TimeFold better for everyone!
+
+- **⭐ Star the Project:** If TimeFold helps keep your workspace clean, please give it a star on GitHub—it helps more users discover the tool!
+- **🐛 Found an Issue or Bug?** Please [open an issue](https://github.com/chandrath/TimeFold-File-Folder-Organizer/issues) with details, reproduction steps, and any relevant logs.
+- **🚀 Pull Requests Welcome:** Have a bug fix, performance optimization, or feature enhancement? Fork the repository, create a branch, and submit a PR!
 
 ---
 
