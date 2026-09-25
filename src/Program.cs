@@ -238,7 +238,50 @@ namespace FileOrganizer
             }
             Services.UndoService.ClearSession();
 
-            Console.WriteLine("[PASS] All category, subtitle pairing, prefix/suffix, and Undo (Beta) tests passed!");
+            // Verify In-Place Folder Movement during Organization
+            string orgTestDir = System.IO.Path.Combine(System.IO.Path.GetTempPath(), "TimeFold_OrgTest_" + Guid.NewGuid().ToString("N"));
+            try
+            {
+                System.IO.Directory.CreateDirectory(orgTestDir);
+                string testSubdir = System.IO.Path.Combine(orgTestDir, "TestFolder");
+                System.IO.Directory.CreateDirectory(testSubdir);
+                System.IO.File.WriteAllText(System.IO.Path.Combine(testSubdir, "data.txt"), "test");
+
+                var orgItem = new Models.FileItem
+                {
+                    Name = "TestFolder",
+                    FullPath = testSubdir,
+                    IsDirectory = true,
+                    TargetFolder = "Grouped Folders"
+                };
+
+                var organizer = new Services.FileOrganizerService(
+                    System.IO.Path.Combine(orgTestDir, "TimeFold.exe"),
+                    orgTestDir,
+                    orgTestDir);
+                organizer.ApplyNamingSettings(
+                    Models.FolderFormat.YearMonth, "", "", false,
+                    Models.OrganizationMode.Extension, createSortedSubfolder: false);
+
+                var orgResult = organizer.OrganizeFilesAsync(
+                    new List<Models.FileItem> { orgItem },
+                    null!,
+                    System.Threading.CancellationToken.None,
+                    false,
+                    Models.ConflictResolutionStrategy.AutoRename).GetAwaiter().GetResult();
+
+                if (orgResult.FilesMoved != 1 || !System.IO.Directory.Exists(System.IO.Path.Combine(orgTestDir, "Grouped Folders", "TestFolder")))
+                {
+                    Console.WriteLine("[FAIL] Organization failed: TestFolder was not moved into Grouped Folders");
+                    return 11;
+                }
+            }
+            finally
+            {
+                try { if (System.IO.Directory.Exists(orgTestDir)) System.IO.Directory.Delete(orgTestDir, true); } catch { }
+            }
+
+            Console.WriteLine("[PASS] All category, subtitle pairing, prefix/suffix, Undo, and Folder Organization tests passed!");
             return 0;
         }
     }

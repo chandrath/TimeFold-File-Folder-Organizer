@@ -239,7 +239,7 @@ namespace FileOrganizer.Services
                     {
                         if (cancellationToken.IsCancellationRequested) break;
 
-                        if (file.IsDirectory && (preExistingDirs.Contains(file.Name) || remappedTopSegments.ContainsKey(file.Name)))
+                        if (file.IsDirectory && remappedTopSegments.ContainsKey(file.Name))
                         {
                             file.DestinationPath = file.FullPath;
                             file.ErrorMessage = string.Empty;
