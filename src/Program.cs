@@ -111,9 +111,13 @@ namespace FileOrganizer
             string gitHyb2 = Services.TargetFolderResolver.Resolve(gitRepo, Models.OrganizationMode.DateAndCategory, Models.FolderFormat.YearMonth, "", "");
             string gitDisabled = Services.TargetFolderResolver.Resolve(gitRepo, Models.OrganizationMode.Category, Models.FolderFormat.YearMonth, "", "", "", "", false);
 
-            if (gitCat != "Git Repos" || !gitDate.StartsWith("2026") || gitExt != "Grouped Folders" || !gitHyb1.StartsWith("Git Repos") || !gitHyb2.EndsWith("Git Repos") || gitDisabled != "Grouped Folders")
+            string gitExtDisabled = Services.TargetFolderResolver.Resolve(gitRepo, Models.OrganizationMode.Extension, Models.FolderFormat.YearMonth, "", "", "", "", false);
+            var normalFolder = new Models.FileItem { Name = "my-docs", FullPath = @"C:\Source\my-docs", IsDirectory = true, IsGitRepository = false };
+            string normalExt = Services.TargetFolderResolver.Resolve(normalFolder, Models.OrganizationMode.Extension, Models.FolderFormat.YearMonth, "", "");
+
+            if (gitCat != "Git Repos" || !gitDate.StartsWith("2026") || gitExt != "Git Repos" || gitExtDisabled != "Grouped Folders" || normalExt != "Grouped Folders" || !gitHyb1.StartsWith("Git Repos") || !gitHyb2.EndsWith("Git Repos") || gitDisabled != "Grouped Folders")
             {
-                Console.WriteLine($"[FAIL] Git repo resolver routing failed: Cat='{gitCat}', Date='{gitDate}', Ext='{gitExt}', Hyb1='{gitHyb1}', Hyb2='{gitHyb2}', Disabled='{gitDisabled}'");
+                Console.WriteLine($"[FAIL] Git repo resolver routing failed: Cat='{gitCat}', Date='{gitDate}', Ext='{gitExt}', ExtDis='{gitExtDisabled}', NormalExt='{normalExt}'");
                 return 8;
             }
 

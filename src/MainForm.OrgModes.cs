@@ -159,6 +159,25 @@ namespace FileOrganizer
                 };
                 menu.Items.AddRange(new ToolStripItem[] { lblActive, lblActiveDesc });
             }
+            else if (_settings.OrgMode == OrganizationMode.Extension)
+            {
+                var lblActive = new ToolStripLabel("  🟢 Currently Active (File Extension Mode)")
+                {
+                    Font = new Font(this.Font, FontStyle.Bold),
+                    ForeColor = _settings.DarkMode ? Color.FromArgb(52, 211, 153) : Color.FromArgb(16, 185, 129)
+                };
+                var lblDesc1 = new ToolStripLabel("  Git repositories (.git / .github) are grouped into 'Git Repos'.")
+                {
+                    Font = new Font(this.Font.FontFamily, this.Font.Size - 0.5f, FontStyle.Regular),
+                    ForeColor = _settings.DarkMode ? Color.FromArgb(156, 163, 175) : Color.FromArgb(100, 116, 139)
+                };
+                var lblDesc2 = new ToolStripLabel("  Other loose folders are placed into 'Grouped Folders'.")
+                {
+                    Font = new Font(this.Font.FontFamily, this.Font.Size - 0.5f, FontStyle.Regular),
+                    ForeColor = _settings.DarkMode ? Color.FromArgb(156, 163, 175) : Color.FromArgb(100, 116, 139)
+                };
+                menu.Items.AddRange(new ToolStripItem[] { lblActive, lblDesc1, lblDesc2 });
+            }
             else
             {
                 var lblInactive = new ToolStripLabel("  ℹ️ Currently Inactive (Date Timeline Mode)")
@@ -166,7 +185,7 @@ namespace FileOrganizer
                     Font = new Font(this.Font, FontStyle.Bold),
                     ForeColor = _settings.DarkMode ? Color.FromArgb(251, 191, 36) : Color.FromArgb(217, 119, 6)
                 };
-                var lblDesc1 = new ToolStripLabel("  Git repository grouping only applies to category-based modes.")
+                var lblDesc1 = new ToolStripLabel("  Git repository grouping applies when organizing by category or extension.")
                 {
                     Font = new Font(this.Font.FontFamily, this.Font.Size - 0.5f, FontStyle.Regular),
                     ForeColor = _settings.DarkMode ? Color.FromArgb(156, 163, 175) : Color.FromArgb(100, 116, 139)

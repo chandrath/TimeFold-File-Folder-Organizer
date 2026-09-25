@@ -131,7 +131,7 @@ namespace FileOrganizer
             _toolTip.SetToolTip(_txtOutputFolder, "Selected destination folder for organized files");
             _toolTip.SetToolTip(_lblFormatBadge, "Current folder naming pattern. Click to customize in Preferences");
             _toolTip.SetToolTip(_btnModeSelector, "Switch organization mode (Date-Based, File Type, or Smart Hybrid)");
-            _toolTip.SetToolTip(_btnFolderRules, "Folder Organization Rules: Git repository detection in Category modes");
+            _toolTip.SetToolTip(_btnFolderRules, "Folder Organization Rules: Git repository detection");
             _toolTip.SetToolTip(_btnRefresh, "Scan and refresh the organization plan (F5)");
             _toolTip.SetToolTip(_btnStart, "Move files & folders into their date-based timeline folders");
             _toolTip.SetToolTip(_btnExitApp, "Exit TimeFold application");

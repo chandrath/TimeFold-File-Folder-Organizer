@@ -50,7 +50,12 @@ namespace FileOrganizer.Services
                     return GetFormattedCategory();
 
                 case OrganizationMode.Extension:
-                    if (item.IsDirectory) return AppConstants.DefaultGroupedFolderName;
+                    if (item.IsDirectory)
+                    {
+                        return (item.IsGitRepository && groupGitRepositories)
+                            ? FileTypeService.Instance.ResolveCategoryName(AppConstants.DefaultGitReposFolderName)
+                            : AppConstants.DefaultGroupedFolderName;
+                    }
                     string ext = item.Extension.TrimStart('.').ToUpperInvariant();
                     return string.IsNullOrWhiteSpace(ext) ? "No Extension" : ext;
 
