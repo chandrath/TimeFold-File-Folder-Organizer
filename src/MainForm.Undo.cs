@@ -18,6 +18,7 @@ namespace FileOrganizer
         private ModernButton _btnUndo = null!;
         private ToolStripMenuItem _menuUndo = null!;
         private Panel _pnlUndoBar = null!;
+        private bool _isOperationRunning;
 
         private void InitializeUndoUI()
         {
@@ -26,6 +27,14 @@ namespace FileOrganizer
             {
                 ShortcutKeys = Keys.Control | Keys.Z,
                 Enabled = UndoService.HasActiveSession()
+            };
+
+            // Hook progress panel visibility to lock/unlock menus and prevent concurrent operations
+            _pnlProgress.VisibleChanged += (s, e) =>
+            {
+                bool inProgress = _pnlProgress.Visible;
+                if (_menuStrip != null) _menuStrip.Enabled = !inProgress;
+                UpdateUndoUIState();
             };
 
             // Insert into File menu right after 'New'
@@ -90,14 +99,16 @@ namespace FileOrganizer
 
         private void UpdateUndoUIState()
         {
-            bool hasSession = UndoService.HasActiveSession();
-            if (_menuUndo != null) _menuUndo.Enabled = hasSession;
-            if (_btnUndo != null) _btnUndo.Enabled = hasSession;
-            if (_pnlUndoBar != null) _pnlUndoBar.Visible = hasSession;
+            bool canUndo = !_isOperationRunning && !_pnlProgress.Visible && UndoService.HasActiveSession();
+            if (_menuUndo != null) _menuUndo.Enabled = canUndo;
+            if (_btnUndo != null) _btnUndo.Enabled = canUndo;
+            if (_pnlUndoBar != null) _pnlUndoBar.Visible = UndoService.HasActiveSession();
         }
 
         private async Task PerformUndoAsync()
         {
+            if (_isOperationRunning || _pnlProgress.Visible) return;
+
             var session = UndoService.LoadSession();
             if (session == null || session.MovedItems.Count == 0)
             {
@@ -136,6 +147,7 @@ namespace FileOrganizer
 
             string? customRestoreDir = dlg.UseDedicatedFolder ? dlg.DedicatedFolderPath : null;
 
+            _isOperationRunning = true;
             // Switch to progress view
             _pnlMain.Visible = false;
             _pnlComplete.Visible = false;
@@ -192,20 +204,23 @@ namespace FileOrganizer
                     : session.SourceDirectory;
 
                 SetSourceFolder(folderToView);
-                UpdateUndoUIState();
             }
             catch (OperationCanceledException)
             {
                 MessageBox.Show(this, "Undo operation was cancelled.", "Cancelled", MessageBoxButtons.OK, MessageBoxIcon.Information);
-                _pnlProgress.Visible = false;
-                _pnlMain.Visible = true;
-                UpdateUndoUIState();
             }
             catch (Exception ex)
             {
                 MessageBox.Show(this, $"Error during undo: {ex.Message}", "Undo Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
-                _pnlProgress.Visible = false;
-                _pnlMain.Visible = true;
+            }
+            finally
+            {
+                _isOperationRunning = false;
+                if (_pnlProgress.Visible)
+                {
+                    _pnlProgress.Visible = false;
+                    _pnlMain.Visible = true;
+                }
                 UpdateUndoUIState();
             }
         }

@@ -343,6 +343,7 @@ namespace FileOrganizer
 
         private async void BtnStart_Click(object? sender, EventArgs e)
         {
+            if (_isOperationRunning || _pnlProgress.Visible) return;
             if (_organizerService == null) return;
             if (string.IsNullOrEmpty(_txtSourceFolder.Text) || !Directory.Exists(_txtSourceFolder.Text))
             {
@@ -390,9 +391,8 @@ namespace FileOrganizer
 
             if (result != DialogResult.Yes) return;
 
-            _pnlMain.Visible = false;
-            _pnlProgress.Visible = true;
-            _pnlComplete.Visible = false;
+            _isOperationRunning = true;
+            _pnlMain.Visible = false; _pnlProgress.Visible = true; _pnlComplete.Visible = false;
 
             _progressBar.Value = 0;
             _txtStatus.Clear();
@@ -417,12 +417,8 @@ namespace FileOrganizer
             {
                 var collidingPaths = new HashSet<string>(_currentConflicts.Select(c => c.Item.FullPath), StringComparer.OrdinalIgnoreCase);
                 var orgResult = await _organizerService.OrganizeFilesAsync(
-                    _filesToOrganize,
-                    progress,
-                    _cancellationTokenSource.Token,
-                    _settings.GenerateCsvLog,
-                    conflictStrategy,
-                    collidingPaths);
+                    _filesToOrganize, progress, _cancellationTokenSource.Token,
+                    _settings.GenerateCsvLog, conflictStrategy, collidingPaths);
 
                 RecordUndoSession(orgResult);
                 ShowCompletion(orgResult);
@@ -430,15 +426,17 @@ namespace FileOrganizer
             catch (OperationCanceledException)
             {
                 MessageBox.Show("Organization was cancelled. Any processed files have been logged.", "Cancelled", MessageBoxButtons.OK, MessageBoxIcon.Information);
-                _pnlMain.Visible = true;
-                _pnlProgress.Visible = false;
                 LoadPreview();
             }
             catch (Exception ex)
             {
                 MessageBox.Show($"Error during organization: {ex.Message}", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
-                _pnlMain.Visible = true;
-                _pnlProgress.Visible = false;
+            }
+            finally
+            {
+                _isOperationRunning = false;
+                if (_pnlProgress.Visible) { _pnlProgress.Visible = false; _pnlMain.Visible = true; }
+                UpdateUndoUIState();
             }
         }
 
