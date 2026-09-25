@@ -87,6 +87,8 @@ namespace FileOrganizer.Config
         public static string GetUndoManifestFilePath() =>
             Path.Combine(GetConfigDirectoryPath(), "last_undo.json");
 
+        public const int UndoSessionMaxAgeDays = 7;
+
         public static void OpenConfigLocation()
         {
             string dir = GetConfigDirectoryPath();

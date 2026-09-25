@@ -21,6 +21,7 @@ namespace FileOrganizer.Forms
 
         public bool UseDedicatedFolder => _rbDedicated.Checked;
         public string DedicatedFolderPath => _safeFolderPath;
+        public bool DiscardRequested { get; private set; }
 
         public UndoConfirmDialog(UndoSession session, UndoPreflightReport preflight, bool isDarkMode)
         {
@@ -39,7 +40,7 @@ namespace FileOrganizer.Forms
             var palette = AppTheme.GetPalette(isDarkMode);
 
             this.Text = "Undo Organization (Beta)";
-            this.Size = new Size(540, 480);
+            this.Size = new Size(540, 510);
             this.StartPosition = FormStartPosition.CenterParent;
             this.FormBorderStyle = FormBorderStyle.FixedDialog;
             this.MaximizeBox = false;
@@ -96,12 +97,21 @@ namespace FileOrganizer.Forms
                 Padding = new Padding(14, 10, 14, 10),
                 Margin = new Padding(0, 0, 0, 12)
             };
+            TimeSpan age = DateTime.Now - _session.Timestamp;
+            string ageDesc = age.TotalDays >= 1 ? $"{(int)age.TotalDays}d ago" : (age.TotalHours >= 1 ? $"{(int)age.TotalHours}h ago" : "just now");
+            bool isHighMissing = _preflight.TotalItems > 0 && ((double)_preflight.MissingAtDestination / _preflight.TotalItems) >= 0.8;
+            string staleNote = _preflight.ReadyToRestore == 0
+                ? "ℹ Notice: All organized files were moved or deleted outside TimeFold.\n"
+                : (isHighMissing ? "⚠ Notice: Most files were moved or deleted since organization.\n" : "");
+
             var lblStats = new Label
             {
-                Text = $"✔ Items Ready to Restore:  {_preflight.ReadyToRestore} of {_preflight.TotalItems}\n" +
+                Text = $"📅 Organized:             {_session.Timestamp:MMM dd, yyyy, h:mm tt} ({ageDesc})\n" +
+                       $"✔ Items Ready to Restore:  {_preflight.ReadyToRestore} of {_preflight.TotalItems}\n" +
                        $"📂 Source Directory:        {_session.SourceDirectory}\n" +
                        (_preflight.MissingAtDestination > 0 ? $"⚠ Missing at Destination:  {_preflight.MissingAtDestination} (will be skipped)\n" : "") +
-                       (_preflight.OriginalPathCollisions > 0 ? $"🛡 Collisions at Source:   {_preflight.OriginalPathCollisions} (will append '(Restored)')\n" : ""),
+                       (_preflight.OriginalPathCollisions > 0 ? $"🛡 Collisions at Source:   {_preflight.OriginalPathCollisions} (will append '(Restored)')\n" : "") +
+                       staleNote,
                 Font = new Font("Segoe UI", 9F),
                 ForeColor = palette.TextPrimary,
                 AutoSize = true,
@@ -168,6 +178,34 @@ namespace FileOrganizer.Forms
 
             // 4. Action Buttons
             var pnlActions = new Panel { Dock = DockStyle.Fill };
+
+            var btnDiscard = new ModernButton
+            {
+                Text = "🗑 Discard Undo",
+                Size = new Size(115, 34),
+                BackColor = palette.SecondaryButtonBg,
+                ForeColor = palette.TextMuted,
+                BorderColor = palette.SecondaryButtonBorder,
+                Font = new Font("Segoe UI", 9F),
+                BorderRadius = 6,
+                Cursor = Cursors.Hand,
+                Location = new Point(0, 4)
+            };
+            btnDiscard.Click += (s, e) =>
+            {
+                if (MessageBox.Show(
+                    this,
+                    "Permanently discard this undo session history?\n\nThis cannot be undone.",
+                    "Discard Undo History",
+                    MessageBoxButtons.YesNo,
+                    MessageBoxIcon.Question) == DialogResult.Yes)
+                {
+                    DiscardRequested = true;
+                    this.DialogResult = DialogResult.Abort;
+                    this.Close();
+                }
+            };
+
             var btnConfirm = new ModernButton
             {
                 Text = "↩ Start Undo",
@@ -179,6 +217,13 @@ namespace FileOrganizer.Forms
                 Cursor = Cursors.Hand,
                 DialogResult = DialogResult.OK
             };
+            if (_preflight.ReadyToRestore == 0)
+            {
+                btnConfirm.Enabled = false;
+                btnConfirm.Text = "Nothing to Restore";
+                btnConfirm.BackColor = palette.SecondaryButtonBg;
+                btnConfirm.ForeColor = palette.TextMuted;
+            }
             btnConfirm.Location = new Point(pnlActions.Width - 235, 4);
             btnConfirm.Anchor = AnchorStyles.Right | AnchorStyles.Top;
 
@@ -197,7 +242,7 @@ namespace FileOrganizer.Forms
             btnCancel.Location = new Point(pnlActions.Width - 100, 4);
             btnCancel.Anchor = AnchorStyles.Right | AnchorStyles.Top;
 
-            pnlActions.Controls.AddRange([btnConfirm, btnCancel]);
+            pnlActions.Controls.AddRange([btnDiscard, btnConfirm, btnCancel]);
             mainLayout.Controls.Add(pnlActions, 0, 4);
 
             this.Controls.Add(mainLayout);

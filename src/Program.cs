@@ -209,6 +209,20 @@ namespace FileOrganizer
                 try { if (System.IO.Directory.Exists(tempDir)) System.IO.Directory.Delete(tempDir, true); } catch { }
             }
 
+            // Verify Undo 7-Day Expiry TTL
+            var expiredSession = new Models.UndoSession { Timestamp = DateTime.Now.AddDays(-8) };
+            if (!Services.UndoService.IsSessionExpired(expiredSession))
+            {
+                Console.WriteLine("[FAIL] Undo TTL check failed: 8-day old session was not marked expired");
+                return 8;
+            }
+            var freshSession = new Models.UndoSession { Timestamp = DateTime.Now.AddDays(-2) };
+            if (Services.UndoService.IsSessionExpired(freshSession))
+            {
+                Console.WriteLine("[FAIL] Undo TTL check failed: 2-day old session was incorrectly marked expired");
+                return 9;
+            }
+
             Console.WriteLine("[PASS] All category, subtitle pairing, prefix/suffix, and Undo (Beta) tests passed!");
             return 0;
         }

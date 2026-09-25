@@ -109,18 +109,30 @@ namespace FileOrganizer
             var preflight = UndoService.PreflightCheck(session);
             if (!preflight.CanProceed)
             {
-                MessageBox.Show(
+                var askClear = MessageBox.Show(
                     this,
-                    "Cannot perform undo:\n\nNone of the organized files were found at their destination folders.\nThey may have already been moved, renamed, or deleted.",
-                    "Undo Not Available",
-                    MessageBoxButtons.OK,
-                    MessageBoxIcon.Warning);
+                    "Cannot perform undo:\n\nNone of the organized files were found at their destination folders.\nThey may have already been moved, renamed, or deleted outside TimeFold.\n\nWould you like to clear this undo history?",
+                    "No Files Found to Restore",
+                    MessageBoxButtons.YesNo,
+                    MessageBoxIcon.Information);
+                if (askClear == DialogResult.Yes)
+                {
+                    UndoService.ClearSession();
+                    UpdateUndoUIState();
+                }
                 return;
             }
 
             // Show Confirmation & Location Choice Dialog
             using var dlg = new UndoConfirmDialog(session, preflight, _settings.DarkMode);
-            if (dlg.ShowDialog(this) != DialogResult.OK) return;
+            var res = dlg.ShowDialog(this);
+            if (dlg.DiscardRequested || res == DialogResult.Abort)
+            {
+                UndoService.ClearSession();
+                UpdateUndoUIState();
+                return;
+            }
+            if (res != DialogResult.OK) return;
 
             string? customRestoreDir = dlg.UseDedicatedFolder ? dlg.DedicatedFolderPath : null;
 

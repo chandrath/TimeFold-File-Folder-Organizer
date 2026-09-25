@@ -15,10 +15,23 @@ namespace FileOrganizer.Services
         private static UndoSession? _currentSession;
         private static readonly JsonSerializerOptions JsonOptions = new() { WriteIndented = true };
 
+        public static bool IsSessionExpired(UndoSession? session)
+        {
+            if (session == null) return true;
+            return (DateTime.Now - session.Timestamp).TotalDays > AppConstants.UndoSessionMaxAgeDays;
+        }
+
         public static bool HasActiveSession()
         {
             if (_currentSession != null && _currentSession.MovedItems.Count > 0)
+            {
+                if (IsSessionExpired(_currentSession))
+                {
+                    ClearSession();
+                    return false;
+                }
                 return true;
+            }
 
             try
             {
@@ -37,7 +50,14 @@ namespace FileOrganizer.Services
         public static UndoSession? LoadSession()
         {
             if (_currentSession != null)
+            {
+                if (IsSessionExpired(_currentSession))
+                {
+                    ClearSession();
+                    return null;
+                }
                 return _currentSession;
+            }
 
             try
             {
@@ -46,6 +66,11 @@ namespace FileOrganizer.Services
                 {
                     string json = File.ReadAllText(path);
                     _currentSession = JsonSerializer.Deserialize<UndoSession>(json, JsonOptions);
+                    if (_currentSession != null && IsSessionExpired(_currentSession))
+                    {
+                        ClearSession();
+                        return null;
+                    }
                     return _currentSession;
                 }
             }
