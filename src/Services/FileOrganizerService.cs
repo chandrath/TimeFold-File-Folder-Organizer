@@ -37,7 +37,8 @@ namespace FileOrganizer.Services
         public List<FileItem> ScanFiles(
             bool includeTopLevelFolders, bool ignoreSystemFiles = true,
             DateSource fileDateSource = DateSource.Modified, DateSource folderDateSource = DateSource.Modified,
-            IEnumerable<string>? excludedFolders = null, bool enableFolderExclusions = true)
+            IEnumerable<string>? excludedFolders = null, bool enableFolderExclusions = true,
+            bool useMediaDateTaken = true)
         {
             var files = new List<FileItem>();
             var executableName = Path.GetFileName(_executablePath);
@@ -100,6 +101,12 @@ namespace FileOrganizer.Services
                         }
                         else if (entry is FileInfo fi)
                         {
+                            DateTime? mediaDate = null;
+                            if (useMediaDateTaken && MediaDateExtractor.IsSupportedMedia(fi.Extension))
+                            {
+                                mediaDate = MediaDateExtractor.TryGetDateTaken(fi.FullName);
+                            }
+
                             var (itemDate, isCreatedActive) = ResolveItemDate(fi.LastWriteTime, fi.CreationTime, fileDateSource);
                             var fileItem = new FileItem
                             {
@@ -109,6 +116,8 @@ namespace FileOrganizer.Services
                                 ModifiedDate = fi.LastWriteTime,
                                 CreatedDate = fi.CreationTime,
                                 IsCreatedDateActive = isCreatedActive,
+                                MediaDateTaken = mediaDate,
+                                IsMediaDateActive = mediaDate.HasValue,
                                 Size = fi.Length
                             };
                             fileItem.TargetFolder = TargetFolderResolver.Resolve(fileItem, _organizationMode, _folderFormat, _folderPrefix, _folderSuffix, _categoryPrefix, _categorySuffix);

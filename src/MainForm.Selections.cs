@@ -348,7 +348,7 @@ namespace FileOrganizer
 
         private int _sortColumn = 2;
         private bool _sortAscending = false;
-        private static readonly string[] ColumnBaseHeaders = { "File Name", "Type", "Modified Date", "Created Date", "📁 Target Folder", "Status", "Size" };
+        private static readonly string[] ColumnBaseHeaders = { "File Name", "Type", "Modified Date", "Created / Taken Date", "📁 Target Folder", "Status", "Size" };
 
         private void LstFiles_ColumnClick(object? sender, ColumnClickEventArgs e)
         {

@@ -181,6 +181,7 @@ namespace FileOrganizer.Config
         public const bool DefaultKeepSubtitleCompanionsTogether = true;
         public const DateSource DefaultFileDateSource = DateSource.Modified;
         public const DateSource DefaultFolderDateSource = DateSource.Modified;
+        public const bool DefaultUseMediaDateTaken = true;
         public const int DefaultMaxPreviewItems = 1000;
         public const int MaxAllowedPreviewItems = 100000;
         public const int MinAllowedPreviewItems = 100;

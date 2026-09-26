@@ -12,6 +12,8 @@ namespace FileOrganizer.Models
         public DateTime ModifiedDate { get; set; }
         public DateTime CreatedDate { get; set; }
         public bool IsCreatedDateActive { get; set; }
+        public DateTime? MediaDateTaken { get; set; }
+        public bool IsMediaDateActive { get; set; }
         public long Size { get; set; }
         public bool IsDirectory { get; set; }
         public bool IsGitRepository { get; set; }

@@ -111,7 +111,7 @@ namespace FileOrganizer
                     _currentPreviewLimit = _settings.MaxPreviewItems > 0 ? _settings.MaxPreviewItems : AppConstants.DefaultMaxPreviewItems;
                     using (FileOrganizer.Services.PerfLogger.Measure("ScanFiles"))
                     {
-                        _filesToOrganize = _organizerService.ScanFiles(_settings.IncludeTopLevelFolders, _settings.IgnoreSystemFiles, _settings.FileDateSource, _settings.FolderDateSource, null, _settings.EnableFolderExclusions);
+                        _filesToOrganize = _organizerService.ScanFiles(_settings.IncludeTopLevelFolders, _settings.IgnoreSystemFiles, _settings.FileDateSource, _settings.FolderDateSource, null, _settings.EnableFolderExclusions, _settings.UseMediaDateTaken);
                     }
                     _sortColumn = 2;
                     _sortAscending = false;
@@ -155,16 +155,22 @@ namespace FileOrganizer
                     var item = new ListViewItem(file.Name) { UseItemStyleForSubItems = false, Checked = file.IsSelected && !file.IsExcludedByRule };
                     item.SubItems.Add(file.TypeDisplay);
 
-                    string modText = (file.IsCreatedDateActive ? "   " : "✔ ") + file.ModifiedDate.ToString("yyyy-MM-dd HH:mm");
-                    string creText = (file.IsCreatedDateActive ? "✔ " : "   ") + file.CreatedDate.ToString("yyyy-MM-dd HH:mm");
+                    bool isMediaActive = file.IsMediaDateActive && file.MediaDateTaken.HasValue;
+                    bool isModActive = !file.IsCreatedDateActive && !isMediaActive;
+                    bool isCreActive = file.IsCreatedDateActive && !isMediaActive;
+
+                    string modText = (isModActive ? "✔ " : "   ") + file.ModifiedDate.ToString("yyyy-MM-dd HH:mm");
+                    string creText = isMediaActive
+                        ? $"📷 {file.MediaDateTaken!.Value:yyyy-MM-dd HH:mm} (EXIF)"
+                        : ((isCreActive ? "✔ " : "   ") + file.CreatedDate.ToString("yyyy-MM-dd HH:mm"));
 
                     var subMod = item.SubItems.Add(modText);
-                    subMod.ForeColor = file.IsCreatedDateActive ? palette.ListDateMuted : palette.ListDateActive;
-                    if (!file.IsCreatedDateActive) subMod.Font = boldFont;
+                    subMod.ForeColor = isModActive ? palette.ListDateActive : palette.ListDateMuted;
+                    if (isModActive) subMod.Font = boldFont;
 
                     var subCre = item.SubItems.Add(creText);
-                    subCre.ForeColor = file.IsCreatedDateActive ? palette.ListDateActive : palette.ListDateMuted;
-                    if (file.IsCreatedDateActive) subCre.Font = boldFont;
+                    subCre.ForeColor = (isCreActive || isMediaActive) ? palette.ListDateActive : palette.ListDateMuted;
+                    if (isCreActive || isMediaActive) subCre.Font = boldFont;
 
                     var subTarget = item.SubItems.Add($"📁 {file.TargetFolder}");
                     subTarget.ForeColor = palette.ListTargetFolder;

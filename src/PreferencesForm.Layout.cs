@@ -18,6 +18,7 @@ namespace FileOrganizer
         private Button _btnTypeRules = null!;
         private ComboBox _cmbFileDateSource = null!;
         private ComboBox _cmbFolderDateSource = null!;
+        private CheckBox _chkMediaDateTaken = null!;
 
         // Appearance Controls
         private Button _btnThemeLight = null!;
@@ -79,6 +80,16 @@ namespace FileOrganizer
             _cmbFolderDateSource.Items.AddRange(["Date Modified (Default)", "Date Created", "Earliest Date (Oldest)"]);
             _cmbFolderDateSource.SelectedIndex = (int)_settings.FolderDateSource;
             currentY += 30;
+
+            _chkMediaDateTaken = new CheckBox
+            {
+                Text = "Prioritize Date Taken for photos & videos (EXIF / Media)",
+                Location = new Point(leftMargin, currentY),
+                Size = new Size(contentWidth, 24),
+                Checked = _settings.UseMediaDateTaken,
+                Font = new Font("Segoe UI", 9F)
+            };
+            currentY += 28;
 
             _chkIncludeFolders = new CheckBox { Text = "Also organize folders (keeps contents intact)", Location = new Point(leftMargin, currentY), Size = new Size(contentWidth - 145, 24), Checked = _settings.IncludeTopLevelFolders };
 
@@ -340,7 +351,7 @@ namespace FileOrganizer
             _btnOK.Click += BtnOK_Click;
 
             this.Controls.AddRange([
-                lblOrgHeader, _chkIncludeFolders, btnExclusions, _chkGroupGitRepositories, _chkIgnoreSystemFiles, lblFileDate, lblFolderDate, _cmbFileDateSource, _cmbFolderDateSource,
+                lblOrgHeader, _chkMediaDateTaken, _chkIncludeFolders, btnExclusions, _chkGroupGitRepositories, _chkIgnoreSystemFiles, lblFileDate, lblFolderDate, _cmbFileDateSource, _cmbFolderDateSource,
                 lblNamingHeader, _cmbFormat, _btnFlipOrder, _chkShortMonth, lblPrefix, lblSuffix, _txtPrefix, _txtSuffix,
                 _pnlLivePreview,
                 lblAppearanceHeader, _btnThemeLight, _btnThemeDark,

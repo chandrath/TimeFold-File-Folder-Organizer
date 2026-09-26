@@ -420,17 +420,23 @@ namespace FileOrganizer
             {
                 newText = "📦 Git Repository (Folder)\nFolder containing a .git or .github repository structure.\n• Kept intact as a whole folder (contents are never touched).\n• In Date mode, organized into date timeline folder.\n• In Category modes, isolated into 'Git Repos'.";
             }
-            else if (subIndex == 2) // Modified Date
+            else if (subIndex == 2 || subIndex == 3) // Date Columns
             {
-                newText = !file.IsCreatedDateActive
-                    ? $"✔ Active Date (Modified)\nUsed to organize this item into target folder '{file.TargetFolder}'.\nTip: Change date source rules in Settings > Preferences"
-                    : $"Inactive Date (Modified)\nOriginal file timestamp (not used for folder placement).\nTip: Change date source rules in Settings > Preferences";
-            }
-            else if (subIndex == 3) // Created Date
-            {
-                newText = file.IsCreatedDateActive
-                    ? $"✔ Active Date (Created)\nUsed to organize this item into target folder '{file.TargetFolder}'.\nTip: Change date source rules in Settings > Preferences"
-                    : $"Inactive Date (Created)\nOriginal file timestamp (not used for folder placement).\nTip: Change date source rules in Settings > Preferences";
+                var sb = new System.Text.StringBuilder();
+                if (file.IsMediaDateActive && file.MediaDateTaken.HasValue)
+                {
+                    sb.AppendLine($"📷 Date Taken:    {file.MediaDateTaken.Value:yyyy-MM-dd HH:mm:ss}  ✔ (Active)");
+                    sb.AppendLine($"📅 Date Modified: {file.ModifiedDate:yyyy-MM-dd HH:mm:ss}");
+                    sb.Append($"📁 Date Created:  {file.CreatedDate:yyyy-MM-dd HH:mm:ss}");
+                }
+                else
+                {
+                    string modActive = !file.IsCreatedDateActive ? "  ✔ (Active)" : "";
+                    string creActive = file.IsCreatedDateActive ? "  ✔ (Active)" : "";
+                    sb.AppendLine($"📅 Date Modified: {file.ModifiedDate:yyyy-MM-dd HH:mm:ss}{modActive}");
+                    sb.Append($"📁 Date Created:  {file.CreatedDate:yyyy-MM-dd HH:mm:ss}{creActive}");
+                }
+                newText = sb.ToString();
             }
             else if (subIndex == 4) // Target Folder
             {

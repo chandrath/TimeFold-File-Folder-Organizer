@@ -404,6 +404,22 @@ namespace FileOrganizer
                     Console.WriteLine("[FAIL] Pinned-at-top sort failed: first item was not an excluded folder");
                     return 19;
                 }
+
+                // Test 6: Verify MediaDateTaken resolution in TargetFolderResolver
+                var photoItem = new Models.FileItem
+                {
+                    Name = "vacation.jpg",
+                    ModifiedDate = new DateTime(2026, 9, 20),
+                    CreatedDate = new DateTime(2026, 9, 26),
+                    MediaDateTaken = new DateTime(2021, 7, 14),
+                    IsMediaDateActive = true
+                };
+                string photoFolder = Services.TargetFolderResolver.Resolve(photoItem, Models.OrganizationMode.Date, Models.FolderFormat.YearMonth, "", "");
+                if (!photoFolder.StartsWith("2021 July", StringComparison.OrdinalIgnoreCase))
+                {
+                    Console.WriteLine($"[FAIL] MediaDateTaken test failed: expected '2021 July', got '{photoFolder}'");
+                    return 20;
+                }
             }
             finally
             {

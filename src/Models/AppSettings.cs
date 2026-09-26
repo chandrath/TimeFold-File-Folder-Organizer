@@ -33,6 +33,7 @@ namespace FileOrganizer.Models
         public bool UseSourceAsOutput { get; set; } = Config.AppConstants.DefaultUseSourceAsOutput;
         public System.Collections.Generic.List<string> ExcludedFolderNames { get; set; } = new();
         public bool EnableFolderExclusions { get; set; } = Config.AppConstants.DefaultEnableFolderExclusions;
+        public bool UseMediaDateTaken { get; set; } = Config.AppConstants.DefaultUseMediaDateTaken;
 
         public static AppSettings LoadFromFile()
         {
@@ -140,7 +141,8 @@ namespace FileOrganizer.Models
                 || CategorySuffix != other.CategorySuffix
                 || KeepHtmlCompanionsTogether != other.KeepHtmlCompanionsTogether
                 || KeepSubtitleCompanionsTogether != other.KeepSubtitleCompanionsTogether
-                || GroupGitRepositories != other.GroupGitRepositories;
+                || GroupGitRepositories != other.GroupGitRepositories
+                || UseMediaDateTaken != other.UseMediaDateTaken;
         }
     }
     

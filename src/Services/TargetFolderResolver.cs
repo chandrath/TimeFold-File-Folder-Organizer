@@ -22,7 +22,9 @@ namespace FileOrganizer.Services
             string categorySuffix = "",
             bool groupGitRepositories = true)
         {
-            DateTime itemDate = item.IsCreatedDateActive ? item.CreatedDate : item.ModifiedDate;
+            DateTime itemDate = (item.IsMediaDateActive && item.MediaDateTaken.HasValue)
+                ? item.MediaDateTaken.Value
+                : (item.IsCreatedDateActive ? item.CreatedDate : item.ModifiedDate);
             string dateFolder = AppConstants.FormatFolderDate(itemDate, folderFormat, folderPrefix, folderSuffix);
 
             string GetFormattedCategory()

@@ -257,6 +257,7 @@ namespace FileOrganizer
 
             _cmbFileDateSource.SelectedIndex = (int)AppConstants.DefaultFileDateSource;
             _cmbFolderDateSource.SelectedIndex = (int)AppConstants.DefaultFolderDateSource;
+            _chkMediaDateTaken.Checked = AppConstants.DefaultUseMediaDateTaken;
             _txtPrefix.Text = AppConstants.DefaultFolderPrefix;
             _txtSuffix.Text = AppConstants.DefaultFolderSuffix;
             SelectPreviewLimitIndex(AppConstants.DefaultMaxPreviewItems);
@@ -292,6 +293,7 @@ namespace FileOrganizer
             _settings.IgnoreSystemFiles = _chkIgnoreSystemFiles.Checked;
             _settings.FileDateSource = (DateSource)_cmbFileDateSource.SelectedIndex;
             _settings.FolderDateSource = (DateSource)_cmbFolderDateSource.SelectedIndex;
+            _settings.UseMediaDateTaken = _chkMediaDateTaken.Checked;
             _settings.ShowDetailedProgress = _chkShowProgress.Checked;
             _settings.ShowOnTop = _chkShowOnTop.Checked;
             _settings.GenerateCsvLog = _chkGenerateCsvLog.Checked;

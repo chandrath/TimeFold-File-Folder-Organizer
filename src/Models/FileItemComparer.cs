@@ -13,12 +13,14 @@ namespace FileOrganizer.Models
         {
             if (list == null || list.Count <= 1) return;
 
+            static DateTime GetEffectiveCol3Date(FileItem f) => (f.IsMediaDateActive && f.MediaDateTaken.HasValue) ? f.MediaDateTaken.Value : f.CreatedDate;
+
             Comparison<FileItem> comparison = column switch
             {
                 0 => (x, y) => string.Compare(x.Name, y.Name, StringComparison.CurrentCultureIgnoreCase),
                 1 => CompareType,
                 2 => (x, y) => DateTime.Compare(x.ModifiedDate, y.ModifiedDate),
-                3 => (x, y) => DateTime.Compare(x.CreatedDate, y.CreatedDate),
+                3 => (x, y) => DateTime.Compare(GetEffectiveCol3Date(x), GetEffectiveCol3Date(y)),
                 4 => (x, y) => string.Compare(x.TargetFolder, y.TargetFolder, StringComparison.CurrentCultureIgnoreCase),
                 5 => (x, y) => string.Compare(x.TargetFolder, y.TargetFolder, StringComparison.CurrentCultureIgnoreCase),
                 6 => CompareSize,
@@ -40,12 +42,14 @@ namespace FileOrganizer.Models
             if (x is not ListViewItem itemX || y is not ListViewItem itemY) return 0;
             if (itemX.Tag is not FileItem f1 || itemY.Tag is not FileItem f2) return 0;
 
+            static DateTime GetEffectiveCol3Date(FileItem f) => (f.IsMediaDateActive && f.MediaDateTaken.HasValue) ? f.MediaDateTaken.Value : f.CreatedDate;
+
             int result = _column switch
             {
                 0 => string.Compare(f1.Name, f2.Name, StringComparison.CurrentCultureIgnoreCase),
                 1 => CompareType(f1, f2),
                 2 => DateTime.Compare(f1.ModifiedDate, f2.ModifiedDate),
-                3 => DateTime.Compare(f1.CreatedDate, f2.CreatedDate),
+                3 => DateTime.Compare(GetEffectiveCol3Date(f1), GetEffectiveCol3Date(f2)),
                 4 => string.Compare(f1.TargetFolder, f2.TargetFolder, StringComparison.CurrentCultureIgnoreCase),
                 5 => string.Compare(f1.TargetFolder, f2.TargetFolder, StringComparison.CurrentCultureIgnoreCase),
                 6 => CompareSize(f1, f2),
