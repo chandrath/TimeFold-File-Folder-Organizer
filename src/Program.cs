@@ -316,6 +316,74 @@ namespace FileOrganizer
                 try { if (System.IO.Directory.Exists(cancelTestDir)) System.IO.Directory.Delete(cancelTestDir, true); } catch { }
             }
 
+            // Verify Folder Exclusion and Checkbox Selection Behavior
+            string exclTestDir = System.IO.Path.Combine(System.IO.Path.GetTempPath(), "TimeFold_ExclTest_" + Guid.NewGuid().ToString("N"));
+            try
+            {
+                System.IO.Directory.CreateDirectory(exclTestDir);
+                string myFilesDir = System.IO.Path.Combine(exclTestDir, "MYFILES");
+                System.IO.Directory.CreateDirectory(myFilesDir);
+                System.IO.File.WriteAllText(System.IO.Path.Combine(myFilesDir, "secret.txt"), "data");
+
+                string normalDir = System.IO.Path.Combine(exclTestDir, "Projects");
+                System.IO.Directory.CreateDirectory(normalDir);
+
+                string file1 = System.IO.Path.Combine(exclTestDir, "doc.pdf");
+                System.IO.File.WriteAllText(file1, "pdf content");
+
+                string file2 = System.IO.Path.Combine(exclTestDir, "notes.txt");
+                System.IO.File.WriteAllText(file2, "notes content");
+
+                var exclOrganizer = new Services.FileOrganizerService(
+                    System.IO.Path.Combine(exclTestDir, "TimeFold.exe"), exclTestDir, exclTestDir);
+                exclOrganizer.ApplyNamingSettings(
+                    Models.FolderFormat.YearMonth, "", "", false,
+                    Models.OrganizationMode.Category, createSortedSubfolder: false);
+
+                // Test 1: Scan with exclusion rule with whitespace & case difference
+                var rules = new List<string> { "  myfiles  " };
+                var scanned = exclOrganizer.ScanFiles(includeTopLevelFolders: true, excludedFolders: rules, enableFolderExclusions: true);
+
+                var exclItem = scanned.FirstOrDefault(f => f.Name.Equals("MYFILES", StringComparison.OrdinalIgnoreCase));
+                if (exclItem == null || !exclItem.IsExcludedByRule || exclItem.IsSelected || exclItem.TargetFolder != "— (Preserved untouched)")
+                {
+                    Console.WriteLine("[FAIL] Exclusion rule test failed: MYFILES was not excluded or target was wrong");
+                    return 13;
+                }
+
+                // Test 2: Uncheck one file (notes.txt)
+                var unselItem = scanned.FirstOrDefault(f => f.Name == "notes.txt");
+                if (unselItem != null) unselItem.IsSelected = false;
+
+                // Test 3: Organize files and verify MYFILES and notes.txt remain untouched at source
+                var res = exclOrganizer.OrganizeFilesAsync(scanned, null!, System.Threading.CancellationToken.None, false).GetAwaiter().GetResult();
+
+                if (!System.IO.Directory.Exists(myFilesDir) || !System.IO.File.Exists(System.IO.Path.Combine(myFilesDir, "secret.txt")))
+                {
+                    Console.WriteLine("[FAIL] Exclusion test failed: MYFILES was moved or altered");
+                    return 14;
+                }
+
+                if (!System.IO.File.Exists(file2))
+                {
+                    Console.WriteLine("[FAIL] Unchecked item test failed: unselected notes.txt was moved");
+                    return 15;
+                }
+
+                // Test 4: Temporary toggle disabled (enableFolderExclusions: false)
+                var scanDisabled = exclOrganizer.ScanFiles(includeTopLevelFolders: true, excludedFolders: rules, enableFolderExclusions: false);
+                var toggledItem = scanDisabled.FirstOrDefault(f => f.Name.Equals("MYFILES", StringComparison.OrdinalIgnoreCase));
+                if (toggledItem == null || toggledItem.IsExcludedByRule || !toggledItem.IsSelected)
+                {
+                    Console.WriteLine("[FAIL] Exclusion toggle test failed: MYFILES should be active when toggle is false");
+                    return 16;
+                }
+            }
+            finally
+            {
+                try { if (System.IO.Directory.Exists(exclTestDir)) System.IO.Directory.Delete(exclTestDir, true); } catch { }
+            }
+
             Console.WriteLine("[PASS] All category, subtitle pairing, prefix/suffix, Undo, and Folder Organization tests passed!");
             return 0;
         }

@@ -373,21 +373,18 @@ namespace FileOrganizer
             if (_lblPreviewHeader == null) return;
             if (total == 0)
             {
-                _lblPreviewHeader.Text = "Organization Plan";
+                _lblPreviewHeader.Text = "Live Preview";
                 _toolTip?.SetToolTip(_lblPreviewHeader, null);
                 return;
             }
 
-            if (displayed < total)
-            {
-                _lblPreviewHeader.Text = $"Organization Plan ({displayed:N0} / {total:N0})";
-                _toolTip?.SetToolTip(_lblPreviewHeader, $"Showing {displayed:N0} of {total:N0} items loaded.\nTip: Change default preview limit in Settings > Preferences");
-            }
-            else
-            {
-                _lblPreviewHeader.Text = $"Organization Plan ({total:N0})";
-                _toolTip?.SetToolTip(_lblPreviewHeader, $"All {total:N0} items loaded.\nTip: Change default preview limit in Settings > Preferences");
-            }
+            int selected = _filesToOrganize.Count(f => f.IsSelected && !f.IsExcludedByRule);
+            string countText = displayed < total
+                ? $"{selected:N0} selected ({displayed:N0} of {total:N0} loaded)"
+                : (selected == total ? $"{total:N0} items" : $"{selected:N0} of {total:N0} selected");
+
+            _lblPreviewHeader.Text = $"Live Preview ({countText})";
+            _toolTip?.SetToolTip(_lblPreviewHeader, $"Showing {displayed:N0} of {total:N0} items ({selected:N0} selected for organization).\nTip: Check/uncheck boxes to include/exclude specific items.");
         }
 
         private static string FormatFileSize(long bytes)

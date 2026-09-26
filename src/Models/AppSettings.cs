@@ -31,6 +31,8 @@ namespace FileOrganizer.Models
         public int MaxPreviewItems { get; set; } = Config.AppConstants.DefaultMaxPreviewItems;
         public bool CreateSortedSubfolder { get; set; } = Config.AppConstants.DefaultCreateSortedSubfolder;
         public bool UseSourceAsOutput { get; set; } = Config.AppConstants.DefaultUseSourceAsOutput;
+        public System.Collections.Generic.List<string> ExcludedFolderNames { get; set; } = new();
+        public bool EnableFolderExclusions { get; set; } = Config.AppConstants.DefaultEnableFolderExclusions;
 
         public static AppSettings LoadFromFile()
         {

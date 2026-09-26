@@ -106,7 +106,7 @@ namespace FileOrganizer
             try
             {
                 _currentPreviewLimit = _settings.MaxPreviewItems > 0 ? _settings.MaxPreviewItems : AppConstants.DefaultMaxPreviewItems;
-                _filesToOrganize = _organizerService.ScanFiles(_settings.IncludeTopLevelFolders, _settings.IgnoreSystemFiles, _settings.FileDateSource, _settings.FolderDateSource);
+                _filesToOrganize = _organizerService.ScanFiles(_settings.IncludeTopLevelFolders, _settings.IgnoreSystemFiles, _settings.FileDateSource, _settings.FolderDateSource, _settings.ExcludedFolderNames, _settings.EnableFolderExclusions);
                 _sortColumn = 2;
                 _sortAscending = false;
                 UpdateColumnHeaderSortIndicators();
@@ -121,134 +121,73 @@ namespace FileOrganizer
             }
         }
 
-        private int _sortColumn = 2;
-        private bool _sortAscending = false;
-        private static readonly string[] ColumnBaseHeaders = { "File Name", "Type", "Modified Date", "Created Date", "📁 Target Folder", "Status", "Size" };
-
         private void UpdateFileList()
         {
-            _lstFiles.ListViewItemSorter = null;
-            _lstFiles.Items.Clear();
-
-            var palette = AppTheme.GetPalette(_settings.DarkMode);
-            var boldFont = GetBoldListFont();
-
-            int maxPreview = _currentPreviewLimit > 0 ? _currentPreviewLimit : (_settings.MaxPreviewItems > 0 ? _settings.MaxPreviewItems : AppConstants.DefaultMaxPreviewItems);
-            var displayedFiles = _filesToOrganize.Take(maxPreview).ToList();
-
-            foreach (var file in displayedFiles)
-            {
-                var item = new ListViewItem(file.Name) { UseItemStyleForSubItems = false };
-                item.SubItems.Add(file.TypeDisplay);
-
-                string modText = (file.IsCreatedDateActive ? "   " : "✔ ") + file.ModifiedDate.ToString("yyyy-MM-dd HH:mm");
-                string creText = (file.IsCreatedDateActive ? "✔ " : "   ") + file.CreatedDate.ToString("yyyy-MM-dd HH:mm");
-
-                var subMod = item.SubItems.Add(modText);
-                subMod.ForeColor = file.IsCreatedDateActive ? palette.ListDateMuted : palette.ListDateActive;
-                if (!file.IsCreatedDateActive) subMod.Font = boldFont;
-
-                var subCre = item.SubItems.Add(creText);
-                subCre.ForeColor = file.IsCreatedDateActive ? palette.ListDateActive : palette.ListDateMuted;
-                if (file.IsCreatedDateActive) subCre.Font = boldFont;
-
-                var subTarget = item.SubItems.Add($"📁 {file.TargetFolder}");
-                subTarget.ForeColor = palette.ListTargetFolder;
-                subTarget.Font = boldFont;
-
-                var conflict = _currentConflicts.FirstOrDefault(c => c.Item == file);
-                var subStatus = item.SubItems.Add(conflict?.ShortStatus ?? "✓ Ready");
-                subStatus.ForeColor = conflict != null
-                    ? (_settings.DarkMode ? Color.FromArgb(248, 113, 113) : Color.FromArgb(220, 38, 38))
-                    : (_settings.DarkMode ? Color.FromArgb(52, 211, 153) : Color.FromArgb(22, 101, 52));
-                if (conflict != null) subStatus.Font = boldFont;
-
-                item.SubItems.Add(file.IsDirectory ? "—" : FormatFileSize(file.Size));
-                item.Tag = file;
-                _lstFiles.Items.Add(item);
-            }
-
-            int total = _filesToOrganize.Count;
-            int remaining = total - displayedFiles.Count;
-
-            if (remaining > 0)
-            {
-                var item = new ListViewItem($"➕ Load 1,000 more files... ({remaining:N0} remaining)")
-                {
-                    ForeColor = _settings.DarkMode ? Color.FromArgb(147, 197, 253) : Color.FromArgb(37, 99, 235)
-                };
-                item.Tag = "LOAD_MORE";
-                _lstFiles.Items.Add(item);
-
-                if (_btnLoadMore != null)
-                {
-                    _btnLoadMore.Text = $"➕ Load 1,000 More ({remaining:N0} remaining)";
-                    _pnlLoadMore.Visible = true;
-                    _pnlLoadMore.SendToBack();
-                }
-            }
-            else if (_pnlLoadMore != null) _pnlLoadMore.Visible = false;
-
-            UpdatePreviewHeaderCount(displayedFiles.Count, total);
-        }
-
-        private void LstFiles_ColumnClick(object? sender, ColumnClickEventArgs e)
-        {
-            if (_sortColumn == e.Column) _sortAscending = !_sortAscending;
-            else { _sortColumn = e.Column; _sortAscending = (e.Column != 2 && e.Column != 3 && e.Column != 5); }
-
-            UpdateColumnHeaderSortIndicators();
-            FileItemComparer.Sort(_filesToOrganize, _sortColumn, _sortAscending);
-            UpdateFileList();
-        }
-
-        private void UpdateColumnHeaderSortIndicators()
-        {
-            for (int i = 0; i < _lstFiles.Columns.Count && i < ColumnBaseHeaders.Length; i++)
-                _lstFiles.Columns[i].Text = (i == _sortColumn) ? $"{ColumnBaseHeaders[i]} {(_sortAscending ? "▲" : "▼")}" : ColumnBaseHeaders[i];
-        }
-
-        private bool _isAdjustingColumns;
-
-        private void AutoFitColumns()
-        {
-            if (_isAdjustingColumns || _lstFiles == null || _lstFiles.Columns.Count < 7 || _filesToOrganize.Count == 0) return;
-            _isAdjustingColumns = true;
-            _lstFiles.BeginUpdate();
+            _isUpdatingList = true;
             try
             {
+                _lstFiles.ListViewItemSorter = null;
+                _lstFiles.Items.Clear();
+
+                var palette = AppTheme.GetPalette(_settings.DarkMode);
                 var boldFont = GetBoldListFont();
-                _lstFiles.Columns[1].AutoResize(ColumnHeaderAutoResizeStyle.ColumnContent);
-                _lstFiles.Columns[1].Width = Math.Max(_lstFiles.Columns[1].Width + 8, TextRenderer.MeasureText(ColumnBaseHeaders[1], _lstFiles.Font).Width + 14);
 
-                _lstFiles.Columns[2].AutoResize(ColumnHeaderAutoResizeStyle.ColumnContent);
-                _lstFiles.Columns[2].Width = Math.Max(_lstFiles.Columns[2].Width + 10, TextRenderer.MeasureText(ColumnBaseHeaders[2] + " ▼", _lstFiles.Font).Width + 14);
+                int maxPreview = _currentPreviewLimit > 0 ? _currentPreviewLimit : (_settings.MaxPreviewItems > 0 ? _settings.MaxPreviewItems : AppConstants.DefaultMaxPreviewItems);
+                var displayedFiles = _filesToOrganize.Take(maxPreview).ToList();
 
-                _lstFiles.Columns[3].AutoResize(ColumnHeaderAutoResizeStyle.ColumnContent);
-                _lstFiles.Columns[3].Width = Math.Max(_lstFiles.Columns[3].Width + 10, TextRenderer.MeasureText(ColumnBaseHeaders[3], _lstFiles.Font).Width + 14);
-
-                int maxTargetW = TextRenderer.MeasureText(ColumnBaseHeaders[4], _lstFiles.Font).Width + 16;
-                foreach (var f in _filesToOrganize)
+                foreach (var file in displayedFiles)
                 {
-                    int w = TextRenderer.MeasureText($"📁 {f.TargetFolder}", boldFont).Width + 16;
-                    if (w > maxTargetW) maxTargetW = w;
+                    var item = new ListViewItem(file.Name) { UseItemStyleForSubItems = false, Checked = file.IsSelected && !file.IsExcludedByRule };
+                    item.SubItems.Add(file.TypeDisplay);
+
+                    string modText = (file.IsCreatedDateActive ? "   " : "✔ ") + file.ModifiedDate.ToString("yyyy-MM-dd HH:mm");
+                    string creText = (file.IsCreatedDateActive ? "✔ " : "   ") + file.CreatedDate.ToString("yyyy-MM-dd HH:mm");
+
+                    var subMod = item.SubItems.Add(modText);
+                    subMod.ForeColor = file.IsCreatedDateActive ? palette.ListDateMuted : palette.ListDateActive;
+                    if (!file.IsCreatedDateActive) subMod.Font = boldFont;
+
+                    var subCre = item.SubItems.Add(creText);
+                    subCre.ForeColor = file.IsCreatedDateActive ? palette.ListDateActive : palette.ListDateMuted;
+                    if (file.IsCreatedDateActive) subCre.Font = boldFont;
+
+                    var subTarget = item.SubItems.Add($"📁 {file.TargetFolder}");
+                    subTarget.ForeColor = palette.ListTargetFolder;
+                    subTarget.Font = boldFont;
+
+                    item.SubItems.Add(""); // Status column placeholder
+                    item.SubItems.Add(file.IsDirectory ? "—" : FormatFileSize(file.Size));
+                    item.Tag = file;
+                    UpdateItemStatusDisplay(item, file, palette);
+                    _lstFiles.Items.Add(item);
                 }
-                _lstFiles.Columns[4].Width = Math.Max(maxTargetW, 90);
 
-                _lstFiles.Columns[5].AutoResize(ColumnHeaderAutoResizeStyle.ColumnContent);
-                _lstFiles.Columns[5].Width = Math.Max(_lstFiles.Columns[5].Width + 10, TextRenderer.MeasureText(ColumnBaseHeaders[5], _lstFiles.Font).Width + 16);
+                int total = _filesToOrganize.Count;
+                int remaining = total - displayedFiles.Count;
 
-                _lstFiles.Columns[6].AutoResize(ColumnHeaderAutoResizeStyle.ColumnContent);
-                _lstFiles.Columns[6].Width = Math.Max(_lstFiles.Columns[6].Width + 8, TextRenderer.MeasureText(ColumnBaseHeaders[6], _lstFiles.Font).Width + 14);
+                if (remaining > 0)
+                {
+                    var item = new ListViewItem($"➕ Load 1,000 more files... ({remaining:N0} remaining)")
+                    {
+                        ForeColor = _settings.DarkMode ? Color.FromArgb(147, 197, 253) : Color.FromArgb(37, 99, 235)
+                    };
+                    item.Tag = "LOAD_MORE";
+                    _lstFiles.Items.Add(item);
 
-                int otherW = _lstFiles.Columns[1].Width + _lstFiles.Columns[2].Width + _lstFiles.Columns[3].Width + _lstFiles.Columns[4].Width + _lstFiles.Columns[5].Width + _lstFiles.Columns[6].Width;
-                int availW = _lstFiles.ClientSize.Width - SystemInformation.VerticalScrollBarWidth;
-                _lstFiles.Columns[0].Width = Math.Max(180, availW - otherW);
+                    if (_btnLoadMore != null)
+                    {
+                        _btnLoadMore.Text = $"➕ Load 1,000 More ({remaining:N0} remaining)";
+                        _pnlLoadMore.Visible = true;
+                        _pnlLoadMore.SendToBack();
+                    }
+                }
+                else if (_pnlLoadMore != null) _pnlLoadMore.Visible = false;
+
+                UpdatePreviewHeaderCount(displayedFiles.Count, total);
             }
             finally
             {
-                _lstFiles.EndUpdate();
-                _isAdjustingColumns = false;
+                _isUpdatingList = false;
             }
         }
 
@@ -268,23 +207,32 @@ namespace FileOrganizer
             if (_pnlEmptyState != null) _pnlEmptyState.Visible = false;
             _lstFiles.Visible = true;
 
-            var grouped = _organizerService?.GroupByMonthYear(_filesToOrganize) ?? new Dictionary<string, List<FileItem>>();
-            var fileCount = _filesToOrganize.Count(f => !f.IsDirectory);
-            var folderCount = _filesToOrganize.Count(f => f.IsDirectory);
-            int total = _filesToOrganize.Count;
+            var selectedFiles = _filesToOrganize.Where(f => f.IsSelected && !f.IsExcludedByRule).ToList();
+            int selCount = selectedFiles.Count, excludedCount = _filesToOrganize.Count(f => f.IsExcludedByRule), unselCount = _filesToOrganize.Count(f => !f.IsSelected && !f.IsExcludedByRule);
+
+            if (selCount == 0)
+            {
+                _lblSummary.Font = new Font(_lblSummary.Font, FontStyle.Regular);
+                _lblSummary.ForeColor = _settings.DarkMode ? Color.FromArgb(251, 191, 36) : Color.FromArgb(217, 119, 6);
+                _lblSummary.Text = "⚠ No items selected to organize (all items are unchecked or excluded).";
+                _btnStart.Enabled = false;
+                return;
+            }
+
+            var grouped = _organizerService?.GroupByMonthYear(selectedFiles) ?? new Dictionary<string, List<FileItem>>();
+            var fileCount = selectedFiles.Count(f => !f.IsDirectory);
+            var folderCount = selectedFiles.Count(f => f.IsDirectory);
 
             _lblSummary.Font = new Font(_lblSummary.Font, FontStyle.Bold);
             _lblSummary.ForeColor = _settings.DarkMode ? Color.FromArgb(52, 211, 153) : Color.FromArgb(4, 120, 87);
             string label = _settings.OrgMode == OrganizationMode.Category ? "category folder(s)" : (_settings.OrgMode == OrganizationMode.Extension ? "extension folder(s)" : (_settings.OrgMode == OrganizationMode.Date ? "date folder(s)" : "folder(s)"));
-            _lblSummary.Text = folderCount > 0
-                ? $"✔ Ready: {total:N0} items ({fileCount:N0} files, {folderCount:N0} folders) → {grouped.Count:N0} target {label}"
-                : $"✔ Ready: {fileCount:N0} file(s) → {grouped.Count:N0} target {label}";
+            string baseSummary = folderCount > 0
+                ? $"✔ Ready: {selCount:N0} selected ({fileCount:N0} files, {folderCount:N0} folders) → {grouped.Count:N0} target {label}"
+                : $"✔ Ready: {selCount:N0} selected file(s) → {grouped.Count:N0} target {label}";
+            if (excludedCount > 0 || unselCount > 0) baseSummary += $" ({excludedCount + unselCount:N0} excluded/skipped)";
+            _lblSummary.Text = baseSummary;
             _btnStart.Enabled = true;
-            if (_shouldAutoFitColumns)
-            {
-                _shouldAutoFitColumns = false;
-                AutoFitColumns();
-            }
+            if (_shouldAutoFitColumns) { _shouldAutoFitColumns = false; AutoFitColumns(); }
         }
 
         private void ShowConflictDialog()
@@ -326,12 +274,7 @@ namespace FileOrganizer
             }
 
             var grouped = _organizerService.GroupByMonthYear(_filesToOrganize);
-            if (grouped.Count == 0)
-            {
-                _pnlTimestampWarning.Visible = false;
-                _pnlCenterSection.PerformLayout();
-                return;
-            }
+            if (grouped.Count == 0) { _pnlTimestampWarning.Visible = false; _pnlCenterSection.PerformLayout(); return; }
 
             var dominant = grouped.OrderByDescending(g => g.Value.Count).First();
             double ratio = (double)dominant.Value.Count / _filesToOrganize.Count;
@@ -363,6 +306,13 @@ namespace FileOrganizer
             LoadPreview();
             if (_filesToOrganize.Count == 0) return;
 
+            var itemsToOrganize = _filesToOrganize.Where(f => f.IsSelected && !f.IsExcludedByRule).ToList();
+            if (itemsToOrganize.Count == 0)
+            {
+                MessageBox.Show("No items are selected to organize. Please check at least one item in the preview list.", "No Items Selected", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                return;
+            }
+
             ConflictResolutionStrategy conflictStrategy = ConflictResolutionStrategy.AutoRename;
             if (_currentConflicts.Count > 0)
             {
@@ -379,9 +329,14 @@ namespace FileOrganizer
                 ? AppConstants.GetSortedFolderPreviewPath(outputDir, _settings.Use24HourTimestamp)
                 : outputDir;
             string destDesc = _settings.CreateSortedSubfolder ? "a Sorted folder in the output location" : "the output location directly";
+            string skipNotice = _filesToOrganize.Count > itemsToOrganize.Count
+                ? $"\n({_filesToOrganize.Count - itemsToOrganize.Count:N0} unchecked/excluded item(s) will remain untouched at source)\n"
+                : "";
+
             var result = MessageBox.Show(
-                $"You are about to organize {_filesToOrganize.Count} item(s) into date-based folders.\n\n" +
-                $"Source: {_txtSourceFolder.Text}\n" +
+                $"You are about to organize {itemsToOrganize.Count:N0} selected item(s) into date-based folders.\n" +
+                skipNotice +
+                $"\nSource: {_txtSourceFolder.Text}\n" +
                 $"Output: {previewOutputDir}" +
                 warningExtra +
                 $"\n\nThis will move files from the source location to {destDesc}.\n\nContinue?",

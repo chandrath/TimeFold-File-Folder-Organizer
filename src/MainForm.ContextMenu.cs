@@ -21,14 +21,26 @@ namespace FileOrganizer
         private ToolStripMenuItem _menuItemRename = null!;
         private ToolStripMenuItem _menuItemDelete = null!;
         private ToolStripMenuItem _menuItemAutoFit = null!, _menuItemToggleStatus = null!;
+        private ToolStripMenuItem _menuItemSelectAll = null!, _menuItemDeselectAll = null!, _menuItemInvertSelection = null!, _menuItemExcludeFolder = null!;
         private ToolStripSeparator _sepTargetFolder = null!;
         private ToolStripSeparator _sepFileOps = null!;
         private ToolStripSeparator _sepAutoFit = null!;
+        private ToolStripSeparator _sepSelection = null!;
         private Point _lastRightClickPoint;
 
         private void InitializeContextMenu()
         {
             _ctxFileMenu = new ContextMenuStrip { ShowImageMargin = false };
+
+            _menuItemSelectAll = new ToolStripMenuItem("☑ Select All", null, (s, e) => SetAllItemsSelected(true));
+            _menuItemDeselectAll = new ToolStripMenuItem("☐ Deselect All", null, (s, e) => SetAllItemsSelected(false));
+            _menuItemInvertSelection = new ToolStripMenuItem("🔀 Invert Selection", null, (s, e) => InvertItemSelection());
+            _menuItemExcludeFolder = new ToolStripMenuItem("🛡 Exclude Folder ('Never Touch')...", null, (s, e) =>
+            {
+                if (_lstFiles.SelectedItems.Count > 0 && _lstFiles.SelectedItems[0].Tag is FileItem file && file.IsDirectory)
+                    AddFolderExclusionRule(file.Name);
+            });
+            _sepSelection = new ToolStripSeparator();
 
             _menuItemOpen = new ToolStripMenuItem("📄 Open", null, (s, e) => OpenSelectedFile());
             _menuItemExplorer = new ToolStripMenuItem("📂 Open in File Explorer", null, (s, e) => OpenSelectedInExplorer());
@@ -47,6 +59,11 @@ namespace FileOrganizer
 
             _ctxFileMenu.Items.AddRange(new ToolStripItem[]
             {
+                _menuItemSelectAll,
+                _menuItemDeselectAll,
+                _menuItemInvertSelection,
+                _sepSelection,
+                _menuItemExcludeFolder,
                 _menuItemAutoFit,
                 _menuItemToggleStatus,
                 _sepAutoFit,
@@ -77,6 +94,10 @@ namespace FileOrganizer
                 {
                     if (_filesToOrganize.Count == 0) { e.Cancel = true; return; }
                     foreach (ToolStripItem it in _ctxFileMenu.Items) it.Visible = false;
+                    _menuItemSelectAll.Visible = true;
+                    _menuItemDeselectAll.Visible = true;
+                    _menuItemInvertSelection.Visible = true;
+                    _sepSelection.Visible = true;
                     _menuItemAutoFit.Visible = true;
                     _menuItemToggleStatus.Visible = true;
                     return;
@@ -88,10 +109,22 @@ namespace FileOrganizer
                     hit.Item.Selected = true;
                 }
 
+                _menuItemSelectAll.Visible = true;
+                _menuItemDeselectAll.Visible = true;
+                _menuItemInvertSelection.Visible = true;
+                _sepSelection.Visible = true;
+
                 var selItem = hit.Item.Tag as FileItem;
                 bool isFileWithExt = selItem != null && !selItem.IsDirectory && !string.IsNullOrEmpty(selItem.Extension);
+                bool isDirectory = selItem != null && selItem.IsDirectory;
                 int colIndex = (hit.SubItem != null) ? hit.Item.SubItems.IndexOf(hit.SubItem) : 0;
                 bool isTargetFolderCell = (colIndex == 4);
+
+                _menuItemExcludeFolder.Visible = isDirectory && !selItem!.IsExcludedByRule;
+                if (_menuItemExcludeFolder.Visible)
+                {
+                    _menuItemExcludeFolder.Text = $"🛡 Exclude folder '{selItem!.Name}' ('Never Touch')...";
+                }
 
                 string currentCategory = isFileWithExt ? FileTypeService.Instance.GetCategory(selItem!.Extension) : "";
                 string originalFactoryName = "";
@@ -100,6 +133,7 @@ namespace FileOrganizer
                 if (isTargetFolderCell && isFileWithExt)
                 {
                     // Target Folder cell right-click: focus on category & destination actions
+                    _menuItemExcludeFolder.Visible = false;
                     _menuItemRenameCategory.Visible = true;
                     _menuItemRenameCategory.Text = $"🏷️ Rename Category '{currentCategory}'...";
 
@@ -127,7 +161,7 @@ namespace FileOrganizer
                     _menuItemExplorer.Visible = true;
                     _menuItemCopy.Visible = true;
                     _sepFileOps.Visible = true;
-                    _menuItemRename.Visible = true;
+                    _menuItemRename.Visible = !isDirectory;
                     _menuItemDelete.Visible = true;
 
                     _sepTargetFolder.Visible = isFileWithExt;

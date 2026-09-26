@@ -137,7 +137,15 @@ namespace FileOrganizer
                 ReapplyOrganizationMode();
             }) { Checked = _settings.GroupGitRepositories, CheckOnClick = true };
 
-            menu.Items.AddRange(new ToolStripItem[] { hdr, new ToolStripSeparator(), itemGit, new ToolStripSeparator() });
+            int ruleCount = _settings.ExcludedFolderNames?.Count ?? 0;
+            var itemExclusions = new ToolStripMenuItem("🛡 Exclude / Ignore Folders ('Never Touch')...", null, (s, a) => ShowFolderExclusionDialog());
+            var itemToggleExclusions = new ToolStripMenuItem($"Enable Folder Exclusion Rules ({ruleCount} defined)", null, (s, a) => ToggleFolderExclusions())
+            {
+                Checked = _settings.EnableFolderExclusions,
+                CheckOnClick = true
+            };
+
+            menu.Items.AddRange(new ToolStripItem[] { hdr, new ToolStripSeparator(), itemGit, new ToolStripSeparator(), itemExclusions, itemToggleExclusions, new ToolStripSeparator() });
 
             bool isCategoryMode = _settings.OrgMode == OrganizationMode.Category
                 || _settings.OrgMode == OrganizationMode.CategoryAndDate

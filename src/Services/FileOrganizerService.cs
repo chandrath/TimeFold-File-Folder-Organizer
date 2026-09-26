@@ -34,7 +34,10 @@ namespace FileOrganizer.Services
         public string OutputDirectory { get => _outputDirectory; set => _outputDirectory = value; }
         public OrganizationResult? LastResult { get; private set; }
 
-        public List<FileItem> ScanFiles(bool includeTopLevelFolders, bool ignoreSystemFiles = true, DateSource fileDateSource = DateSource.Modified, DateSource folderDateSource = DateSource.Modified)
+        public List<FileItem> ScanFiles(
+            bool includeTopLevelFolders, bool ignoreSystemFiles = true,
+            DateSource fileDateSource = DateSource.Modified, DateSource folderDateSource = DateSource.Modified,
+            IEnumerable<string>? excludedFolders = null, bool enableFolderExclusions = true)
         {
             var files = new List<FileItem>();
             var executableName = Path.GetFileName(_executablePath);
@@ -50,59 +53,34 @@ namespace FileOrganizer.Services
                     {
                         var itemName = Path.GetFileName(itemPath);
 
-                        // Exclude executable itself
-                        if (itemName.Equals(executableName, StringComparison.OrdinalIgnoreCase))
-                            continue;
-
-                        // Exclude application's own CSV audit logs (preserve all user .csv data files)
+                        if (itemName.Equals(executableName, StringComparison.OrdinalIgnoreCase)) continue;
                         if ((itemName.StartsWith(AppConstants.CsvLogPrefix, StringComparison.OrdinalIgnoreCase) ||
                              itemName.StartsWith(AppConstants.LegacyCsvLogPrefix, StringComparison.OrdinalIgnoreCase)) &&
-                            Path.GetExtension(itemPath).Equals(".csv", StringComparison.OrdinalIgnoreCase))
-                        {
-                            continue;
-                        }
+                            Path.GetExtension(itemPath).Equals(".csv", StringComparison.OrdinalIgnoreCase)) continue;
+                        if (itemName.StartsWith(AppConstants.SortedFolderPrefix, StringComparison.OrdinalIgnoreCase)) continue;
 
-                        // Exclude application's own Sorted output folders
-                        if (itemName.StartsWith(AppConstants.SortedFolderPrefix, StringComparison.OrdinalIgnoreCase))
-                        {
-                            continue;
-                        }
-
-                        // Exclude output directory itself if inside working directory
                         string normalizedItem = Path.GetFullPath(itemPath).TrimEnd(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar);
-                        if (string.Equals(normalizedItem, normalizedOutput, StringComparison.OrdinalIgnoreCase))
-                        {
-                            continue;
-                        }
+                        if (string.Equals(normalizedItem, normalizedOutput, StringComparison.OrdinalIgnoreCase)) continue;
 
-                        // Ignore known Windows system files and protected directories
                         if (ignoreSystemFiles)
                         {
-                            if (AppConstants.KnownSystemFilesAndDirs.Contains(itemName))
-                                continue;
-
+                            if (AppConstants.KnownSystemFilesAndDirs.Contains(itemName)) continue;
                             try
                             {
                                 var attributes = File.GetAttributes(itemPath);
-                                if ((attributes & FileAttributes.System) != 0)
-                                    continue;
+                                if ((attributes & FileAttributes.System) != 0) continue;
                             }
-                            catch
-                            {
-                                // If attributes cannot be read due to lock/permissions, skip
-                                continue;
-                            }
+                            catch { continue; }
                         }
 
                         bool isDirectory = Directory.Exists(itemPath);
-
-                        // Skip directories if not including top-level folders
-                        if (isDirectory && !includeTopLevelFolders)
-                            continue;
+                        if (isDirectory && !includeTopLevelFolders) continue;
 
                         if (isDirectory)
                         {
                             var dirInfo = new DirectoryInfo(itemPath);
+                            bool isExcluded = enableFolderExclusions && excludedFolders != null &&
+                                excludedFolders.Any(ef => string.Equals(ef.Trim(), dirInfo.Name, StringComparison.OrdinalIgnoreCase));
                             var (itemDate, isCreatedActive) = ResolveItemDate(dirInfo.LastWriteTime, dirInfo.CreationTime, folderDateSource);
                             var fileItem = new FileItem
                             {
@@ -113,9 +91,11 @@ namespace FileOrganizer.Services
                                 ModifiedDate = dirInfo.LastWriteTime,
                                 CreatedDate = dirInfo.CreationTime,
                                 IsCreatedDateActive = isCreatedActive,
-                                Size = 0
+                                Size = 0,
+                                IsExcludedByRule = isExcluded,
+                                IsSelected = !isExcluded
                             };
-                            fileItem.TargetFolder = TargetFolderResolver.Resolve(fileItem, _organizationMode, _folderFormat, _folderPrefix, _folderSuffix, _categoryPrefix, _categorySuffix, _groupGitRepositories);
+                            fileItem.TargetFolder = isExcluded ? "— (Preserved untouched)" : TargetFolderResolver.Resolve(fileItem, _organizationMode, _folderFormat, _folderPrefix, _folderSuffix, _categoryPrefix, _categorySuffix, _groupGitRepositories);
                             files.Add(fileItem);
                         }
                         else if (File.Exists(itemPath))
@@ -220,6 +200,18 @@ namespace FileOrganizer.Services
                 foreach (var group in grouped)
                 {
                     if (cancellationToken.IsCancellationRequested) break;
+                    if (string.Equals(group.Key, "— (Preserved untouched)", StringComparison.OrdinalIgnoreCase))
+                    {
+                        foreach (var file in group.Value)
+                        {
+                            file.DestinationPath = file.FullPath;
+                            file.ErrorMessage = string.Empty;
+                            processedFiles.Add(file);
+                            currentIndex++;
+                            progress?.Report((currentIndex, result.TotalFiles, $"{file.Name} (Excluded by rule)"));
+                        }
+                        continue;
+                    }
 
                     string effectiveGroupKey = group.Key;
                     string topSegment = effectiveGroupKey.Split(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar)[0];
@@ -241,13 +233,14 @@ namespace FileOrganizer.Services
                     {
                         if (cancellationToken.IsCancellationRequested) break;
 
-                        if (file.IsDirectory && remappedTopSegments.ContainsKey(file.Name))
+                        if (!file.IsSelected || file.IsExcludedByRule || (file.IsDirectory && remappedTopSegments.ContainsKey(file.Name)))
                         {
                             file.DestinationPath = file.FullPath;
                             file.ErrorMessage = string.Empty;
                             processedFiles.Add(file);
                             currentIndex++;
-                            progress?.Report((currentIndex, result.TotalFiles, $"{file.Name} (Preserved untouched)"));
+                            string reason = file.IsExcludedByRule ? "Excluded by rule" : (!file.IsSelected ? "Unchecked" : "Preserved untouched");
+                            progress?.Report((currentIndex, result.TotalFiles, $"{file.Name} ({reason})"));
                             continue;
                         }
 

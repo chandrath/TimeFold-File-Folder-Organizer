@@ -168,6 +168,7 @@ namespace FileOrganizer.Config
         public const bool DefaultHasSeenWelcomeTour = false;
         public const bool DefaultCreateSortedSubfolder = true;
         public const bool DefaultUseSourceAsOutput = true;
+        public const bool DefaultEnableFolderExclusions = true;
         public const int MaxRecentFolders = 5;
         public const FolderFormat DefaultFolderFormat = FolderFormat.YearMonth;
         public const string DefaultFolderPrefix = "";

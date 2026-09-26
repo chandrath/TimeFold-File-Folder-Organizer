@@ -58,6 +58,10 @@ namespace FileOrganizer.Services
             foreach (var group in grouped)
             {
                 string groupKey = group.Key;
+                if (string.Equals(groupKey, "— (Preserved untouched)", StringComparison.OrdinalIgnoreCase)) continue;
+                var activeItems = group.Value.Where(f => f.IsSelected && !f.IsExcludedByRule).ToList();
+                if (activeItems.Count == 0) continue;
+
                 string groupTargetDir = Path.Combine(targetRoot, groupKey);
                 string topSegment = groupKey.Split(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar)[0];
 
@@ -66,7 +70,7 @@ namespace FileOrganizer.Services
                 {
                     string safeTop = GetSafeTop(topSegment);
                     string proposedTarget = safeTop + groupKey.Substring(topSegment.Length);
-                    foreach (var item in group.Value)
+                    foreach (var item in activeItems)
                     {
                         conflicts.Add(new ConflictInfo
                         {
@@ -81,7 +85,7 @@ namespace FileOrganizer.Services
                 }
 
                 // 2. Self-target directory collisions (e.g. folder '2024' into target '2024')
-                foreach (var item in group.Value.Where(f => f.IsDirectory))
+                foreach (var item in activeItems.Where(f => f.IsDirectory))
                 {
                     if (string.Equals(item.Name, groupKey, StringComparison.OrdinalIgnoreCase))
                     {
@@ -101,7 +105,7 @@ namespace FileOrganizer.Services
                 }
 
                 // 3. Intra-batch duplicates (multiple files/folders with the same name in the same target folder)
-                var nameGroups = group.Value.GroupBy(f => f.Name, StringComparer.OrdinalIgnoreCase);
+                var nameGroups = activeItems.GroupBy(f => f.Name, StringComparer.OrdinalIgnoreCase);
                 foreach (var nameGroup in nameGroups)
                 {
                     var items = nameGroup.ToList();
@@ -129,7 +133,7 @@ namespace FileOrganizer.Services
                 // 4. Existing destination file collisions
                 if (Directory.Exists(groupTargetDir))
                 {
-                    foreach (var item in group.Value)
+                    foreach (var item in activeItems)
                     {
                         if (item.IsDirectory && string.Equals(item.Name, groupKey, StringComparison.OrdinalIgnoreCase))
                             continue;

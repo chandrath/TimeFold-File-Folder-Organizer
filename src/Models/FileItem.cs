@@ -19,6 +19,8 @@ namespace FileOrganizer.Models
         public bool WasRenamed { get; set; }
         public string OriginalName { get; set; } = string.Empty;
         public string ErrorMessage { get; set; } = string.Empty;
+        public bool IsSelected { get; set; } = true;
+        public bool IsExcludedByRule { get; set; }
 
         public string Extension => Path.GetExtension(Name);
         public string TypeDisplay => IsDirectory ? (IsGitRepository ? "Git Repo (Folder)" : "Folder") : (string.IsNullOrEmpty(Path.GetExtension(Name)) ? "File" : Path.GetExtension(Name).TrimStart('.').ToUpperInvariant());

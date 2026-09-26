@@ -203,7 +203,7 @@ namespace FileOrganizer
             var pnlPreviewHeader = new Panel { Dock = DockStyle.Top, Height = 30, Margin = new Padding(0, 0, 0, 4) };
             _lblPreviewHeader = new Label
             {
-                Text = "Organization Plan",
+                Text = "Live Preview",
                 Font = new Font("Segoe UI", 10F, FontStyle.Bold),
                 ForeColor = Color.FromArgb(55, 65, 81),
                 Dock = DockStyle.Left,
@@ -254,18 +254,18 @@ namespace FileOrganizer
 
             _pnlConflicts = new Panel { Dock = DockStyle.Top, Height = 40, BorderStyle = BorderStyle.FixedSingle, BackColor = AppConstants.ColorDangerBg, Visible = false, Padding = new Padding(8, 4, 8, 4), Margin = new Padding(0, 2, 0, 6), Cursor = Cursors.Hand };
             _lblConflicts = new Label { Text = "⚠ Conflicts Detected:", Font = new Font("Segoe UI", 9F, FontStyle.Bold), ForeColor = AppConstants.ColorDanger, Dock = DockStyle.Fill, TextAlign = ContentAlignment.MiddleLeft, Cursor = Cursors.Hand };
-            _pnlConflicts.Click += (s, e) => ShowConflictDialog();
-            _lblConflicts.Click += (s, e) => ShowConflictDialog();
+            _pnlConflicts.Click += (s, e) => ShowConflictDialog(); _lblConflicts.Click += (s, e) => ShowConflictDialog();
             _pnlConflicts.Controls.Add(_lblConflicts);
 
             _pnlTimestampWarning = new Panel { Dock = DockStyle.Top, Height = 36, BorderStyle = BorderStyle.FixedSingle, BackColor = Color.FromArgb(254, 243, 199), Visible = false, Padding = new Padding(8, 4, 8, 4), Margin = new Padding(0, 2, 0, 4) };
             _lblTimestampWarning = new Label { Text = "", Font = new Font("Segoe UI", 8.5F, FontStyle.Bold), ForeColor = Color.FromArgb(146, 64, 14), Dock = DockStyle.Fill, TextAlign = ContentAlignment.MiddleLeft };
             _pnlTimestampWarning.Controls.Add(_lblTimestampWarning);
 
-            _lstFiles = new ListView { Dock = DockStyle.Fill, View = View.Details, FullRowSelect = true, GridLines = true, MultiSelect = false, BorderStyle = BorderStyle.FixedSingle, BackColor = Color.White, Font = new Font("Segoe UI", 9F), Visible = false };
+            _lstFiles = new ListView { Dock = DockStyle.Fill, View = View.Details, FullRowSelect = true, GridLines = true, MultiSelect = false, BorderStyle = BorderStyle.FixedSingle, BackColor = Color.White, Font = new Font("Segoe UI", 9F), Visible = false, CheckBoxes = true };
             _lstFiles.Columns.AddRange([new ColumnHeader { Text = "File Name", Width = 230 }, new ColumnHeader { Text = "Type", Width = 44 }, new ColumnHeader { Text = "Modified Date", Width = 116 }, new ColumnHeader { Text = "Created Date", Width = 110 }, new ColumnHeader { Text = "📁 Target Folder", Width = 130 }, new ColumnHeader { Text = "Status", Width = 100 }, new ColumnHeader { Text = "Size", Width = 50 }]);
             _lstFiles.ColumnClick += LstFiles_ColumnClick;
             _lstFiles.Click += LstFiles_Click;
+            _lstFiles.ItemChecked += (s, e) => HandleListItemChecked(e);
 
             _pnlLoadMore = new Panel { Dock = DockStyle.Bottom, Height = 34, Visible = false, Padding = new Padding(0, 4, 0, 0) };
             _btnLoadMore = new ModernButton { Text = "➕ Load 1,000 More", Dock = DockStyle.Fill, BorderRadius = 6, Cursor = Cursors.Hand };

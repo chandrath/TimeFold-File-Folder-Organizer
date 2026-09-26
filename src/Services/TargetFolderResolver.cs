@@ -142,7 +142,7 @@ namespace FileOrganizer.Services
 
             foreach (var item in items)
             {
-                if (item.IsDirectory)
+                if (item.IsDirectory && !item.IsExcludedByRule)
                 {
                     string dirName = item.Name;
                     string? candidateBase = null;
