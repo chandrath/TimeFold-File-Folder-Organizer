@@ -49,6 +49,7 @@ namespace FileOrganizer
         private ContextMenuStrip _ctxFileMenu = null!;
         private ModernButton _btnRefresh = null!;
         private bool _shouldAutoFitColumns;
+        private bool _hasMediaDateColumn;
         private ModernButton _lblFormatBadge = null!;
         private ModernButton _btnModeSelector = null!;
         private Panel _pnlEmptyState = null!, _pnlConflicts = null!, _pnlTimestampWarning = null!, _pnlLoadMore = null!;
@@ -342,6 +343,7 @@ namespace FileOrganizer
             _chkUseSourceAsOutput.Checked = AppConstants.DefaultUseSourceAsOutput; _chkCreateSubfolder.Checked = AppConstants.DefaultCreateSortedSubfolder; _chkIncludeFolders.Checked = AppConstants.DefaultIncludeTopLevelFolders;
             _filesToOrganize.Clear();
             _lstFiles.Items.Clear();
+            if (_hasMediaDateColumn && _lstFiles.Columns.Count >= 8) { _lstFiles.Columns.RemoveAt(4); _hasMediaDateColumn = false; }
             _lstFiles.Visible = false;
             if (_pnlEmptyState != null) _pnlEmptyState.Visible = true;
             _lblSummary.Font = new Font(_lblSummary.Font, FontStyle.Regular);
@@ -420,25 +422,25 @@ namespace FileOrganizer
             {
                 newText = "📦 Git Repository (Folder)\nFolder containing a .git or .github repository structure.\n• Kept intact as a whole folder (contents are never touched).\n• In Date mode, organized into date timeline folder.\n• In Category modes, isolated into 'Git Repos'.";
             }
-            else if (subIndex == 2 || subIndex == 3) // Date Columns
+            else if (subIndex == 2 || subIndex == 3 || (_hasMediaDateColumn && subIndex == 4)) // Date Columns
             {
                 var sb = new System.Text.StringBuilder();
                 if (file.IsMediaDateActive && file.MediaDateTaken.HasValue)
                 {
-                    sb.AppendLine($"📷 Date Taken:    {file.MediaDateTaken.Value:yyyy-MM-dd HH:mm:ss}  ✔ (Active)");
-                    sb.AppendLine($"📅 Date Modified: {file.ModifiedDate:yyyy-MM-dd HH:mm:ss}");
-                    sb.Append($"📁 Date Created:  {file.CreatedDate:yyyy-MM-dd HH:mm:ss}");
+                    sb.AppendLine($"📷 Date Taken:    {AppConstants.FormatTooltipDate(file.MediaDateTaken.Value)}  ✔ (Active)");
+                    sb.AppendLine($"📅 Date Modified: {AppConstants.FormatTooltipDate(file.ModifiedDate)}");
+                    sb.Append($"📁 Date Created:  {AppConstants.FormatTooltipDate(file.CreatedDate)}");
                 }
                 else
                 {
                     string modActive = !file.IsCreatedDateActive ? "  ✔ (Active)" : "";
                     string creActive = file.IsCreatedDateActive ? "  ✔ (Active)" : "";
-                    sb.AppendLine($"📅 Date Modified: {file.ModifiedDate:yyyy-MM-dd HH:mm:ss}{modActive}");
-                    sb.Append($"📁 Date Created:  {file.CreatedDate:yyyy-MM-dd HH:mm:ss}{creActive}");
+                    sb.AppendLine($"📅 Date Modified: {AppConstants.FormatTooltipDate(file.ModifiedDate)}{modActive}");
+                    sb.Append($"📁 Date Created:  {AppConstants.FormatTooltipDate(file.CreatedDate)}{creActive}");
                 }
                 newText = sb.ToString();
             }
-            else if (subIndex == 4) // Target Folder
+            else if (subIndex == (_hasMediaDateColumn ? 5 : 4)) // Target Folder
             {
                 string outputBase = GetBaseOutputFolder();
                 string subPath = _settings.CreateSortedSubfolder

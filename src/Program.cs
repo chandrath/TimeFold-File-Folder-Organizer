@@ -420,6 +420,26 @@ namespace FileOrganizer
                     Console.WriteLine($"[FAIL] MediaDateTaken test failed: expected '2021 July', got '{photoFolder}'");
                     return 20;
                 }
+
+                // Test 7: Verify FileItemComparer with hasMediaDateColumn
+                var itemA = new Models.FileItem { Name = "a.jpg", MediaDateTaken = new DateTime(2020, 1, 1), IsMediaDateActive = true };
+                var itemB = new Models.FileItem { Name = "b.jpg", MediaDateTaken = new DateTime(2022, 1, 1), IsMediaDateActive = true };
+                var sortList = new System.Collections.Generic.List<Models.FileItem> { itemB, itemA };
+                Models.FileItemComparer.Sort(sortList, 4, true, hasMediaDateColumn: true);
+                if (sortList[0].Name != "a.jpg")
+                {
+                    Console.WriteLine("[FAIL] FileItemComparer sort on media date column failed");
+                    return 21;
+                }
+
+                // Test 8: Verify AppConstants.FormatTooltipDate
+                var testDate = new DateTime(2020, 8, 15, 15, 30, 22);
+                string formatted = Config.AppConstants.FormatTooltipDate(testDate);
+                if (formatted != "15 Aug 2020 03:30:22 PM")
+                {
+                    Console.WriteLine($"[FAIL] FormatTooltipDate test failed: expected '15 Aug 2020 03:30:22 PM', got '{formatted}'");
+                    return 22;
+                }
             }
             finally
             {

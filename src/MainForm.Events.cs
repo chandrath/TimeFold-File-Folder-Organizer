@@ -143,6 +143,23 @@ namespace FileOrganizer
                 _lstFiles.ListViewItemSorter = null;
                 _lstFiles.Items.Clear();
 
+                bool shouldHaveMediaColumn = _settings.UseMediaDateTaken && _filesToOrganize.Any(f => f.IsMediaDateActive && f.MediaDateTaken.HasValue);
+                if (shouldHaveMediaColumn && !_hasMediaDateColumn)
+                {
+                    _lstFiles.Columns.Insert(4, new ColumnHeader { Text = "📷 Date Taken", Width = 175 });
+                    _hasMediaDateColumn = true;
+                    if (_sortColumn >= 4) _sortColumn++;
+                    UpdateColumnHeaderSortIndicators();
+                }
+                else if (!shouldHaveMediaColumn && _hasMediaDateColumn)
+                {
+                    if (_lstFiles.Columns.Count >= 8) _lstFiles.Columns.RemoveAt(4);
+                    _hasMediaDateColumn = false;
+                    if (_sortColumn == 4) _sortColumn = 2;
+                    else if (_sortColumn > 4) _sortColumn--;
+                    UpdateColumnHeaderSortIndicators();
+                }
+
                 var palette = AppTheme.GetPalette(_settings.DarkMode);
                 var boldFont = GetBoldListFont();
 
@@ -159,18 +176,24 @@ namespace FileOrganizer
                     bool isModActive = !file.IsCreatedDateActive && !isMediaActive;
                     bool isCreActive = file.IsCreatedDateActive && !isMediaActive;
 
-                    string modText = (isModActive ? "✔ " : "   ") + file.ModifiedDate.ToString("yyyy-MM-dd HH:mm");
-                    string creText = isMediaActive
-                        ? $"📷 {file.MediaDateTaken!.Value:yyyy-MM-dd HH:mm} (EXIF)"
-                        : ((isCreActive ? "✔ " : "   ") + file.CreatedDate.ToString("yyyy-MM-dd HH:mm"));
+                    string modText = (isModActive ? "✔ " : "   ") + AppConstants.FormatDisplayDate(file.ModifiedDate);
+                    string creText = (isCreActive ? "✔ " : "   ") + AppConstants.FormatDisplayDate(file.CreatedDate);
 
                     var subMod = item.SubItems.Add(modText);
                     subMod.ForeColor = isModActive ? palette.ListDateActive : palette.ListDateMuted;
                     if (isModActive) subMod.Font = boldFont;
 
                     var subCre = item.SubItems.Add(creText);
-                    subCre.ForeColor = (isCreActive || isMediaActive) ? palette.ListDateActive : palette.ListDateMuted;
-                    if (isCreActive || isMediaActive) subCre.Font = boldFont;
+                    subCre.ForeColor = isCreActive ? palette.ListDateActive : palette.ListDateMuted;
+                    if (isCreActive) subCre.Font = boldFont;
+
+                    if (_hasMediaDateColumn)
+                    {
+                        string mediaText = isMediaActive ? $"✔ {AppConstants.FormatDisplayDate(file.MediaDateTaken!.Value)}" : "—";
+                        var subMedia = item.SubItems.Add(mediaText);
+                        subMedia.ForeColor = isMediaActive ? palette.ListDateActive : palette.ListDateMuted;
+                        if (isMediaActive) subMedia.Font = boldFont;
+                    }
 
                     var subTarget = item.SubItems.Add($"📁 {file.TargetFolder}");
                     subTarget.ForeColor = palette.ListTargetFolder;
@@ -452,7 +475,6 @@ namespace FileOrganizer
                 summaryBuilder.AppendLine("AUDIT LOG");
                 summaryBuilder.AppendLine($"  📊 {result.CsvLogPath}");
             }
-
             _lblCompleteSummary.Text = summaryBuilder.ToString();
 
             bool outputExists = !string.IsNullOrWhiteSpace(result.SortedFolderPath) && Directory.Exists(result.SortedFolderPath);
@@ -469,7 +491,6 @@ namespace FileOrganizer
             if (!string.IsNullOrWhiteSpace(fallback) && Directory.Exists(fallback)) { Process.Start("explorer.exe", fallback); return; }
             MessageBox.Show("Output folder is not available yet.", "Folder Unavailable", MessageBoxButtons.OK, MessageBoxIcon.Information);
         }
-
         private void BtnStartNewProject_Click(object? sender, EventArgs e) => ResetForm();
     }
 }

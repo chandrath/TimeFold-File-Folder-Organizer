@@ -278,18 +278,39 @@ namespace FileOrganizer
                     {
                         item.ForeColor = palette.ListText;
                         item.SubItems[1].ForeColor = palette.ListText;
-                        item.SubItems[2].ForeColor = file.IsCreatedDateActive ? palette.ListDateMuted : palette.ListDateActive;
-                        item.SubItems[3].ForeColor = file.IsCreatedDateActive ? palette.ListDateActive : palette.ListDateMuted;
-                        item.SubItems[4].ForeColor = palette.ListTargetFolder;
 
-                        bool isConflict = _currentConflicts.Any(c => c.Item == file);
-                        item.SubItems[5].ForeColor = isConflict
-                            ? (_settings.DarkMode ? Color.FromArgb(248, 113, 113) : Color.FromArgb(220, 38, 38))
-                            : (_settings.DarkMode ? Color.FromArgb(52, 211, 153) : Color.FromArgb(22, 101, 52));
+                        bool isMediaActive = file.IsMediaDateActive && file.MediaDateTaken.HasValue;
+                        bool isModActive = !file.IsCreatedDateActive && !isMediaActive;
+                        bool isCreActive = file.IsCreatedDateActive && !isMediaActive;
 
-                        if (item.SubItems.Count > 6)
+                        item.SubItems[2].ForeColor = isModActive ? palette.ListDateActive : palette.ListDateMuted;
+                        item.SubItems[3].ForeColor = isCreActive ? palette.ListDateActive : palette.ListDateMuted;
+
+                        int targetCol = _hasMediaDateColumn ? 5 : 4;
+                        int statusCol = _hasMediaDateColumn ? 6 : 5;
+                        int sizeCol = _hasMediaDateColumn ? 7 : 6;
+
+                        if (_hasMediaDateColumn && item.SubItems.Count > 4)
                         {
-                            item.SubItems[6].ForeColor = palette.ListText;
+                            item.SubItems[4].ForeColor = isMediaActive ? palette.ListDateActive : palette.ListDateMuted;
+                        }
+
+                        if (item.SubItems.Count > targetCol)
+                        {
+                            item.SubItems[targetCol].ForeColor = palette.ListTargetFolder;
+                        }
+
+                        if (item.SubItems.Count > statusCol)
+                        {
+                            bool isConflict = _currentConflicts.Any(c => c.Item == file);
+                            item.SubItems[statusCol].ForeColor = isConflict
+                                ? (_settings.DarkMode ? Color.FromArgb(248, 113, 113) : Color.FromArgb(220, 38, 38))
+                                : (_settings.DarkMode ? Color.FromArgb(52, 211, 153) : Color.FromArgb(22, 101, 52));
+                        }
+
+                        if (item.SubItems.Count > sizeCol)
+                        {
+                            item.SubItems[sizeCol].ForeColor = palette.ListText;
                         }
                     }
                 }

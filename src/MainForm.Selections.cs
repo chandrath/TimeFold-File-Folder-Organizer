@@ -317,46 +317,54 @@ namespace FileOrganizer
 
         private void UpdateItemStatusDisplay(ListViewItem item, FileItem file, AppTheme.ThemePalette palette)
         {
-            if (item.SubItems.Count <= 5) return;
+            int statusIndex = _hasMediaDateColumn ? 6 : 5;
+            if (item.SubItems.Count <= statusIndex) return;
             var boldFont = GetBoldListFont();
             var conflict = _currentConflicts.FirstOrDefault(c => c.Item == file);
 
             if (file.IsExcludedByRule)
             {
-                item.SubItems[5].Text = "🛡 Excluded (Rule)";
-                item.SubItems[5].ForeColor = _settings.DarkMode ? Color.FromArgb(251, 191, 36) : Color.FromArgb(217, 119, 6);
-                item.SubItems[5].Font = boldFont;
+                item.SubItems[statusIndex].Text = "🛡 Excluded (Rule)";
+                item.SubItems[statusIndex].ForeColor = _settings.DarkMode ? Color.FromArgb(251, 191, 36) : Color.FromArgb(217, 119, 6);
+                item.SubItems[statusIndex].Font = boldFont;
                 item.ForeColor = _settings.DarkMode ? Color.FromArgb(148, 163, 184) : Color.FromArgb(100, 116, 139);
             }
             else if (!file.IsSelected)
             {
-                item.SubItems[5].Text = "○ Unchecked";
-                item.SubItems[5].ForeColor = palette.TextMuted;
-                item.SubItems[5].Font = _lstFiles.Font;
+                item.SubItems[statusIndex].Text = "○ Unchecked";
+                item.SubItems[statusIndex].ForeColor = palette.TextMuted;
+                item.SubItems[statusIndex].Font = _lstFiles.Font;
                 item.ForeColor = palette.TextMuted;
             }
             else
             {
-                item.SubItems[5].Text = conflict?.ShortStatus ?? "✓ Ready";
-                item.SubItems[5].ForeColor = conflict != null
+                item.SubItems[statusIndex].Text = conflict?.ShortStatus ?? "✓ Ready";
+                item.SubItems[statusIndex].ForeColor = conflict != null
                     ? (_settings.DarkMode ? Color.FromArgb(248, 113, 113) : Color.FromArgb(220, 38, 38))
                     : (_settings.DarkMode ? Color.FromArgb(52, 211, 153) : Color.FromArgb(22, 101, 52));
-                item.SubItems[5].Font = conflict != null ? boldFont : _lstFiles.Font;
+                item.SubItems[statusIndex].Font = conflict != null ? boldFont : _lstFiles.Font;
                 item.ForeColor = palette.TextPrimary;
             }
         }
 
         private int _sortColumn = 2;
         private bool _sortAscending = false;
-        private static readonly string[] ColumnBaseHeaders = { "File Name", "Type", "Modified Date", "Created / Taken Date", "📁 Target Folder", "Status", "Size" };
+        private static readonly string[] ColumnBaseHeadersStandard = { "File Name", "Type", "Modified Date", "Created Date", "📁 Target Folder", "Status", "Size" };
+        private static readonly string[] ColumnBaseHeadersWithMedia = { "File Name", "Type", "Modified Date", "Created Date", "📷 Date Taken", "📁 Target Folder", "Status", "Size" };
+        private string[] CurrentHeaders => _hasMediaDateColumn ? ColumnBaseHeadersWithMedia : ColumnBaseHeadersStandard;
 
         private void LstFiles_ColumnClick(object? sender, ColumnClickEventArgs e)
         {
             if (_sortColumn == e.Column) _sortAscending = !_sortAscending;
-            else { _sortColumn = e.Column; _sortAscending = (e.Column != 2 && e.Column != 3 && e.Column != 5); }
+            else
+            {
+                _sortColumn = e.Column;
+                bool isDesc = e.Column == 2 || e.Column == 3 || (_hasMediaDateColumn ? (e.Column == 4 || e.Column == 6) : (e.Column == 5));
+                _sortAscending = !isDesc;
+            }
 
             UpdateColumnHeaderSortIndicators();
-            FileItemComparer.Sort(_filesToOrganize, _sortColumn, _sortAscending);
+            FileItemComparer.Sort(_filesToOrganize, _sortColumn, _sortAscending, _hasMediaDateColumn);
             _isUpdatingList = true;
             try
             {
@@ -370,54 +378,69 @@ namespace FileOrganizer
 
         private void UpdateColumnHeaderSortIndicators()
         {
-            for (int i = 0; i < _lstFiles.Columns.Count && i < ColumnBaseHeaders.Length; i++)
-                _lstFiles.Columns[i].Text = (i == _sortColumn) ? $"{ColumnBaseHeaders[i]} {(_sortAscending ? "▲" : "▼")}" : ColumnBaseHeaders[i];
+            var headers = CurrentHeaders;
+            for (int i = 0; i < _lstFiles.Columns.Count && i < headers.Length; i++)
+                _lstFiles.Columns[i].Text = (i == _sortColumn) ? $"{headers[i]} {(_sortAscending ? "▲" : "▼")}" : headers[i];
         }
 
         private bool _isAdjustingColumns;
 
         private void AutoFitColumns()
         {
-            if (_isAdjustingColumns || _lstFiles == null || _lstFiles.Columns.Count < 7 || _filesToOrganize.Count == 0) return;
+            int minCols = _hasMediaDateColumn ? 8 : 7;
+            if (_isAdjustingColumns || _lstFiles == null || _lstFiles.Columns.Count < minCols || _filesToOrganize.Count == 0) return;
             using (FileOrganizer.Services.PerfLogger.Measure("AutoFitColumns"))
             {
                 _isAdjustingColumns = true;
                 _lstFiles.BeginUpdate();
                 try
                 {
-                var boldFont = GetBoldListFont();
-                _lstFiles.Columns[1].AutoResize(ColumnHeaderAutoResizeStyle.ColumnContent);
-                _lstFiles.Columns[1].Width = Math.Max(_lstFiles.Columns[1].Width + 8, TextRenderer.MeasureText(ColumnBaseHeaders[1], _lstFiles.Font).Width + 14);
+                    var boldFont = GetBoldListFont();
+                    var headers = CurrentHeaders;
 
-                _lstFiles.Columns[2].AutoResize(ColumnHeaderAutoResizeStyle.ColumnContent);
-                _lstFiles.Columns[2].Width = Math.Max(_lstFiles.Columns[2].Width + 10, TextRenderer.MeasureText(ColumnBaseHeaders[2] + " ▼", _lstFiles.Font).Width + 14);
+                    _lstFiles.Columns[1].AutoResize(ColumnHeaderAutoResizeStyle.ColumnContent);
+                    _lstFiles.Columns[1].Width = Math.Max(_lstFiles.Columns[1].Width + 8, TextRenderer.MeasureText(headers[1], _lstFiles.Font).Width + 14);
 
-                _lstFiles.Columns[3].AutoResize(ColumnHeaderAutoResizeStyle.ColumnContent);
-                _lstFiles.Columns[3].Width = Math.Max(_lstFiles.Columns[3].Width + 10, TextRenderer.MeasureText(ColumnBaseHeaders[3], _lstFiles.Font).Width + 14);
+                    _lstFiles.Columns[2].AutoResize(ColumnHeaderAutoResizeStyle.ColumnContent);
+                    _lstFiles.Columns[2].Width = Math.Max(_lstFiles.Columns[2].Width + 10, TextRenderer.MeasureText(headers[2] + " ▼", _lstFiles.Font).Width + 14);
 
-                int maxTargetW = TextRenderer.MeasureText(ColumnBaseHeaders[4], _lstFiles.Font).Width + 16;
-                foreach (var f in _filesToOrganize)
-                {
-                    int w = TextRenderer.MeasureText($"📁 {f.TargetFolder}", boldFont).Width + 16;
-                    if (w > maxTargetW) maxTargetW = w;
+                    _lstFiles.Columns[3].AutoResize(ColumnHeaderAutoResizeStyle.ColumnContent);
+                    _lstFiles.Columns[3].Width = Math.Max(_lstFiles.Columns[3].Width + 10, TextRenderer.MeasureText(headers[3], _lstFiles.Font).Width + 14);
+
+                    int targetCol = _hasMediaDateColumn ? 5 : 4;
+                    int statusCol = _hasMediaDateColumn ? 6 : 5;
+                    int sizeCol = _hasMediaDateColumn ? 7 : 6;
+
+                    if (_hasMediaDateColumn)
+                    {
+                        _lstFiles.Columns[4].AutoResize(ColumnHeaderAutoResizeStyle.ColumnContent);
+                        _lstFiles.Columns[4].Width = Math.Max(_lstFiles.Columns[4].Width + 10, TextRenderer.MeasureText(headers[4], _lstFiles.Font).Width + 16);
+                    }
+
+                    int maxTargetW = TextRenderer.MeasureText(headers[targetCol], _lstFiles.Font).Width + 16;
+                    foreach (var f in _filesToOrganize)
+                    {
+                        int w = TextRenderer.MeasureText($"📁 {f.TargetFolder}", boldFont).Width + 16;
+                        if (w > maxTargetW) maxTargetW = w;
+                    }
+                    _lstFiles.Columns[targetCol].Width = Math.Max(maxTargetW, 90);
+
+                    _lstFiles.Columns[statusCol].AutoResize(ColumnHeaderAutoResizeStyle.ColumnContent);
+                    _lstFiles.Columns[statusCol].Width = Math.Max(_lstFiles.Columns[statusCol].Width + 10, TextRenderer.MeasureText(headers[statusCol], _lstFiles.Font).Width + 16);
+
+                    _lstFiles.Columns[sizeCol].AutoResize(ColumnHeaderAutoResizeStyle.ColumnContent);
+                    _lstFiles.Columns[sizeCol].Width = Math.Max(_lstFiles.Columns[sizeCol].Width + 8, TextRenderer.MeasureText(headers[sizeCol], _lstFiles.Font).Width + 14);
+
+                    int otherW = 0;
+                    for (int i = 1; i < _lstFiles.Columns.Count; i++) otherW += _lstFiles.Columns[i].Width;
+                    int availW = _lstFiles.ClientSize.Width - SystemInformation.VerticalScrollBarWidth;
+                    _lstFiles.Columns[0].Width = Math.Max(180, availW - otherW);
                 }
-                _lstFiles.Columns[4].Width = Math.Max(maxTargetW, 90);
-
-                _lstFiles.Columns[5].AutoResize(ColumnHeaderAutoResizeStyle.ColumnContent);
-                _lstFiles.Columns[5].Width = Math.Max(_lstFiles.Columns[5].Width + 10, TextRenderer.MeasureText(ColumnBaseHeaders[5], _lstFiles.Font).Width + 16);
-
-                _lstFiles.Columns[6].AutoResize(ColumnHeaderAutoResizeStyle.ColumnContent);
-                _lstFiles.Columns[6].Width = Math.Max(_lstFiles.Columns[6].Width + 8, TextRenderer.MeasureText(ColumnBaseHeaders[6], _lstFiles.Font).Width + 14);
-
-                int otherW = _lstFiles.Columns[1].Width + _lstFiles.Columns[2].Width + _lstFiles.Columns[3].Width + _lstFiles.Columns[4].Width + _lstFiles.Columns[5].Width + _lstFiles.Columns[6].Width;
-                int availW = _lstFiles.ClientSize.Width - SystemInformation.VerticalScrollBarWidth;
-                _lstFiles.Columns[0].Width = Math.Max(180, availW - otherW);
-            }
-            finally
-            {
-                _lstFiles.EndUpdate();
-                _isAdjustingColumns = false;
-            }
+                finally
+                {
+                    _lstFiles.EndUpdate();
+                    _isAdjustingColumns = false;
+                }
             }
         }
     }

@@ -43,15 +43,16 @@ namespace FileOrganizer.Services
 
         private static DateTime? TryGetImageDateTaken(string filePath)
         {
+            // 1. Direct binary TIFF/EXIF scanner (works natively on HEIC, JPEG, TIFF without GDI+ codecs)
+            var directDate = TryGetTiffDateFromStream(filePath);
+            if (directDate.HasValue) return directDate;
+
+            // 2. GDI+ fallback for JPEG/PNG
             try
             {
                 using var stream = new FileStream(filePath, FileMode.Open, FileAccess.Read, FileShare.ReadWrite);
                 using var image = Image.FromStream(stream, useEmbeddedColorManagement: false, validateImageData: false);
 
-                // EXIF Property Tags:
-                // 0x9003 = PropertyTagExifDTOrig (Date Time Original / Date Taken)
-                // 0x9004 = PropertyTagExifDTDigitized
-                // 0x0132 = PropertyTagDateTime
                 int[] tags = { 0x9003, 0x9004, 0x0132 };
                 foreach (int tag in tags)
                 {
@@ -75,6 +76,109 @@ namespace FileOrganizer.Services
 
             return null;
         }
+
+        private static DateTime? TryGetTiffDateFromStream(string filePath)
+        {
+            try
+            {
+                using var fs = new FileStream(filePath, FileMode.Open, FileAccess.Read, FileShare.ReadWrite);
+                int toRead = (int)Math.Min(fs.Length, 256 * 1024);
+                if (toRead < 16) return null;
+
+                byte[] buffer = new byte[toRead];
+                int read = fs.Read(buffer, 0, toRead);
+                if (read < 16) return null;
+
+                for (int i = 0; i <= read - 16; i++)
+                {
+                    bool isLE = buffer[i] == 0x49 && buffer[i + 1] == 0x49 && buffer[i + 2] == 0x2A && buffer[i + 3] == 0x00;
+                    bool isBE = buffer[i] == 0x4D && buffer[i + 1] == 0x4D && buffer[i + 2] == 0x00 && buffer[i + 3] == 0x2A;
+
+                    if (isLE || isBE)
+                    {
+                        var dt = TryParseTiffAt(buffer, i, read, isLE);
+                        if (dt.HasValue) return dt;
+                    }
+                }
+            }
+            catch { }
+
+            return null;
+        }
+
+        private static DateTime? TryParseTiffAt(byte[] buffer, int tiffStart, int length, bool isLE)
+        {
+            try
+            {
+                if (tiffStart + 8 > length) return null;
+                uint ifdOffset = ReadUInt32(buffer, tiffStart + 4, isLE);
+                if (ifdOffset < 8 || tiffStart + ifdOffset + 2 > length) return null;
+
+                return ScanIfd(buffer, tiffStart, (int)(tiffStart + ifdOffset), length, isLE);
+            }
+            catch { return null; }
+        }
+
+        private static DateTime? ScanIfd(byte[] buffer, int tiffStart, int ifdPos, int length, bool isLE)
+        {
+            if (ifdPos + 2 > length) return null;
+            ushort count = ReadUInt16(buffer, ifdPos, isLE);
+            if (count == 0 || count > 500) return null;
+
+            int current = ifdPos + 2;
+            DateTime? backupDate = null;
+
+            for (int i = 0; i < count; i++)
+            {
+                if (current + 12 > length) break;
+                ushort tag = ReadUInt16(buffer, current, isLE);
+                uint valOffset = ReadUInt32(buffer, current + 8, isLE);
+
+                if (tag == 0x9003 || tag == 0x0132)
+                {
+                    var dt = ReadDateString(buffer, tiffStart, valOffset, length);
+                    if (dt.HasValue)
+                    {
+                        if (tag == 0x9003) return dt;
+                        backupDate ??= dt;
+                    }
+                }
+                else if (tag == 0x8769) // Exif Sub-IFD
+                {
+                    if (tiffStart + valOffset + 2 <= length)
+                    {
+                        var subDt = ScanIfd(buffer, tiffStart, (int)(tiffStart + valOffset), length, isLE);
+                        if (subDt.HasValue) return subDt;
+                    }
+                }
+
+                current += 12;
+            }
+
+            return backupDate;
+        }
+
+        private static DateTime? ReadDateString(byte[] buffer, int tiffStart, uint offset, int length)
+        {
+            int strStart = (int)(tiffStart + offset);
+            if (strStart < 0 || strStart + 19 > length) return null;
+
+            string raw = Encoding.ASCII.GetString(buffer, strStart, 19);
+            if (DateTime.TryParseExact(raw, "yyyy:MM:dd HH:mm:ss", CultureInfo.InvariantCulture, DateTimeStyles.None, out var dt))
+            {
+                if (dt.Year >= 1980 && dt.Year <= DateTime.Now.Year + 1)
+                    return dt;
+            }
+            return null;
+        }
+
+        private static ushort ReadUInt16(byte[] b, int offset, bool isLE) =>
+            isLE ? BinaryPrimitives.ReadUInt16LittleEndian(b.AsSpan(offset, 2))
+                 : BinaryPrimitives.ReadUInt16BigEndian(b.AsSpan(offset, 2));
+
+        private static uint ReadUInt32(byte[] b, int offset, bool isLE) =>
+            isLE ? BinaryPrimitives.ReadUInt32LittleEndian(b.AsSpan(offset, 4))
+                 : BinaryPrimitives.ReadUInt32BigEndian(b.AsSpan(offset, 4));
 
         private static DateTime? TryGetVideoCreationDate(string filePath)
         {
@@ -108,7 +212,7 @@ namespace FileOrganizer.Services
                             {
                                 int version = fs.ReadByte();
                                 if (version < 0) break;
-                                fs.Seek(3, SeekOrigin.Current); // skip flags
+                                fs.Seek(3, SeekOrigin.Current);
 
                                 ulong creationSeconds;
                                 if (version == 1)
