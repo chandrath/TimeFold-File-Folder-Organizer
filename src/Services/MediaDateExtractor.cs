@@ -1,6 +1,6 @@
 using System;
+using System.Buffers;
 using System.Buffers.Binary;
-using System.Drawing;
 using System.Globalization;
 using System.IO;
 using System.Text;
@@ -34,46 +34,74 @@ namespace FileOrganizer.Services
                     return TryGetVideoCreationDate(filePath);
 
                 if (ImageExtensions.Contains(ext))
-                    return TryGetImageDateTaken(filePath);
+                    return TryGetImageDateTaken(filePath, ext);
             }
             catch { }
 
             return null;
         }
 
-        private static DateTime? TryGetImageDateTaken(string filePath)
+        private static DateTime? TryGetImageDateTaken(string filePath, string ext)
         {
-            // 1. Direct binary TIFF/EXIF scanner (works natively on HEIC, JPEG, TIFF without GDI+ codecs)
-            var directDate = TryGetTiffDateFromStream(filePath);
-            if (directDate.HasValue) return directDate;
+            if (ext.Equals(".jpg", StringComparison.OrdinalIgnoreCase) || ext.Equals(".jpeg", StringComparison.OrdinalIgnoreCase))
+            {
+                var jpegDate = TryGetJpegApp1Date(filePath);
+                if (jpegDate.HasValue) return jpegDate;
+            }
 
-            // 2. GDI+ fallback for JPEG/PNG
+            return TryGetTiffDateFromStream(filePath);
+        }
+
+        private static DateTime? TryGetJpegApp1Date(string filePath)
+        {
             try
             {
-                using var stream = new FileStream(filePath, FileMode.Open, FileAccess.Read, FileShare.ReadWrite);
-                using var image = Image.FromStream(stream, useEmbeddedColorManagement: false, validateImageData: false);
+                using var fs = new FileStream(filePath, FileMode.Open, FileAccess.Read, FileShare.ReadWrite, 4096, FileOptions.SequentialScan);
+                byte[] markerBuf = new byte[4];
+                if (fs.Read(markerBuf, 0, 2) < 2 || markerBuf[0] != 0xFF || markerBuf[1] != 0xD8)
+                    return null;
 
-                int[] tags = { 0x9003, 0x9004, 0x0132 };
-                foreach (int tag in tags)
+                while (fs.Position + 4 <= fs.Length)
                 {
-                    try
+                    if (fs.Read(markerBuf, 0, 4) < 4) break;
+                    if (markerBuf[0] != 0xFF) break;
+
+                    byte marker = markerBuf[1];
+                    if (marker == 0xDA || marker == 0xD9) break;
+
+                    int payloadLen = (markerBuf[2] << 8) | markerBuf[3];
+                    if (payloadLen < 2) break;
+                    int dataLen = payloadLen - 2;
+
+                    if (marker == 0xE1)
                     {
-                        var prop = image.GetPropertyItem(tag);
-                        if (prop?.Value != null && prop.Value.Length >= 19)
+                        if (dataLen < 14) break;
+                        byte[] app1 = ArrayPool<byte>.Shared.Rent(dataLen);
+                        try
                         {
-                            string raw = Encoding.ASCII.GetString(prop.Value).Trim('\0', ' ', '\r', '\n');
-                            if (DateTime.TryParseExact(raw, "yyyy:MM:dd HH:mm:ss", CultureInfo.InvariantCulture, DateTimeStyles.None, out var dt))
+                            if (fs.Read(app1, 0, dataLen) >= dataLen &&
+                                app1[0] == 0x45 && app1[1] == 0x78 && app1[2] == 0x69 && app1[3] == 0x66 && app1[4] == 0 && app1[5] == 0)
                             {
-                                if (dt.Year >= 1980 && dt.Year <= DateTime.Now.Year + 1)
-                                    return dt;
+                                bool isLE = app1[6] == 0x49 && app1[7] == 0x49 && app1[8] == 0x2A && app1[9] == 0;
+                                bool isBE = app1[6] == 0x4D && app1[7] == 0x4D && app1[8] == 0 && app1[9] == 0x2A;
+                                if (isLE || isBE)
+                                {
+                                    return TryParseTiffAt(app1, 6, dataLen, isLE);
+                                }
                             }
                         }
+                        finally
+                        {
+                            ArrayPool<byte>.Shared.Return(app1);
+                        }
+                        return null;
                     }
-                    catch { }
+
+                    if (dataLen > 0) fs.Seek(dataLen, SeekOrigin.Current);
+                    else break;
                 }
             }
             catch { }
-
             return null;
         }
 
@@ -81,24 +109,31 @@ namespace FileOrganizer.Services
         {
             try
             {
-                using var fs = new FileStream(filePath, FileMode.Open, FileAccess.Read, FileShare.ReadWrite);
-                int toRead = (int)Math.Min(fs.Length, 256 * 1024);
+                using var fs = new FileStream(filePath, FileMode.Open, FileAccess.Read, FileShare.ReadWrite, 4096, FileOptions.SequentialScan);
+                int toRead = (int)Math.Min(fs.Length, 48 * 1024);
                 if (toRead < 16) return null;
 
-                byte[] buffer = new byte[toRead];
-                int read = fs.Read(buffer, 0, toRead);
-                if (read < 16) return null;
-
-                for (int i = 0; i <= read - 16; i++)
+                byte[] buffer = ArrayPool<byte>.Shared.Rent(toRead);
+                try
                 {
-                    bool isLE = buffer[i] == 0x49 && buffer[i + 1] == 0x49 && buffer[i + 2] == 0x2A && buffer[i + 3] == 0x00;
-                    bool isBE = buffer[i] == 0x4D && buffer[i + 1] == 0x4D && buffer[i + 2] == 0x00 && buffer[i + 3] == 0x2A;
+                    int read = fs.Read(buffer, 0, toRead);
+                    if (read < 16) return null;
 
-                    if (isLE || isBE)
+                    for (int i = 0; i <= read - 16; i++)
                     {
-                        var dt = TryParseTiffAt(buffer, i, read, isLE);
-                        if (dt.HasValue) return dt;
+                        bool isLE = buffer[i] == 0x49 && buffer[i + 1] == 0x49 && buffer[i + 2] == 0x2A && buffer[i + 3] == 0x00;
+                        bool isBE = buffer[i] == 0x4D && buffer[i + 1] == 0x4D && buffer[i + 2] == 0x00 && buffer[i + 3] == 0x2A;
+
+                        if (isLE || isBE)
+                        {
+                            var dt = TryParseTiffAt(buffer, i, read, isLE);
+                            if (dt.HasValue) return dt;
+                        }
                     }
+                }
+                finally
+                {
+                    ArrayPool<byte>.Shared.Return(buffer);
                 }
             }
             catch { }
@@ -184,7 +219,7 @@ namespace FileOrganizer.Services
         {
             try
             {
-                using var fs = new FileStream(filePath, FileMode.Open, FileAccess.Read, FileShare.ReadWrite);
+                using var fs = new FileStream(filePath, FileMode.Open, FileAccess.Read, FileShare.ReadWrite, 4096, FileOptions.SequentialScan);
                 using var reader = new BinaryReader(fs);
 
                 byte[] buffer = new byte[8];

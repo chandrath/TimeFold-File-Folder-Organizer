@@ -101,14 +101,8 @@ namespace FileOrganizer.Services
                         }
                         else if (entry is FileInfo fi)
                         {
-                            DateTime? mediaDate = null;
-                            if (useMediaDateTaken && MediaDateExtractor.IsSupportedMedia(fi.Extension))
-                            {
-                                mediaDate = MediaDateExtractor.TryGetDateTaken(fi.FullName);
-                            }
-
                             var (itemDate, isCreatedActive) = ResolveItemDate(fi.LastWriteTime, fi.CreationTime, fileDateSource);
-                            var fileItem = new FileItem
+                            files.Add(new FileItem
                             {
                                 FullPath = fi.FullName,
                                 Name = fi.Name,
@@ -116,16 +110,38 @@ namespace FileOrganizer.Services
                                 ModifiedDate = fi.LastWriteTime,
                                 CreatedDate = fi.CreationTime,
                                 IsCreatedDateActive = isCreatedActive,
-                                MediaDateTaken = mediaDate,
-                                IsMediaDateActive = mediaDate.HasValue,
                                 Size = fi.Length
-                            };
-                            fileItem.TargetFolder = TargetFolderResolver.Resolve(fileItem, _organizationMode, _folderFormat, _folderPrefix, _folderSuffix, _categoryPrefix, _categorySuffix);
-                            files.Add(fileItem);
+                            });
                         }
                     }
                     catch { continue; }
                 }
+            }
+
+            if (useMediaDateTaken)
+            {
+                var mediaFiles = files.Where(f => !f.IsDirectory && MediaDateExtractor.IsSupportedMedia(f.Extension)).ToList();
+                if (mediaFiles.Count > 0)
+                {
+                    using (PerfLogger.Measure($"ExtractMediaDates: {mediaFiles.Count} items"))
+                    {
+                        System.Threading.Tasks.Parallel.ForEach(mediaFiles, f =>
+                        {
+                            var mDate = MediaDateExtractor.TryGetDateTaken(f.FullPath);
+                            if (mDate.HasValue)
+                            {
+                                f.MediaDateTaken = mDate;
+                                f.IsMediaDateActive = true;
+                            }
+                        });
+                    }
+                }
+            }
+
+            foreach (var f in files)
+            {
+                if (!f.IsDirectory)
+                    f.TargetFolder = TargetFolderResolver.Resolve(f, _organizationMode, _folderFormat, _folderPrefix, _folderSuffix, _categoryPrefix, _categorySuffix);
             }
 
             using (PerfLogger.Measure($"ScanFiles: Post-processing {files.Count} items"))

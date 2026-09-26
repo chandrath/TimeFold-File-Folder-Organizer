@@ -99,29 +99,27 @@ namespace FileOrganizer
             }
         }
 
-        private void LoadPreview()
+        private int _previewGeneration;
+        private async void LoadPreview()
         {
             if (_organizerService == null) return;
-
+            int currentGen = ++_previewGeneration;
             _isUpdatingList = true;
             try
             {
-                using (FileOrganizer.Services.PerfLogger.Measure("LoadPreview: Total"))
-                {
-                    _currentPreviewLimit = _settings.MaxPreviewItems > 0 ? _settings.MaxPreviewItems : AppConstants.DefaultMaxPreviewItems;
-                    using (FileOrganizer.Services.PerfLogger.Measure("ScanFiles"))
-                    {
-                        _filesToOrganize = _organizerService.ScanFiles(_settings.IncludeTopLevelFolders, _settings.IgnoreSystemFiles, _settings.FileDateSource, _settings.FolderDateSource, null, _settings.EnableFolderExclusions, _settings.UseMediaDateTaken);
-                    }
-                    _sortColumn = 2;
-                    _sortAscending = false;
-                    UpdateColumnHeaderSortIndicators();
-                    using (FileOrganizer.Services.PerfLogger.Measure("CheckConflicts")) { CheckConflicts(); }
-                    using (FileOrganizer.Services.PerfLogger.Measure("UpdateFileList")) { UpdateFileList(); }
-                    using (FileOrganizer.Services.PerfLogger.Measure("UpdateSummary")) { UpdateSummary(); }
-                    using (FileOrganizer.Services.PerfLogger.Measure("CheckTimestampSimilarity")) { CheckTimestampSimilarity(); }
-                    using (FileOrganizer.Services.PerfLogger.Measure("CheckExclusionsPausedWarning")) { CheckExclusionsPausedWarning(); }
-                }
+                Cursor.Current = Cursors.WaitCursor;
+                _currentPreviewLimit = _settings.MaxPreviewItems > 0 ? _settings.MaxPreviewItems : AppConstants.DefaultMaxPreviewItems;
+                var files = await System.Threading.Tasks.Task.Run(() =>
+                    _organizerService.ScanFiles(_settings.IncludeTopLevelFolders, _settings.IgnoreSystemFiles, _settings.FileDateSource, _settings.FolderDateSource, null, _settings.EnableFolderExclusions, _settings.UseMediaDateTaken));
+                if (currentGen != _previewGeneration) return;
+                _filesToOrganize = files;
+                _sortColumn = 2; _sortAscending = false;
+                UpdateColumnHeaderSortIndicators();
+                CheckConflicts();
+                UpdateFileList();
+                UpdateSummary();
+                CheckTimestampSimilarity();
+                CheckExclusionsPausedWarning();
             }
             catch (Exception ex)
             {
@@ -130,6 +128,7 @@ namespace FileOrganizer
             finally
             {
                 _isUpdatingList = false;
+                Cursor.Current = Cursors.Default;
             }
         }
 
