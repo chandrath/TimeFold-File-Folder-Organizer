@@ -80,7 +80,21 @@ namespace FileOrganizer
             _cmbFolderDateSource.SelectedIndex = (int)_settings.FolderDateSource;
             currentY += 30;
 
-            _chkIncludeFolders = new CheckBox { Text = "Also organize folders (keeps contents intact)", Location = new Point(leftMargin, currentY), Size = new Size(contentWidth, 24), Checked = _settings.IncludeTopLevelFolders };
+            _chkIncludeFolders = new CheckBox { Text = "Also organize folders (keeps contents intact)", Location = new Point(leftMargin, currentY), Size = new Size(contentWidth - 145, 24), Checked = _settings.IncludeTopLevelFolders };
+
+            var btnExclusions = new Button
+            {
+                Text = "🛡 Exclusions...",
+                Location = new Point(leftMargin + contentWidth - 135, currentY - 1),
+                Size = new Size(135, 26),
+                Font = new Font("Segoe UI", 8.5F),
+                Cursor = Cursors.Hand
+            };
+            btnExclusions.Click += (s, e) =>
+            {
+                using var dlg = new Forms.FolderExclusionDialog(_settings, _isDarkMode);
+                dlg.ShowDialog(this);
+            };
             currentY += 24;
 
             _chkGroupGitRepositories = new CheckBox { Text = "    └ Group Git Repositories into dedicated folder (Category modes)", Location = new Point(leftMargin, currentY), Size = new Size(contentWidth, 24), Checked = _settings.GroupGitRepositories, Enabled = _settings.IncludeTopLevelFolders };
@@ -326,7 +340,7 @@ namespace FileOrganizer
             _btnOK.Click += BtnOK_Click;
 
             this.Controls.AddRange([
-                lblOrgHeader, _chkIncludeFolders, _chkGroupGitRepositories, _chkIgnoreSystemFiles, lblFileDate, lblFolderDate, _cmbFileDateSource, _cmbFolderDateSource,
+                lblOrgHeader, _chkIncludeFolders, btnExclusions, _chkGroupGitRepositories, _chkIgnoreSystemFiles, lblFileDate, lblFolderDate, _cmbFileDateSource, _cmbFolderDateSource,
                 lblNamingHeader, _cmbFormat, _btnFlipOrder, _chkShortMonth, lblPrefix, lblSuffix, _txtPrefix, _txtSuffix,
                 _pnlLivePreview,
                 lblAppearanceHeader, _btnThemeLight, _btnThemeDark,

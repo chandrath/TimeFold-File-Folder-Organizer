@@ -261,6 +261,8 @@ namespace FileOrganizer
             _lblTimestampWarning = new Label { Text = "", Font = new Font("Segoe UI", 8.5F, FontStyle.Bold), ForeColor = Color.FromArgb(146, 64, 14), Dock = DockStyle.Fill, TextAlign = ContentAlignment.MiddleLeft };
             _pnlTimestampWarning.Controls.Add(_lblTimestampWarning);
 
+            InitializeExclusionControls(pnlPreviewHeader, _pnlCenterSection);
+
             _lstFiles = new ListView { Dock = DockStyle.Fill, View = View.Details, FullRowSelect = true, GridLines = true, MultiSelect = false, BorderStyle = BorderStyle.FixedSingle, BackColor = Color.White, Font = new Font("Segoe UI", 9F), Visible = false, CheckBoxes = true };
             _lstFiles.Columns.AddRange([new ColumnHeader { Text = "File Name", Width = 230 }, new ColumnHeader { Text = "Type", Width = 44 }, new ColumnHeader { Text = "Modified Date", Width = 116 }, new ColumnHeader { Text = "Created Date", Width = 110 }, new ColumnHeader { Text = "📁 Target Folder", Width = 130 }, new ColumnHeader { Text = "Status", Width = 100 }, new ColumnHeader { Text = "Size", Width = 50 }]);
             _lstFiles.ColumnClick += LstFiles_ColumnClick;

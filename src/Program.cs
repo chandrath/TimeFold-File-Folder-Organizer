@@ -345,7 +345,7 @@ namespace FileOrganizer
                 var scanned = exclOrganizer.ScanFiles(includeTopLevelFolders: true, excludedFolders: rules, enableFolderExclusions: true);
 
                 var exclItem = scanned.FirstOrDefault(f => f.Name.Equals("MYFILES", StringComparison.OrdinalIgnoreCase));
-                if (exclItem == null || !exclItem.IsExcludedByRule || exclItem.IsSelected || exclItem.TargetFolder != "— (Preserved untouched)")
+                if (exclItem == null || !exclItem.IsExcludedByRule || exclItem.IsSelected || exclItem.TargetFolder != "— (Ignored)")
                 {
                     Console.WriteLine("[FAIL] Exclusion rule test failed: MYFILES was not excluded or target was wrong");
                     return 13;
@@ -377,6 +377,32 @@ namespace FileOrganizer
                 {
                     Console.WriteLine("[FAIL] Exclusion toggle test failed: MYFILES should be active when toggle is false");
                     return 16;
+                }
+
+                // Test 5: Verify .timefold-ignore subfolder marker auto-detection, self-exemption, and TypeDisplay
+                System.IO.Directory.CreateDirectory(normalDir);
+                string subMarker = System.IO.Path.Combine(normalDir, Config.AppConstants.TimefoldIgnoreFileName);
+                System.IO.File.WriteAllBytes(subMarker, Array.Empty<byte>());
+
+                var scanIgnoreFile = exclOrganizer.ScanFiles(includeTopLevelFolders: true, enableFolderExclusions: true);
+                if (scanIgnoreFile.Any(f => f.Name.Equals(Config.AppConstants.TimefoldIgnoreFileName, StringComparison.OrdinalIgnoreCase)))
+                {
+                    Console.WriteLine("[FAIL] .timefold-ignore self-exemption failed: .timefold-ignore should never be scanned");
+                    return 17;
+                }
+
+                var projectItem = scanIgnoreFile.FirstOrDefault(f => f.Name.Equals("Projects", StringComparison.OrdinalIgnoreCase));
+                if (projectItem == null || !projectItem.IsExcludedByRule || projectItem.TypeDisplay != "Folder (Ignored)" || projectItem.TargetFolder != "— (Ignored)")
+                {
+                    Console.WriteLine("[FAIL] .timefold-ignore rule test failed: Projects was not excluded or TypeDisplay was incorrect");
+                    return 18;
+                }
+
+                var pinnedOrder = scanIgnoreFile.OrderByDescending(f => f.IsExcludedByRule).ToList();
+                if (!pinnedOrder.First().IsExcludedByRule)
+                {
+                    Console.WriteLine("[FAIL] Pinned-at-top sort failed: first item was not an excluded folder");
+                    return 19;
                 }
             }
             finally

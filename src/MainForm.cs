@@ -196,20 +196,23 @@ namespace FileOrganizer
 
         private void SetSourceFolder(string folder)
         {
-            if (Directory.Exists(folder))
+            using (FileOrganizer.Services.PerfLogger.Measure($"SetSourceFolder: {folder}"))
             {
-                _txtSourceFolder.Text = folder;
-                _settings.AddRecentFolder(folder);
-                UpdateRecentMenus();
-                _organizerService = new FileOrganizerService(_executablePath, folder);
-                _organizerService.ApplyNamingSettings(
-                    _settings.FolderFormat, _settings.FolderPrefix, _settings.FolderSuffix,
-                    _settings.Use24HourTimestamp, _settings.OrgMode, _settings.KeepHtmlCompanionsTogether,
-                    _settings.CategoryPrefix, _settings.CategorySuffix, _settings.KeepSubtitleCompanionsTogether,
-                    _settings.CreateSortedSubfolder, _settings.GroupGitRepositories);
-                _shouldAutoFitColumns = true;
-                UpdateOutputFolder();
-                LoadPreview();
+                if (Directory.Exists(folder))
+                {
+                    _txtSourceFolder.Text = folder;
+                    _settings.AddRecentFolder(folder);
+                    UpdateRecentMenus();
+                    _organizerService = new FileOrganizerService(_executablePath, folder);
+                    _organizerService.ApplyNamingSettings(
+                        _settings.FolderFormat, _settings.FolderPrefix, _settings.FolderSuffix,
+                        _settings.Use24HourTimestamp, _settings.OrgMode, _settings.KeepHtmlCompanionsTogether,
+                        _settings.CategoryPrefix, _settings.CategorySuffix, _settings.KeepSubtitleCompanionsTogether,
+                        _settings.CreateSortedSubfolder, _settings.GroupGitRepositories);
+                    _shouldAutoFitColumns = true;
+                    UpdateOutputFolder();
+                    LoadPreview();
+                }
             }
         }
 
@@ -359,7 +362,15 @@ namespace FileOrganizer
         {
             int current = _currentPreviewLimit > 0 ? _currentPreviewLimit : (_settings.MaxPreviewItems > 0 ? _settings.MaxPreviewItems : AppConstants.DefaultMaxPreviewItems);
             _currentPreviewLimit = current + 1000;
-            UpdateFileList();
+            _isUpdatingList = true;
+            try
+            {
+                UpdateFileList();
+            }
+            finally
+            {
+                _isUpdatingList = false;
+            }
         }
 
         private void LstFiles_Click(object? sender, EventArgs e)
@@ -368,24 +379,8 @@ namespace FileOrganizer
             if (_lstFiles.SelectedItems.Count > 0 && _lstFiles.SelectedItems[0].Tag is "LOAD_MORE") BtnLoadMore_Click(sender, e);
         }
 
-        private void UpdatePreviewHeaderCount(int displayed, int total)
-        {
-            if (_lblPreviewHeader == null) return;
-            if (total == 0)
-            {
-                _lblPreviewHeader.Text = "Live Preview";
-                _toolTip?.SetToolTip(_lblPreviewHeader, null);
-                return;
-            }
-
-            int selected = _filesToOrganize.Count(f => f.IsSelected && !f.IsExcludedByRule);
-            string countText = displayed < total
-                ? $"{selected:N0} selected ({displayed:N0} of {total:N0} loaded)"
-                : (selected == total ? $"{total:N0} items" : $"{selected:N0} of {total:N0} selected");
-
-            _lblPreviewHeader.Text = $"Live Preview ({countText})";
-            _toolTip?.SetToolTip(_lblPreviewHeader, $"Showing {displayed:N0} of {total:N0} items ({selected:N0} selected for organization).\nTip: Check/uncheck boxes to include/exclude specific items.");
-        }
+        private void UpdatePreviewHeaderCount(int displayed, int total) =>
+            UpdateTwoToneHeader(displayed, total);
 
         private static string FormatFileSize(long bytes)
         {

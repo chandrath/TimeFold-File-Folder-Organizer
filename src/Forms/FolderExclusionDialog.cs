@@ -13,6 +13,7 @@ namespace FileOrganizer.Forms
     {
         private readonly bool _darkMode;
         private readonly AppSettings _settings;
+        private readonly string? _sourceFolder;
         private CheckBox _chkEnable = null!;
         private TextBox _txtNewFolder = null!;
         private ModernButton _btnAdd = null!;
@@ -24,10 +25,11 @@ namespace FileOrganizer.Forms
 
         public bool RulesChanged { get; private set; }
 
-        public FolderExclusionDialog(AppSettings settings, bool darkMode)
+        public FolderExclusionDialog(AppSettings settings, bool darkMode, string? sourceFolder = null)
         {
             _settings = settings;
             _darkMode = darkMode;
+            _sourceFolder = sourceFolder;
             InitializeComponent();
             ApplyTheme();
             LoadCurrentRules();
@@ -35,7 +37,7 @@ namespace FileOrganizer.Forms
 
         private void InitializeComponent()
         {
-            Text = "Folder Exclusion Rules (Never Touch)";
+            Text = "Folder Exclusion Rules";
             Size = new Size(520, 480);
             MinimumSize = new Size(460, 400);
             StartPosition = FormStartPosition.CenterParent;
@@ -48,7 +50,7 @@ namespace FileOrganizer.Forms
 
             var lblHeader = new Label
             {
-                Text = "🛡 Excluded / Protected Folders",
+                Text = "🛡 Excluded Folders",
                 Font = new Font("Segoe UI", 11F, FontStyle.Bold),
                 AutoSize = true,
                 Location = new Point(20, 14)
@@ -56,7 +58,7 @@ namespace FileOrganizer.Forms
 
             var lblDesc = new Label
             {
-                Text = "TimeFold will never move, rename, or touch folders matching these names in any organization mode (including Git Repos). Names are matched case-insensitively.",
+                Text = "Folders matching these names or containing a .timefold-ignore file will be preserved intact and skipped during organization.",
                 Font = new Font("Segoe UI", 8.5F),
                 ForeColor = Color.Gray,
                 Size = new Size(460, 36),
@@ -168,13 +170,20 @@ namespace FileOrganizer.Forms
         private void LoadCurrentRules()
         {
             _lstFolders.Items.Clear();
-            if (_settings.ExcludedFolderNames != null)
+            var names = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+            if (!string.IsNullOrWhiteSpace(_sourceFolder) && System.IO.Directory.Exists(_sourceFolder))
             {
-                foreach (var folder in _settings.ExcludedFolderNames.OrderBy(f => f))
+                try
                 {
-                    if (!string.IsNullOrWhiteSpace(folder)) _lstFolders.Items.Add(folder.Trim());
+                    foreach (var dir in System.IO.Directory.GetDirectories(_sourceFolder))
+                    {
+                        if (System.IO.File.Exists(System.IO.Path.Combine(dir, AppConstants.TimefoldIgnoreFileName)))
+                            names.Add(System.IO.Path.GetFileName(dir));
+                    }
                 }
+                catch { }
             }
+            foreach (var n in names.OrderBy(x => x)) _lstFolders.Items.Add(n);
         }
 
         private void AddFolder()
@@ -205,10 +214,36 @@ namespace FileOrganizer.Forms
 
         private void SaveAndClose()
         {
-            var list = _lstFolders.Items.Cast<object>().Select(o => o.ToString()?.Trim() ?? "").Where(s => !string.IsNullOrEmpty(s)).Distinct(StringComparer.OrdinalIgnoreCase).ToList();
-            _settings.ExcludedFolderNames = list;
+            var list = _lstFolders.Items.Cast<object>().Select(o => o.ToString()?.Trim().TrimEnd('/', '\\') ?? "").Where(s => !string.IsNullOrEmpty(s)).Distinct(StringComparer.OrdinalIgnoreCase).ToList();
+            _settings.ExcludedFolderNames = new();
             _settings.EnableFolderExclusions = _chkEnable.Checked;
             _settings.SaveToFile();
+
+            if (!string.IsNullOrWhiteSpace(_sourceFolder) && System.IO.Directory.Exists(_sourceFolder))
+            {
+                try
+                {
+                    string rootIgnore = System.IO.Path.Combine(_sourceFolder, AppConstants.TimefoldIgnoreFileName);
+                    if (System.IO.File.Exists(rootIgnore)) System.IO.File.Delete(rootIgnore);
+
+                    var set = new HashSet<string>(list, StringComparer.OrdinalIgnoreCase);
+                    foreach (var dir in System.IO.Directory.GetDirectories(_sourceFolder))
+                    {
+                        string dirName = System.IO.Path.GetFileName(dir);
+                        string marker = System.IO.Path.Combine(dir, AppConstants.TimefoldIgnoreFileName);
+                        if (set.Contains(dirName))
+                        {
+                            if (!System.IO.File.Exists(marker)) System.IO.File.WriteAllBytes(marker, Array.Empty<byte>());
+                        }
+                        else
+                        {
+                            if (System.IO.File.Exists(marker)) System.IO.File.Delete(marker);
+                        }
+                    }
+                }
+                catch { }
+            }
+
             RulesChanged = true;
             DialogResult = DialogResult.OK;
             Close();

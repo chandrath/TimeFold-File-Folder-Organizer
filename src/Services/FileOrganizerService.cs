@@ -43,109 +43,92 @@ namespace FileOrganizer.Services
             var executableName = Path.GetFileName(_executablePath);
             string normalizedOutput = Path.GetFullPath(_outputDirectory).TrimEnd(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar);
 
-            try
+            HashSet<string>? explicitExclusions = null;
+            if (excludedFolders != null)
             {
-                var items = Directory.GetFileSystemEntries(_workingDirectory, "*", SearchOption.TopDirectoryOnly);
+                explicitExclusions = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+                foreach (var ef in excludedFolders) { string tr = ef.Trim().TrimEnd('/', '\\'); if (!string.IsNullOrEmpty(tr)) explicitExclusions.Add(tr); }
+            }
 
-                foreach (var itemPath in items)
+            using (PerfLogger.Measure($"ScanFiles: Enumerate {_workingDirectory}"))
+            {
+                var dir = new DirectoryInfo(_workingDirectory);
+                foreach (var entry in dir.EnumerateFileSystemInfos())
                 {
                     try
                     {
-                        var itemName = Path.GetFileName(itemPath);
-
+                        var itemName = entry.Name;
                         if (itemName.Equals(executableName, StringComparison.OrdinalIgnoreCase)) continue;
+                        if (itemName.Equals(AppConstants.TimefoldIgnoreFileName, StringComparison.OrdinalIgnoreCase)) continue;
                         if ((itemName.StartsWith(AppConstants.CsvLogPrefix, StringComparison.OrdinalIgnoreCase) ||
                              itemName.StartsWith(AppConstants.LegacyCsvLogPrefix, StringComparison.OrdinalIgnoreCase)) &&
-                            Path.GetExtension(itemPath).Equals(".csv", StringComparison.OrdinalIgnoreCase)) continue;
+                            entry.Extension.Equals(".csv", StringComparison.OrdinalIgnoreCase)) continue;
                         if (itemName.StartsWith(AppConstants.SortedFolderPrefix, StringComparison.OrdinalIgnoreCase)) continue;
 
-                        string normalizedItem = Path.GetFullPath(itemPath).TrimEnd(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar);
+                        string normalizedItem = entry.FullName.TrimEnd(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar);
                         if (string.Equals(normalizedItem, normalizedOutput, StringComparison.OrdinalIgnoreCase)) continue;
 
                         if (ignoreSystemFiles)
                         {
                             if (AppConstants.KnownSystemFilesAndDirs.Contains(itemName)) continue;
-                            try
-                            {
-                                var attributes = File.GetAttributes(itemPath);
-                                if ((attributes & FileAttributes.System) != 0) continue;
-                            }
-                            catch { continue; }
+                            if ((entry.Attributes & FileAttributes.System) != 0) continue;
                         }
 
-                        bool isDirectory = Directory.Exists(itemPath);
+                        bool isDirectory = (entry.Attributes & FileAttributes.Directory) != 0;
                         if (isDirectory && !includeTopLevelFolders) continue;
 
                         if (isDirectory)
                         {
-                            var dirInfo = new DirectoryInfo(itemPath);
-                            bool isExcluded = enableFolderExclusions && excludedFolders != null &&
-                                excludedFolders.Any(ef => string.Equals(ef.Trim(), dirInfo.Name, StringComparison.OrdinalIgnoreCase));
-                            var (itemDate, isCreatedActive) = ResolveItemDate(dirInfo.LastWriteTime, dirInfo.CreationTime, folderDateSource);
+                            bool hasMarker = File.Exists(Path.Combine(entry.FullName, AppConstants.TimefoldIgnoreFileName));
+                            bool isExcluded = enableFolderExclusions && (hasMarker || (explicitExclusions != null && explicitExclusions.Contains(entry.Name)));
+                            var (itemDate, isCreatedActive) = ResolveItemDate(entry.LastWriteTime, entry.CreationTime, folderDateSource);
                             var fileItem = new FileItem
                             {
-                                FullPath = itemPath,
-                                Name = dirInfo.Name,
+                                FullPath = entry.FullName,
+                                Name = entry.Name,
                                 IsDirectory = true,
-                                IsGitRepository = IsGitRepository(itemPath),
-                                ModifiedDate = dirInfo.LastWriteTime,
-                                CreatedDate = dirInfo.CreationTime,
+                                IsGitRepository = IsGitRepository(entry.FullName),
+                                ModifiedDate = entry.LastWriteTime,
+                                CreatedDate = entry.CreationTime,
                                 IsCreatedDateActive = isCreatedActive,
                                 Size = 0,
                                 IsExcludedByRule = isExcluded,
                                 IsSelected = !isExcluded
                             };
-                            fileItem.TargetFolder = isExcluded ? "— (Preserved untouched)" : TargetFolderResolver.Resolve(fileItem, _organizationMode, _folderFormat, _folderPrefix, _folderSuffix, _categoryPrefix, _categorySuffix, _groupGitRepositories);
+                            fileItem.TargetFolder = isExcluded ? "— (Ignored)" : TargetFolderResolver.Resolve(fileItem, _organizationMode, _folderFormat, _folderPrefix, _folderSuffix, _categoryPrefix, _categorySuffix, _groupGitRepositories);
                             files.Add(fileItem);
                         }
-                        else if (File.Exists(itemPath))
+                        else if (entry is FileInfo fi)
                         {
-                            var fileInfo = new FileInfo(itemPath);
-                            var (itemDate, isCreatedActive) = ResolveItemDate(fileInfo.LastWriteTime, fileInfo.CreationTime, fileDateSource);
+                            var (itemDate, isCreatedActive) = ResolveItemDate(fi.LastWriteTime, fi.CreationTime, fileDateSource);
                             var fileItem = new FileItem
                             {
-                                FullPath = itemPath,
-                                Name = fileInfo.Name,
+                                FullPath = fi.FullName,
+                                Name = fi.Name,
                                 IsDirectory = false,
-                                ModifiedDate = fileInfo.LastWriteTime,
-                                CreatedDate = fileInfo.CreationTime,
+                                ModifiedDate = fi.LastWriteTime,
+                                CreatedDate = fi.CreationTime,
                                 IsCreatedDateActive = isCreatedActive,
-                                Size = fileInfo.Length
+                                Size = fi.Length
                             };
                             fileItem.TargetFolder = TargetFolderResolver.Resolve(fileItem, _organizationMode, _folderFormat, _folderPrefix, _folderSuffix, _categoryPrefix, _categorySuffix);
                             files.Add(fileItem);
                         }
                     }
-                    catch
-                    {
-                        // Skip items that cannot be accessed due to permissions or lock
-                        continue;
-                    }
+                    catch { continue; }
                 }
             }
-            catch (Exception ex)
-            {
-                throw new Exception($"Error scanning files: {ex.Message}", ex);
-            }
 
-            if (_keepHtmlCompanionsTogether)
+            using (PerfLogger.Measure($"ScanFiles: Post-processing {files.Count} items"))
             {
-                TargetFolderResolver.ApplyHtmlCompanionPairing(files);
+                if (_keepHtmlCompanionsTogether) TargetFolderResolver.ApplyHtmlCompanionPairing(files);
+                if (_keepSubtitleCompanionsTogether) TargetFolderResolver.ApplySubtitleCompanionPairing(files);
+                return files.OrderByDescending(f => f.ModifiedDate).ToList();
             }
-
-            if (_keepSubtitleCompanionsTogether)
-            {
-                TargetFolderResolver.ApplySubtitleCompanionPairing(files);
-            }
-
-            return files.OrderByDescending(f => f.ModifiedDate).ToList();
         }
 
-        public Dictionary<string, List<FileItem>> GroupByMonthYear(List<FileItem> files)
-        {
-            return files.GroupBy(f => f.TargetFolder)
-                        .ToDictionary(g => g.Key, g => g.ToList());
-        }
+        public Dictionary<string, List<FileItem>> GroupByMonthYear(List<FileItem> files) =>
+            files.GroupBy(f => f.TargetFolder).ToDictionary(g => g.Key, g => g.ToList());
 
         public List<string> DetectConflicts(Dictionary<string, List<FileItem>> grouped) => new();
 

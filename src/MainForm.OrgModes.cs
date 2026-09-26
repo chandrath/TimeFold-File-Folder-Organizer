@@ -138,14 +138,10 @@ namespace FileOrganizer
             }) { Checked = _settings.GroupGitRepositories, CheckOnClick = true };
 
             int ruleCount = _settings.ExcludedFolderNames?.Count ?? 0;
-            var itemExclusions = new ToolStripMenuItem("🛡 Exclude / Ignore Folders ('Never Touch')...", null, (s, a) => ShowFolderExclusionDialog());
-            var itemToggleExclusions = new ToolStripMenuItem($"Enable Folder Exclusion Rules ({ruleCount} defined)", null, (s, a) => ToggleFolderExclusions())
-            {
-                Checked = _settings.EnableFolderExclusions,
-                CheckOnClick = true
-            };
+            string exStatus = !_settings.EnableFolderExclusions ? " (Disabled)" : (ruleCount > 0 ? $" ({ruleCount} defined)" : "");
+            var itemExclusions = new ToolStripMenuItem($"🛡 Folder Exclusion Rules{exStatus}...", null, (s, a) => ShowFolderExclusionDialog());
 
-            menu.Items.AddRange(new ToolStripItem[] { hdr, new ToolStripSeparator(), itemGit, new ToolStripSeparator(), itemExclusions, itemToggleExclusions, new ToolStripSeparator() });
+            menu.Items.AddRange(new ToolStripItem[] { hdr, new ToolStripSeparator(), itemGit, new ToolStripSeparator(), itemExclusions, new ToolStripSeparator() });
 
             bool isCategoryMode = _settings.OrgMode == OrganizationMode.Category
                 || _settings.OrgMode == OrganizationMode.CategoryAndDate

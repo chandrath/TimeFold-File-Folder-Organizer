@@ -103,27 +103,41 @@ namespace FileOrganizer
         {
             if (_organizerService == null) return;
 
+            _isUpdatingList = true;
             try
             {
-                _currentPreviewLimit = _settings.MaxPreviewItems > 0 ? _settings.MaxPreviewItems : AppConstants.DefaultMaxPreviewItems;
-                _filesToOrganize = _organizerService.ScanFiles(_settings.IncludeTopLevelFolders, _settings.IgnoreSystemFiles, _settings.FileDateSource, _settings.FolderDateSource, _settings.ExcludedFolderNames, _settings.EnableFolderExclusions);
-                _sortColumn = 2;
-                _sortAscending = false;
-                UpdateColumnHeaderSortIndicators();
-                CheckConflicts();
-                UpdateFileList();
-                UpdateSummary();
-                CheckTimestampSimilarity();
+                using (FileOrganizer.Services.PerfLogger.Measure("LoadPreview: Total"))
+                {
+                    _currentPreviewLimit = _settings.MaxPreviewItems > 0 ? _settings.MaxPreviewItems : AppConstants.DefaultMaxPreviewItems;
+                    using (FileOrganizer.Services.PerfLogger.Measure("ScanFiles"))
+                    {
+                        _filesToOrganize = _organizerService.ScanFiles(_settings.IncludeTopLevelFolders, _settings.IgnoreSystemFiles, _settings.FileDateSource, _settings.FolderDateSource, null, _settings.EnableFolderExclusions);
+                    }
+                    _sortColumn = 2;
+                    _sortAscending = false;
+                    UpdateColumnHeaderSortIndicators();
+                    using (FileOrganizer.Services.PerfLogger.Measure("CheckConflicts")) { CheckConflicts(); }
+                    using (FileOrganizer.Services.PerfLogger.Measure("UpdateFileList")) { UpdateFileList(); }
+                    using (FileOrganizer.Services.PerfLogger.Measure("UpdateSummary")) { UpdateSummary(); }
+                    using (FileOrganizer.Services.PerfLogger.Measure("CheckTimestampSimilarity")) { CheckTimestampSimilarity(); }
+                    using (FileOrganizer.Services.PerfLogger.Measure("CheckExclusionsPausedWarning")) { CheckExclusionsPausedWarning(); }
+                }
             }
             catch (Exception ex)
             {
                 MessageBox.Show($"Error loading files: {ex.Message}", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
+            finally
+            {
+                _isUpdatingList = false;
+            }
         }
 
         private void UpdateFileList()
         {
+            bool wasUpdating = _isUpdatingList;
             _isUpdatingList = true;
+            _lstFiles.BeginUpdate();
             try
             {
                 _lstFiles.ListViewItemSorter = null;
@@ -133,8 +147,9 @@ namespace FileOrganizer
                 var boldFont = GetBoldListFont();
 
                 int maxPreview = _currentPreviewLimit > 0 ? _currentPreviewLimit : (_settings.MaxPreviewItems > 0 ? _settings.MaxPreviewItems : AppConstants.DefaultMaxPreviewItems);
-                var displayedFiles = _filesToOrganize.Take(maxPreview).ToList();
+                var displayedFiles = _filesToOrganize.OrderByDescending(f => f.IsExcludedByRule).Take(maxPreview).ToList();
 
+                var itemsToAdd = new List<ListViewItem>(displayedFiles.Count + 1);
                 foreach (var file in displayedFiles)
                 {
                     var item = new ListViewItem(file.Name) { UseItemStyleForSubItems = false, Checked = file.IsSelected && !file.IsExcludedByRule };
@@ -159,7 +174,7 @@ namespace FileOrganizer
                     item.SubItems.Add(file.IsDirectory ? "—" : FormatFileSize(file.Size));
                     item.Tag = file;
                     UpdateItemStatusDisplay(item, file, palette);
-                    _lstFiles.Items.Add(item);
+                    itemsToAdd.Add(item);
                 }
 
                 int total = _filesToOrganize.Count;
@@ -172,7 +187,7 @@ namespace FileOrganizer
                         ForeColor = _settings.DarkMode ? Color.FromArgb(147, 197, 253) : Color.FromArgb(37, 99, 235)
                     };
                     item.Tag = "LOAD_MORE";
-                    _lstFiles.Items.Add(item);
+                    itemsToAdd.Add(item);
 
                     if (_btnLoadMore != null)
                     {
@@ -183,11 +198,13 @@ namespace FileOrganizer
                 }
                 else if (_pnlLoadMore != null) _pnlLoadMore.Visible = false;
 
+                _lstFiles.Items.AddRange(itemsToAdd.ToArray());
                 UpdatePreviewHeaderCount(displayedFiles.Count, total);
             }
             finally
             {
-                _isUpdatingList = false;
+                _lstFiles.EndUpdate();
+                _isUpdatingList = wasUpdating;
             }
         }
 

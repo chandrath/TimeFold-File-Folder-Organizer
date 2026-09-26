@@ -35,10 +35,10 @@ namespace FileOrganizer
             _menuItemSelectAll = new ToolStripMenuItem("☑ Select All", null, (s, e) => SetAllItemsSelected(true));
             _menuItemDeselectAll = new ToolStripMenuItem("☐ Deselect All", null, (s, e) => SetAllItemsSelected(false));
             _menuItemInvertSelection = new ToolStripMenuItem("🔀 Invert Selection", null, (s, e) => InvertItemSelection());
-            _menuItemExcludeFolder = new ToolStripMenuItem("🛡 Exclude Folder ('Never Touch')...", null, (s, e) =>
+            _menuItemExcludeFolder = new ToolStripMenuItem("🛡 Ignore Folder...", null, (s, e) =>
             {
                 if (_lstFiles.SelectedItems.Count > 0 && _lstFiles.SelectedItems[0].Tag is FileItem file && file.IsDirectory)
-                    AddFolderExclusionRule(file.Name);
+                    ToggleFolderIgnore(file.Name);
             });
             _sepSelection = new ToolStripSeparator();
 
@@ -120,10 +120,12 @@ namespace FileOrganizer
                 int colIndex = (hit.SubItem != null) ? hit.Item.SubItems.IndexOf(hit.SubItem) : 0;
                 bool isTargetFolderCell = (colIndex == 4);
 
-                _menuItemExcludeFolder.Visible = isDirectory && !selItem!.IsExcludedByRule;
-                if (_menuItemExcludeFolder.Visible)
+                _menuItemExcludeFolder.Visible = isDirectory;
+                if (isDirectory)
                 {
-                    _menuItemExcludeFolder.Text = $"🛡 Exclude folder '{selItem!.Name}' ('Never Touch')...";
+                    _menuItemExcludeFolder.Text = selItem!.IsExcludedByRule
+                        ? $"✓ Stop ignoring folder '{selItem.Name}'"
+                        : $"🛡 Ignore folder '{selItem.Name}'...";
                 }
 
                 string currentCategory = isFileWithExt ? FileTypeService.Instance.GetCategory(selItem!.Extension) : "";

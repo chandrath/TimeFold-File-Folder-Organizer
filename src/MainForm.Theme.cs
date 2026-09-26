@@ -102,6 +102,12 @@ namespace FileOrganizer
 
             // 8. Organization Plan Header, Refresh & ListView
             if (_lblPreviewHeader != null) _lblPreviewHeader.ForeColor = palette.TextPrimary;
+            if (_lblIgnoredHeader != null) _lblIgnoredHeader.ForeColor = isDark ? Color.FromArgb(248, 113, 113) : Color.FromArgb(220, 38, 38);
+            if (_pnlExclusionsPausedWarning != null)
+            {
+                _pnlExclusionsPausedWarning.BackColor = isDark ? Color.FromArgb(69, 45, 10) : Color.FromArgb(254, 243, 199);
+                if (_lblExclusionsPaused != null) _lblExclusionsPaused.ForeColor = isDark ? Color.FromArgb(252, 211, 77) : Color.FromArgb(146, 64, 14);
+            }
             if (_btnRefresh != null)
             {
                 _btnRefresh.BackColor = palette.SecondaryButtonBg;
