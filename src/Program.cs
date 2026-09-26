@@ -440,6 +440,26 @@ namespace FileOrganizer
                     Console.WriteLine($"[FAIL] FormatTooltipDate test failed: expected '15 Aug 2020 03:30:22 PM', got '{formatted}'");
                     return 22;
                 }
+
+                // Test 9: Verify MP4 video creation date extraction
+                string testMp4 = System.IO.Path.Combine(exclTestDir, "test_clip.mp4");
+                ulong sec2024 = (ulong)(new DateTime(2024, 1, 1, 0, 0, 0, DateTimeKind.Utc) - new DateTime(1904, 1, 1, 0, 0, 0, DateTimeKind.Utc)).TotalSeconds;
+                using (var ms = new System.IO.FileStream(testMp4, System.IO.FileMode.Create))
+                {
+                    ms.Write(new byte[] { 0, 0, 0, 16, 0x66, 0x74, 0x79, 0x70, 0x69, 0x73, 0x6f, 0x6d, 0, 0, 0, 0 });
+                    ms.Write(new byte[] { 0, 0, 0, 36, 0x6d, 0x6f, 0x6f, 0x76 });
+                    ms.Write(new byte[] { 0, 0, 0, 28, 0x6d, 0x76, 0x68, 0x64, 0, 0, 0, 0 });
+                    byte[] secBuf = new byte[4];
+                    System.Buffers.Binary.BinaryPrimitives.WriteUInt32BigEndian(secBuf, (uint)sec2024);
+                    ms.Write(secBuf);
+                    ms.Write(new byte[12]);
+                }
+                var mp4Date = Services.MediaDateExtractor.TryGetDateTaken(testMp4);
+                if (mp4Date == null || mp4Date.Value.Year != 2024)
+                {
+                    Console.WriteLine($"[FAIL] MP4 creation date test failed: expected year 2024, got '{mp4Date}'");
+                    return 23;
+                }
             }
             finally
             {

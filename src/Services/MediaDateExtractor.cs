@@ -110,7 +110,7 @@ namespace FileOrganizer.Services
             try
             {
                 using var fs = new FileStream(filePath, FileMode.Open, FileAccess.Read, FileShare.ReadWrite, 4096, FileOptions.SequentialScan);
-                int toRead = (int)Math.Min(fs.Length, 48 * 1024);
+                int toRead = (int)Math.Min(fs.Length, 96 * 1024);
                 if (toRead < 16) return null;
 
                 byte[] buffer = ArrayPool<byte>.Shared.Rent(toRead);
@@ -215,15 +215,27 @@ namespace FileOrganizer.Services
             isLE ? BinaryPrimitives.ReadUInt32LittleEndian(b.AsSpan(offset, 4))
                  : BinaryPrimitives.ReadUInt32BigEndian(b.AsSpan(offset, 4));
 
+        private static DateTime? TryParseMacTimestamp(ulong seconds)
+        {
+            if (seconds == 0) return null;
+            var epoch = new DateTime(1904, 1, 1, 0, 0, 0, DateTimeKind.Utc);
+            if (seconds < (ulong)(DateTime.MaxValue - epoch).TotalSeconds)
+            {
+                var dt = epoch.AddSeconds(seconds).ToLocalTime();
+                if (dt.Year >= 1980 && dt.Year <= DateTime.Now.Year + 1)
+                    return dt;
+            }
+            return null;
+        }
+
         private static DateTime? TryGetVideoCreationDate(string filePath)
         {
             try
             {
                 using var fs = new FileStream(filePath, FileMode.Open, FileAccess.Read, FileShare.ReadWrite, 4096, FileOptions.SequentialScan);
-                using var reader = new BinaryReader(fs);
-
                 byte[] buffer = new byte[8];
                 long length = fs.Length;
+                DateTime? fallbackDate = null;
 
                 while (fs.Position + 8 <= length)
                 {
@@ -231,7 +243,23 @@ namespace FileOrganizer.Services
                     uint size = BinaryPrimitives.ReadUInt32BigEndian(buffer.AsSpan(0, 4));
                     string type = Encoding.ASCII.GetString(buffer, 4, 4);
 
-                    long boxDataSize = size >= 8 ? size - 8 : (size == 1 ? (reader.ReadInt64() - 16) : 0);
+                    long boxDataSize;
+                    if (size == 1)
+                    {
+                        byte[] extBuf = new byte[8];
+                        if (fs.Read(extBuf, 0, 8) < 8) break;
+                        ulong extSize = BinaryPrimitives.ReadUInt64BigEndian(extBuf);
+                        boxDataSize = extSize >= 16 ? (long)(extSize - 16) : 0;
+                    }
+                    else if (size == 0)
+                    {
+                        boxDataSize = length - fs.Position;
+                    }
+                    else
+                    {
+                        boxDataSize = size >= 8 ? (long)(size - 8) : 0;
+                    }
+
                     if (boxDataSize < 0) break;
 
                     if (type == "moov")
@@ -242,44 +270,62 @@ namespace FileOrganizer.Services
                             if (fs.Read(buffer, 0, 8) < 8) break;
                             uint childSize = BinaryPrimitives.ReadUInt32BigEndian(buffer.AsSpan(0, 4));
                             string childType = Encoding.ASCII.GetString(buffer, 4, 4);
+                            long childDataSize = childSize >= 8 ? (long)(childSize - 8) : 0;
 
-                            if (childType == "mvhd")
+                            if (childType == "mvhd" || childType == "tkhd" || childType == "mdhd")
                             {
                                 int version = fs.ReadByte();
-                                if (version < 0) break;
-                                fs.Seek(3, SeekOrigin.Current);
-
-                                ulong creationSeconds;
-                                if (version == 1)
+                                if (version >= 0)
                                 {
-                                    byte[] timeBuf = new byte[8];
-                                    if (fs.Read(timeBuf, 0, 8) < 8) break;
-                                    creationSeconds = BinaryPrimitives.ReadUInt64BigEndian(timeBuf);
-                                }
-                                else
-                                {
-                                    byte[] timeBuf = new byte[4];
-                                    if (fs.Read(timeBuf, 0, 4) < 4) break;
-                                    creationSeconds = BinaryPrimitives.ReadUInt32BigEndian(timeBuf);
-                                }
-
-                                if (creationSeconds > 0)
-                                {
-                                    var epoch = new DateTime(1904, 1, 1, 0, 0, 0, DateTimeKind.Utc);
-                                    if (creationSeconds < (ulong)(DateTime.MaxValue - epoch).TotalSeconds)
+                                    fs.Seek(3, SeekOrigin.Current);
+                                    ulong creationSec = 0;
+                                    if (version == 1)
                                     {
-                                        var dt = epoch.AddSeconds(creationSeconds).ToLocalTime();
-                                        if (dt.Year >= 1980 && dt.Year <= DateTime.Now.Year + 1)
-                                            return dt;
+                                        byte[] tb = new byte[8];
+                                        if (fs.Read(tb, 0, 8) == 8) creationSec = BinaryPrimitives.ReadUInt64BigEndian(tb);
+                                    }
+                                    else
+                                    {
+                                        byte[] tb = new byte[4];
+                                        if (fs.Read(tb, 0, 4) == 4) creationSec = BinaryPrimitives.ReadUInt32BigEndian(tb);
+                                    }
+
+                                    var parsed = TryParseMacTimestamp(creationSec);
+                                    if (parsed.HasValue)
+                                    {
+                                        if (childType == "mvhd") return parsed;
+                                        fallbackDate ??= parsed;
                                     }
                                 }
-                                return null;
+                                long rem = childDataSize - (version == 1 ? 12 : 8);
+                                if (rem > 0) fs.Seek(rem, SeekOrigin.Current);
                             }
-
-                            long skip = childSize >= 8 ? childSize - 8 : 0;
-                            if (skip > 0) fs.Seek(skip, SeekOrigin.Current);
-                            else break;
+                            else if (childType == "udta")
+                            {
+                                int readLen = (int)Math.Min(childDataSize, 32 * 1024);
+                                if (readLen > 0)
+                                {
+                                    byte[] udtaBuf = ArrayPool<byte>.Shared.Rent(readLen);
+                                    try
+                                    {
+                                        if (fs.Read(udtaBuf, 0, readLen) == readLen)
+                                        {
+                                            var udtaDate = TryExtractTextDate(udtaBuf, readLen);
+                                            if (udtaDate.HasValue) return udtaDate;
+                                        }
+                                    }
+                                    finally { ArrayPool<byte>.Shared.Return(udtaBuf); }
+                                    long rem = childDataSize - readLen;
+                                    if (rem > 0) fs.Seek(rem, SeekOrigin.Current);
+                                }
+                            }
+                            else
+                            {
+                                if (childDataSize > 0) fs.Seek(childDataSize, SeekOrigin.Current);
+                                else break;
+                            }
                         }
+                        if (fallbackDate.HasValue) return fallbackDate;
                         break;
                     }
 
@@ -289,6 +335,26 @@ namespace FileOrganizer.Services
             }
             catch { }
 
+            return null;
+        }
+
+        private static DateTime? TryExtractTextDate(byte[] buffer, int length)
+        {
+            for (int i = 0; i <= length - 19; i++)
+            {
+                if (buffer[i] >= '1' && buffer[i] <= '2' && buffer[i + 1] >= '0' && buffer[i + 1] <= '9')
+                {
+                    if (buffer[i + 4] == '-' && buffer[i + 7] == '-' && (buffer[i + 10] == 'T' || buffer[i + 10] == ' '))
+                    {
+                        string str = Encoding.ASCII.GetString(buffer, i, 19);
+                        if (DateTime.TryParse(str, CultureInfo.InvariantCulture, DateTimeStyles.None, out var dt))
+                        {
+                            if (dt.Year >= 1980 && dt.Year <= DateTime.Now.Year + 1)
+                                return dt;
+                        }
+                    }
+                }
+            }
             return null;
         }
     }
