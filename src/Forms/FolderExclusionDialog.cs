@@ -235,7 +235,7 @@ namespace FileOrganizer.Forms
                         {
                             if (!System.IO.File.Exists(marker))
                             {
-                                System.IO.File.WriteAllBytes(marker, Array.Empty<byte>());
+                                System.IO.File.WriteAllText(marker, AppConstants.TimefoldIgnoreFileContent);
                                 try { System.IO.File.SetAttributes(marker, System.IO.FileAttributes.Hidden); } catch { }
                             }
                         }

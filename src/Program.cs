@@ -66,7 +66,8 @@ namespace FileOrganizer
                 [".bat"] = "Script Files",
                 [".sh"] = "Script Files",
                 [".lnk"] = "Shortcuts",
-                [".url"] = "Web Links"
+                [".url"] = "Web Links",
+                [".torrent"] = "Torrent Files"
             };
 
             foreach (var kvp in testMap)

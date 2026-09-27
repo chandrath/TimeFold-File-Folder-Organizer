@@ -41,7 +41,8 @@ namespace FileOrganizer.Services
             ["App Installers"] = new[] { ".exe", ".msi", ".msix", ".appx", ".dmg", ".pkg", ".appimage", ".flatpak", ".deb", ".rpm", ".snap", ".apk", ".aab", ".xapk", ".ipa", ".ipk" },
             ["Font Files"] = new[] { ".ttf", ".otf", ".woff", ".woff2", ".eot" },
             ["Shortcuts"] = new[] { ".lnk" },
-            ["Web Links"] = new[] { ".url", ".website" }
+            ["Web Links"] = new[] { ".url", ".website" },
+            ["Torrent Files"] = new[] { ".torrent", ".magnet" }
         };
 
         private UserTypeDelta _delta = new();

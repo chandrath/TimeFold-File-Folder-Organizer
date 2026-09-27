@@ -171,6 +171,12 @@ namespace FileOrganizer.Config
         public const bool DefaultEnableFolderExclusions = true;
         public const bool DefaultShowIgnoreMarkerWarning = true;
         public const string TimefoldIgnoreFileName = ".timefold-ignore";
+        public static string TimefoldIgnoreFileContent =>
+            $"# TimeFold Folder Ignore Marker\r\n" +
+            $"# Created by {AppName} ({RepositoryUrl})\r\n" +
+            $"#\r\n" +
+            $"# This file tells TimeFold to skip organizing this folder and its contents.\r\n" +
+            $"# You can safely delete this file anytime if you want TimeFold to organize this folder again.\r\n";
         public const int MaxRecentFolders = 5;
         public const FolderFormat DefaultFolderFormat = FolderFormat.YearMonth;
         public const string DefaultFolderPrefix = "";

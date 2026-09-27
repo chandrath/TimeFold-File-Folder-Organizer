@@ -108,7 +108,7 @@ namespace FileOrganizer
                         if (dlg.ShowDialog(this) != DialogResult.OK) return;
                         if (dlg.DoNotShowAgain) { _settings.ShowIgnoreMarkerWarning = false; _settings.SaveToFile(); }
                     }
-                    System.IO.File.WriteAllBytes(markerPath, Array.Empty<byte>());
+                    System.IO.File.WriteAllText(markerPath, AppConstants.TimefoldIgnoreFileContent);
                     try { System.IO.File.SetAttributes(markerPath, System.IO.FileAttributes.Hidden); } catch { }
                     _settings.EnableFolderExclusions = true;
                     _settings.SaveToFile();
