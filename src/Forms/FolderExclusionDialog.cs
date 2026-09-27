@@ -224,7 +224,7 @@ namespace FileOrganizer.Forms
                 try
                 {
                     string rootIgnore = System.IO.Path.Combine(_sourceFolder, AppConstants.TimefoldIgnoreFileName);
-                    if (System.IO.File.Exists(rootIgnore)) System.IO.File.Delete(rootIgnore);
+                    if (System.IO.File.Exists(rootIgnore)) { try { System.IO.File.SetAttributes(rootIgnore, System.IO.FileAttributes.Normal); } catch { } System.IO.File.Delete(rootIgnore); }
 
                     var set = new HashSet<string>(list, StringComparer.OrdinalIgnoreCase);
                     foreach (var dir in System.IO.Directory.GetDirectories(_sourceFolder))
@@ -233,11 +233,19 @@ namespace FileOrganizer.Forms
                         string marker = System.IO.Path.Combine(dir, AppConstants.TimefoldIgnoreFileName);
                         if (set.Contains(dirName))
                         {
-                            if (!System.IO.File.Exists(marker)) System.IO.File.WriteAllBytes(marker, Array.Empty<byte>());
+                            if (!System.IO.File.Exists(marker))
+                            {
+                                System.IO.File.WriteAllBytes(marker, Array.Empty<byte>());
+                                try { System.IO.File.SetAttributes(marker, System.IO.FileAttributes.Hidden); } catch { }
+                            }
                         }
                         else
                         {
-                            if (System.IO.File.Exists(marker)) System.IO.File.Delete(marker);
+                            if (System.IO.File.Exists(marker))
+                            {
+                                try { System.IO.File.SetAttributes(marker, System.IO.FileAttributes.Normal); } catch { }
+                                System.IO.File.Delete(marker);
+                            }
                         }
                     }
                 }

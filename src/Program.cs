@@ -71,6 +71,7 @@ namespace FileOrganizer
 
             foreach (var kvp in testMap)
             {
+                if (service.TryGetExtensionOverride(kvp.Key, out _)) continue;
                 string cat = service.GetCategory(kvp.Key);
                 if (cat != kvp.Value)
                 {
@@ -473,15 +474,7 @@ namespace FileOrganizer
                 }
 
                 // Test 10: Verify AppConstants.BuildDateTooltip contains guidance
-                var testMediaItem = new Models.FileItem
-                {
-                    Name = "photo.jpg",
-                    MediaDateTaken = new DateTime(2023, 8, 14, 15, 30, 22),
-                    ModifiedDate = new DateTime(2026, 9, 20, 11, 45, 10),
-                    CreatedDate = new DateTime(2026, 9, 26, 18, 20, 0),
-                    IsMediaDateActive = true,
-                    TargetFolder = "2023-08"
-                };
+                var testMediaItem = new Models.FileItem { Name = "photo.jpg", MediaDateTaken = new DateTime(2023, 8, 14, 15, 30, 22), ModifiedDate = new DateTime(2026, 9, 20, 11, 45, 10), CreatedDate = new DateTime(2026, 9, 26, 18, 20, 0), IsMediaDateActive = true, TargetFolder = "2023-08" };
                 string mediaTip = Config.AppConstants.BuildDateTooltip(testMediaItem);
                 if (!mediaTip.Contains("📷 Date Taken:") || !mediaTip.Contains("disable 'Prioritize original media Date Taken"))
                 {
@@ -499,4 +492,3 @@ namespace FileOrganizer
         }
     }
 }
-

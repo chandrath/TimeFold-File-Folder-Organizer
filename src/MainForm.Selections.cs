@@ -70,29 +70,15 @@ namespace FileOrganizer
             pnlCenterSection.Controls.Add(_pnlExclusionsPausedWarning);
         }
 
-        private void ResumeExclusions()
-        {
-            _settings.EnableFolderExclusions = true;
-            _settings.SaveToFile();
-            LoadPreview();
-        }
+        private void ResumeExclusions() { _settings.EnableFolderExclusions = true; _settings.SaveToFile(); LoadPreview(); }
 
         public void ShowFolderExclusionDialog()
         {
             using var dlg = new FolderExclusionDialog(_settings, _settings.DarkMode, _txtSourceFolder.Text);
-            if (dlg.ShowDialog(this) == DialogResult.OK)
-            {
-                _settings.SaveToFile();
-                LoadPreview();
-            }
+            if (dlg.ShowDialog(this) == DialogResult.OK) { _settings.SaveToFile(); LoadPreview(); }
         }
 
-        public void ToggleFolderExclusions()
-        {
-            _settings.EnableFolderExclusions = !_settings.EnableFolderExclusions;
-            _settings.SaveToFile();
-            LoadPreview();
-        }
+        public void ToggleFolderExclusions() { _settings.EnableFolderExclusions = !_settings.EnableFolderExclusions; _settings.SaveToFile(); LoadPreview(); }
 
         public void ToggleFolderIgnore(string folderName)
         {
@@ -108,11 +94,22 @@ namespace FileOrganizer
             {
                 if (isIgnoredNow)
                 {
-                    if (System.IO.File.Exists(markerPath)) System.IO.File.Delete(markerPath);
+                    if (System.IO.File.Exists(markerPath))
+                    {
+                        try { System.IO.File.SetAttributes(markerPath, System.IO.FileAttributes.Normal); } catch { }
+                        System.IO.File.Delete(markerPath);
+                    }
                 }
                 else
                 {
+                    if (_settings.ShowIgnoreMarkerWarning)
+                    {
+                        using var dlg = new Forms.IgnoreFolderConfirmDialog(clean, _settings.DarkMode);
+                        if (dlg.ShowDialog(this) != DialogResult.OK) return;
+                        if (dlg.DoNotShowAgain) { _settings.ShowIgnoreMarkerWarning = false; _settings.SaveToFile(); }
+                    }
                     System.IO.File.WriteAllBytes(markerPath, Array.Empty<byte>());
+                    try { System.IO.File.SetAttributes(markerPath, System.IO.FileAttributes.Hidden); } catch { }
                     _settings.EnableFolderExclusions = true;
                     _settings.SaveToFile();
                 }

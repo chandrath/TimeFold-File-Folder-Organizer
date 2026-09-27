@@ -34,6 +34,7 @@ namespace FileOrganizer.Models
         public System.Collections.Generic.List<string> ExcludedFolderNames { get; set; } = new();
         public bool EnableFolderExclusions { get; set; } = Config.AppConstants.DefaultEnableFolderExclusions;
         public bool UseMediaDateTaken { get; set; } = Config.AppConstants.DefaultUseMediaDateTaken;
+        public bool ShowIgnoreMarkerWarning { get; set; } = Config.AppConstants.DefaultShowIgnoreMarkerWarning;
 
         public static AppSettings LoadFromFile()
         {
