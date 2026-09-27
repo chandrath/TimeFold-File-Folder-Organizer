@@ -132,14 +132,17 @@ namespace FileOrganizer
 
             int ruleCount = _settings.ExcludedFolderNames?.Count ?? 0;
             string exStatus = !_settings.EnableFolderExclusions ? " (Disabled)" : (ruleCount > 0 ? $" ({ruleCount} defined)" : "");
-            var itemExclusions = new ToolStripMenuItem($"🛡 Folder Exclusion Rules{exStatus}...", null, (s, a) => ShowFolderExclusionDialog());
+            var itemExclusions = new ToolStripMenuItem($"🛡 Folder Exclusion Rules{exStatus}...", null, (s, a) => ShowFolderExclusionDialog())
+            {
+                Padding = new Padding(0, 2, 45, 2)
+            };
 
             var itemGit = new ToolStripMenuItem("Group Git Repositories into dedicated folder", null, (s, a) =>
             {
                 _settings.GroupGitRepositories = !_settings.GroupGitRepositories;
                 _settings.SaveToFile();
                 ReapplyOrganizationMode();
-            }) { Checked = _settings.GroupGitRepositories, CheckOnClick = true };
+            }) { Checked = _settings.GroupGitRepositories, CheckOnClick = true, Padding = new Padding(0, 2, 45, 2) };
 
             menu.Items.AddRange(new ToolStripItem[] { hdr, new ToolStripSeparator(), itemExclusions, new ToolStripSeparator(), itemGit, new ToolStripSeparator() });
 
@@ -156,7 +159,7 @@ namespace FileOrganizer
                     Font = new Font(this.Font, FontStyle.Bold),
                     ForeColor = _settings.DarkMode ? Color.FromArgb(52, 211, 153) : Color.FromArgb(16, 185, 129)
                 };
-                var lblActiveDesc = new ToolStripLabel("  Direct subfolders with .git or .github are isolated into 'Git Repos'.")
+                var lblActiveDesc = new ToolStripLabel("  Folders with .git or .github are isolated into 'Git Repos'.")
                 {
                     Font = new Font(this.Font.FontFamily, this.Font.Size - 0.5f, FontStyle.Regular),
                     ForeColor = _settings.DarkMode ? Color.FromArgb(156, 163, 175) : Color.FromArgb(100, 116, 139)
@@ -189,12 +192,12 @@ namespace FileOrganizer
                     Font = new Font(this.Font, FontStyle.Bold),
                     ForeColor = _settings.DarkMode ? Color.FromArgb(251, 191, 36) : Color.FromArgb(217, 119, 6)
                 };
-                var lblDesc1 = new ToolStripLabel("  Git repository grouping applies when organizing by category or extension.")
+                var lblDesc1 = new ToolStripLabel("  Applies when organizing by Category or Extension.")
                 {
                     Font = new Font(this.Font.FontFamily, this.Font.Size - 0.5f, FontStyle.Regular),
                     ForeColor = _settings.DarkMode ? Color.FromArgb(156, 163, 175) : Color.FromArgb(100, 116, 139)
                 };
-                var lblDesc2 = new ToolStripLabel("  In Date Timeline mode, all folders are organized purely by date.")
+                var lblDesc2 = new ToolStripLabel("  In Date Timeline mode, folders are organized by date.")
                 {
                     Font = new Font(this.Font.FontFamily, this.Font.Size - 0.5f, FontStyle.Regular),
                     ForeColor = _settings.DarkMode ? Color.FromArgb(156, 163, 175) : Color.FromArgb(100, 116, 139)
