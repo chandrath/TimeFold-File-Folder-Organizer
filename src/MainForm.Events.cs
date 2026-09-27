@@ -171,9 +171,10 @@ namespace FileOrganizer
                     var item = new ListViewItem(file.Name) { UseItemStyleForSubItems = false, Checked = file.IsSelected && !file.IsExcludedByRule };
                     item.SubItems.Add(file.TypeDisplay);
 
-                    bool isMediaActive = file.IsMediaDateActive && file.MediaDateTaken.HasValue;
-                    bool isModActive = !file.IsCreatedDateActive && !isMediaActive;
-                    bool isCreActive = file.IsCreatedDateActive && !isMediaActive;
+                    bool isExcludedOrUnchecked = file.IsExcludedByRule || !file.IsSelected;
+                    bool isMediaActive = !isExcludedOrUnchecked && file.IsMediaDateActive && file.MediaDateTaken.HasValue;
+                    bool isModActive = !isExcludedOrUnchecked && !file.IsCreatedDateActive && !isMediaActive;
+                    bool isCreActive = !isExcludedOrUnchecked && file.IsCreatedDateActive && !isMediaActive;
 
                     string modText = (isModActive ? "✔ " : "   ") + AppConstants.FormatDisplayDate(file.ModifiedDate);
                     string creText = (isCreActive ? "✔ " : "   ") + AppConstants.FormatDisplayDate(file.CreatedDate);
@@ -348,8 +349,10 @@ namespace FileOrganizer
 
             if (!AppConstants.CheckDirectoryWritePermission(outputDir, this)) return;
 
-            LoadPreview();
-            if (_filesToOrganize.Count == 0) return;
+            if (_filesToOrganize.Count == 0)
+            {
+                MessageBox.Show("Please select a folder to preview files first.", "No Files Loaded", MessageBoxButtons.OK, MessageBoxIcon.Information); return;
+            }
 
             var itemsToOrganize = _filesToOrganize.Where(f => f.IsSelected && !f.IsExcludedByRule).ToList();
             if (itemsToOrganize.Count == 0)

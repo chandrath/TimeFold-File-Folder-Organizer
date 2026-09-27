@@ -59,24 +59,24 @@ namespace FileOrganizer
 
             _ctxFileMenu.Items.AddRange(new ToolStripItem[]
             {
-                _menuItemSelectAll,
-                _menuItemDeselectAll,
-                _menuItemInvertSelection,
-                _sepSelection,
                 _menuItemExcludeFolder,
-                _menuItemAutoFit,
-                _menuItemToggleStatus,
-                _sepAutoFit,
-                _menuItemRenameCategory,
-                _menuItemResetCategoryName,
-                _menuItemChangeCategory,
-                _sepTargetFolder,
                 _menuItemOpen,
                 _menuItemExplorer,
                 _menuItemCopy,
                 _sepFileOps,
                 _menuItemRename,
-                _menuItemDelete
+                _menuItemDelete,
+                _sepTargetFolder,
+                _menuItemRenameCategory,
+                _menuItemResetCategoryName,
+                _menuItemChangeCategory,
+                _sepSelection,
+                _menuItemSelectAll,
+                _menuItemDeselectAll,
+                _menuItemInvertSelection,
+                _sepAutoFit,
+                _menuItemAutoFit,
+                _menuItemToggleStatus
             });
 
             _lstFiles.MouseDown += (s, e) =>
@@ -89,7 +89,10 @@ namespace FileOrganizer
 
             _ctxFileMenu.Opening += (s, e) =>
             {
-                var hit = _lstFiles.HitTest(_lastRightClickPoint);
+                Point pt = _lstFiles.PointToClient(Cursor.Position);
+                var hit = _lstFiles.HitTest(pt);
+                if (hit.Item == null) hit = _lstFiles.HitTest(_lastRightClickPoint);
+
                 if (hit.Item == null)
                 {
                     if (_filesToOrganize.Count == 0) { e.Cancel = true; return; }
@@ -109,84 +112,52 @@ namespace FileOrganizer
                     hit.Item.Selected = true;
                 }
 
-                _menuItemSelectAll.Visible = true;
-                _menuItemDeselectAll.Visible = true;
-                _menuItemInvertSelection.Visible = true;
-                _sepSelection.Visible = true;
-
                 var selItem = hit.Item.Tag as FileItem;
                 bool isFileWithExt = selItem != null && !selItem.IsDirectory && !string.IsNullOrEmpty(selItem.Extension);
                 bool isDirectory = selItem != null && selItem.IsDirectory;
-                int colIndex = (hit.SubItem != null) ? hit.Item.SubItems.IndexOf(hit.SubItem) : 0;
-                bool isTargetFolderCell = (colIndex == 4);
+                bool isCatMode = _settings.OrgMode == OrganizationMode.Category
+                    || _settings.OrgMode == OrganizationMode.CategoryAndDate
+                    || _settings.OrgMode == OrganizationMode.DateAndCategory
+                    || _settings.OrgMode == OrganizationMode.Extension;
 
                 _menuItemExcludeFolder.Visible = isDirectory;
-                if (isDirectory)
+                if (isDirectory && selItem != null)
                 {
-                    _menuItemExcludeFolder.Text = selItem!.IsExcludedByRule
+                    bool hasMarker = File.Exists(Path.Combine(selItem.FullPath, AppConstants.TimefoldIgnoreFileName));
+                    bool isIgnored = hasMarker || selItem.IsExcludedByRule;
+                    _menuItemExcludeFolder.Text = isIgnored
                         ? $"✓ Stop ignoring folder '{selItem.Name}'"
                         : $"🛡 Ignore folder '{selItem.Name}'...";
                 }
 
+                _menuItemOpen.Visible = true;
+                _menuItemExplorer.Visible = true;
+                _menuItemCopy.Visible = true;
+                _sepFileOps.Visible = true;
+                _menuItemRename.Visible = !isDirectory;
+                _menuItemDelete.Visible = true;
+
                 string currentCategory = isFileWithExt ? FileTypeService.Instance.GetCategory(selItem!.Extension) : "";
                 string originalFactoryName = "";
-                bool isRenamed = isFileWithExt && FileTypeService.Instance.IsCategoryRenamed(currentCategory, out originalFactoryName);
+                bool isRenamed = isFileWithExt && isCatMode && FileTypeService.Instance.IsCategoryRenamed(currentCategory, out originalFactoryName);
 
-                if (isTargetFolderCell && isFileWithExt)
-                {
-                    // Target Folder cell right-click: focus on category & destination actions
-                    _menuItemExcludeFolder.Visible = false;
-                    _menuItemRenameCategory.Visible = true;
-                    _menuItemRenameCategory.Text = $"🏷️ Rename Category '{currentCategory}'...";
+                _sepTargetFolder.Visible = isFileWithExt && isCatMode;
+                _menuItemRenameCategory.Visible = isFileWithExt && isCatMode;
+                if (_menuItemRenameCategory.Visible) _menuItemRenameCategory.Text = $"🏷️ Rename Category '{currentCategory}'...";
 
-                    _menuItemResetCategoryName.Visible = isRenamed;
-                    if (isRenamed)
-                    {
-                        _menuItemResetCategoryName.Text = $"↺ Revert Category to Factory Name ('{originalFactoryName}')";
-                    }
+                _menuItemResetCategoryName.Visible = isRenamed && isCatMode;
+                if (_menuItemResetCategoryName.Visible) _menuItemResetCategoryName.Text = $"↺ Revert Category to Factory Name ('{originalFactoryName}')";
 
-                    _menuItemChangeCategory.Visible = true;
-                    _menuItemChangeCategory.Text = $"🔀 Remap all {selItem!.Extension.ToLowerInvariant()} files to another category...";
+                _menuItemChangeCategory.Visible = isFileWithExt && isCatMode;
+                if (_menuItemChangeCategory.Visible) _menuItemChangeCategory.Text = $"🔀 Remap all {selItem!.Extension.ToLowerInvariant()} files...";
 
-                    _sepTargetFolder.Visible = true;
-                    _menuItemOpen.Visible = true;
-                    _menuItemExplorer.Visible = true;
-                    _menuItemCopy.Visible = true;
-                    _sepFileOps.Visible = false;
-                    _menuItemRename.Visible = false;
-                    _menuItemDelete.Visible = false;
-                }
-                else
-                {
-                    // File Name / General Row right-click: focus on file operations
-                    _menuItemOpen.Visible = true;
-                    _menuItemExplorer.Visible = true;
-                    _menuItemCopy.Visible = true;
-                    _sepFileOps.Visible = true;
-                    _menuItemRename.Visible = !isDirectory;
-                    _menuItemDelete.Visible = true;
-
-                    _sepTargetFolder.Visible = isFileWithExt;
-                    _menuItemRenameCategory.Visible = isFileWithExt;
-                    if (isFileWithExt)
-                    {
-                        _menuItemRenameCategory.Text = $"🏷️ Rename Category '{currentCategory}'...";
-                    }
-
-                    _menuItemResetCategoryName.Visible = isRenamed;
-                    if (isRenamed)
-                    {
-                        _menuItemResetCategoryName.Text = $"↺ Revert Category to Factory Name ('{originalFactoryName}')";
-                    }
-
-                    _menuItemChangeCategory.Visible = isFileWithExt;
-                    if (isFileWithExt)
-                    {
-                        _menuItemChangeCategory.Text = $"🔀 Remap all {selItem!.Extension.ToLowerInvariant()} files...";
-                    }
-                }
+                _sepSelection.Visible = true;
+                _menuItemSelectAll.Visible = true;
+                _menuItemDeselectAll.Visible = true;
+                _menuItemInvertSelection.Visible = true;
                 _sepAutoFit.Visible = true;
                 _menuItemAutoFit.Visible = true;
+                _menuItemToggleStatus.Visible = true;
             };
 
             _lstFiles.ContextMenuStrip = _ctxFileMenu;

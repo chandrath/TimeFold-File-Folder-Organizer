@@ -114,6 +114,8 @@ namespace FileOrganizer
                 else
                 {
                     System.IO.File.WriteAllBytes(markerPath, Array.Empty<byte>());
+                    _settings.EnableFolderExclusions = true;
+                    _settings.SaveToFile();
                 }
             }
             catch (Exception ex)
@@ -195,48 +197,7 @@ namespace FileOrganizer
             _toolTip?.SetToolTip(_lblPreviewHeader, $"Showing {displayed:N0} of {total:N0} items ({selected:N0} selected for organization, {ignoredCount:N0} ignored).\nTip: Check/uncheck boxes to include/exclude specific items.");
         }
 
-        public void SetAllItemsSelected(bool selected)
-        {
-            if (_filesToOrganize.Count == 0) return;
-            _isUpdatingList = true;
-            _lstFiles.BeginUpdate();
-            try
-            {
-                _lstFiles.BeginUpdate();
-                try
-                {
-                    foreach (var file in _filesToOrganize)
-                    {
-                        if (!file.IsExcludedByRule) file.IsSelected = selected;
-                    }
-
-                    var palette = AppTheme.GetPalette(_settings.DarkMode);
-                    foreach (ListViewItem item in _lstFiles.Items)
-                    {
-                        if (item.Tag is FileItem file && !file.IsExcludedByRule)
-                        {
-                            item.Checked = selected;
-                            UpdateItemStatusDisplay(item, file, palette);
-                        }
-                    }
-                }
-                finally
-                {
-                    _lstFiles.EndUpdate();
-                }
-
-                CheckConflicts();
-                UpdateSummary();
-                int maxPreview = _currentPreviewLimit > 0 ? _currentPreviewLimit : (_settings.MaxPreviewItems > 0 ? _settings.MaxPreviewItems : AppConstants.DefaultMaxPreviewItems);
-                UpdatePreviewHeaderCount(Math.Min(maxPreview, _filesToOrganize.Count), _filesToOrganize.Count);
-            }
-            finally
-            {
-                _isUpdatingList = false;
-            }
-        }
-
-        public void InvertItemSelection()
+        private void MutateSelection(Action<FileItem> mutate, Func<FileItem, bool> isChecked)
         {
             if (_filesToOrganize.Count == 0) return;
             _isUpdatingList = true;
@@ -247,34 +208,29 @@ namespace FileOrganizer
                 {
                     foreach (var file in _filesToOrganize)
                     {
-                        if (!file.IsExcludedByRule) file.IsSelected = !file.IsSelected;
+                        if (!file.IsExcludedByRule) mutate(file);
                     }
-
                     var palette = AppTheme.GetPalette(_settings.DarkMode);
                     foreach (ListViewItem item in _lstFiles.Items)
                     {
                         if (item.Tag is FileItem file && !file.IsExcludedByRule)
                         {
-                            item.Checked = file.IsSelected;
+                            item.Checked = isChecked(file);
                             UpdateItemStatusDisplay(item, file, palette);
                         }
                     }
                 }
-                finally
-                {
-                    _lstFiles.EndUpdate();
-                }
-
+                finally { _lstFiles.EndUpdate(); }
                 CheckConflicts();
                 UpdateSummary();
                 int maxPreview = _currentPreviewLimit > 0 ? _currentPreviewLimit : (_settings.MaxPreviewItems > 0 ? _settings.MaxPreviewItems : AppConstants.DefaultMaxPreviewItems);
                 UpdatePreviewHeaderCount(Math.Min(maxPreview, _filesToOrganize.Count), _filesToOrganize.Count);
             }
-            finally
-            {
-                _isUpdatingList = false;
-            }
+            finally { _isUpdatingList = false; }
         }
+
+        public void SetAllItemsSelected(bool selected) => MutateSelection(f => f.IsSelected = selected, _ => selected);
+        public void InvertItemSelection() => MutateSelection(f => f.IsSelected = !f.IsSelected, f => f.IsSelected);
 
         private bool _preventItemCheck = false;
 
@@ -355,6 +311,7 @@ namespace FileOrganizer
         private void UpdateItemStatusDisplay(ListViewItem item, FileItem file, AppTheme.ThemePalette palette)
         {
             int statusIndex = _hasMediaDateColumn ? 6 : 5;
+            int targetIndex = _hasMediaDateColumn ? 5 : 4;
             if (item.SubItems.Count <= statusIndex) return;
             var boldFont = GetBoldListFont();
             var conflict = _currentConflicts.FirstOrDefault(c => c.Item == file);
@@ -364,14 +321,22 @@ namespace FileOrganizer
                 item.SubItems[statusIndex].Text = "🛡 Excluded (Rule)";
                 item.SubItems[statusIndex].ForeColor = _settings.DarkMode ? Color.FromArgb(251, 191, 36) : Color.FromArgb(217, 119, 6);
                 item.SubItems[statusIndex].Font = boldFont;
+                item.SubItems[targetIndex].Text = "— (Ignored)";
+                item.SubItems[targetIndex].ForeColor = palette.TextMuted;
+                item.SubItems[targetIndex].Font = _lstFiles.Font;
                 item.ForeColor = _settings.DarkMode ? Color.FromArgb(148, 163, 184) : Color.FromArgb(100, 116, 139);
+                MuteItemSubItems(item, file, statusIndex);
             }
             else if (!file.IsSelected)
             {
                 item.SubItems[statusIndex].Text = "○ Unchecked";
                 item.SubItems[statusIndex].ForeColor = palette.TextMuted;
                 item.SubItems[statusIndex].Font = _lstFiles.Font;
+                item.SubItems[targetIndex].Text = "— (Skipped)";
+                item.SubItems[targetIndex].ForeColor = palette.TextMuted;
+                item.SubItems[targetIndex].Font = _lstFiles.Font;
                 item.ForeColor = palette.TextMuted;
+                MuteItemSubItems(item, file, statusIndex);
             }
             else
             {
@@ -380,7 +345,55 @@ namespace FileOrganizer
                     ? (_settings.DarkMode ? Color.FromArgb(248, 113, 113) : Color.FromArgb(220, 38, 38))
                     : (_settings.DarkMode ? Color.FromArgb(52, 211, 153) : Color.FromArgb(22, 101, 52));
                 item.SubItems[statusIndex].Font = conflict != null ? boldFont : _lstFiles.Font;
-                item.ForeColor = palette.TextPrimary;
+                item.SubItems[targetIndex].Text = $"📁 {file.TargetFolder}";
+                item.SubItems[targetIndex].ForeColor = palette.ListTargetFolder;
+                item.SubItems[targetIndex].Font = boldFont;
+                RestoreItemSubItems(item, file, palette);
+            }
+        }
+
+        private void MuteItemSubItems(ListViewItem item, FileItem file, int statusIndex)
+        {
+            for (int i = 1; i < item.SubItems.Count; i++)
+            {
+                if (i != statusIndex) item.SubItems[i].ForeColor = Color.FromArgb(156, 163, 175);
+            }
+            if (item.SubItems.Count > 2) { item.SubItems[2].Text = "   " + AppConstants.FormatDisplayDate(file.ModifiedDate); item.SubItems[2].Font = _lstFiles.Font; }
+            if (item.SubItems.Count > 3) { item.SubItems[3].Text = "   " + AppConstants.FormatDisplayDate(file.CreatedDate); item.SubItems[3].Font = _lstFiles.Font; }
+            if (_hasMediaDateColumn && item.SubItems.Count > 4)
+            {
+                item.SubItems[4].Text = file.MediaDateTaken.HasValue ? "   " + AppConstants.FormatDisplayDate(file.MediaDateTaken.Value) : "—";
+                item.SubItems[4].Font = _lstFiles.Font;
+            }
+        }
+
+        private void RestoreItemSubItems(ListViewItem item, FileItem file, AppTheme.ThemePalette palette)
+        {
+            var boldFont = GetBoldListFont();
+            item.ForeColor = palette.TextPrimary;
+            if (item.SubItems.Count > 1) item.SubItems[1].ForeColor = palette.ListText;
+            bool isMediaActive = file.IsMediaDateActive && file.MediaDateTaken.HasValue;
+            bool isModActive = !file.IsCreatedDateActive && !isMediaActive;
+            bool isCreActive = file.IsCreatedDateActive && !isMediaActive;
+
+            if (item.SubItems.Count > 2)
+            {
+                item.SubItems[2].Text = (isModActive ? "✔ " : "   ") + AppConstants.FormatDisplayDate(file.ModifiedDate);
+                item.SubItems[2].Font = isModActive ? boldFont : _lstFiles.Font;
+                item.SubItems[2].ForeColor = isModActive ? palette.ListDateActive : palette.ListDateMuted;
+            }
+            if (item.SubItems.Count > 3)
+            {
+                item.SubItems[3].Text = (isCreActive ? "✔ " : "   ") + AppConstants.FormatDisplayDate(file.CreatedDate);
+                item.SubItems[3].Font = isCreActive ? boldFont : _lstFiles.Font;
+                item.SubItems[3].ForeColor = isCreActive ? palette.ListDateActive : palette.ListDateMuted;
+            }
+            if (_hasMediaDateColumn && item.SubItems.Count > 4)
+            {
+                string mText = isMediaActive ? $"✔ {AppConstants.FormatDisplayDate(file.MediaDateTaken!.Value)}" : (file.MediaDateTaken.HasValue ? $"   {AppConstants.FormatDisplayDate(file.MediaDateTaken.Value)}" : "—");
+                item.SubItems[4].Text = mText;
+                item.SubItems[4].Font = isMediaActive ? boldFont : _lstFiles.Font;
+                item.SubItems[4].ForeColor = isMediaActive ? palette.ListDateActive : palette.ListDateMuted;
             }
         }
 
