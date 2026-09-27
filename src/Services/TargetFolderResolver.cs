@@ -29,17 +29,9 @@ namespace FileOrganizer.Services
 
             string GetFormattedCategory()
             {
-                string baseCat;
-                if (item.IsDirectory)
-                {
-                    baseCat = (item.IsGitRepository && groupGitRepositories)
-                        ? FileTypeService.Instance.ResolveCategoryName(AppConstants.DefaultGitReposFolderName)
-                        : AppConstants.DefaultGroupedFolderName;
-                }
-                else
-                {
-                    baseCat = FileTypeService.Instance.GetCategory(item.Extension);
-                }
+                string baseCat = item.IsDirectory
+                    ? FileTypeService.Instance.GetFolderCategory(item.IsGitRepository && groupGitRepositories)
+                    : FileTypeService.Instance.GetCategory(item.Extension);
                 return AppConstants.FormatCategoryFolder(baseCat, categoryPrefix, categorySuffix);
             }
 
@@ -54,13 +46,7 @@ namespace FileOrganizer.Services
                 case OrganizationMode.Extension:
                     if (item.IsDirectory)
                     {
-                        return (item.IsGitRepository && groupGitRepositories)
-                            ? FileTypeService.Instance.ResolveCategoryName(AppConstants.DefaultGitReposFolderName)
-                            : AppConstants.DefaultGroupedFolderName;
-                    }
-                    if (FileTypeService.Instance.TryGetExtensionOverride(item.Extension, out var customDest))
-                    {
-                        return AppConstants.FormatCategoryFolder(customDest, categoryPrefix, categorySuffix);
+                        return FileTypeService.Instance.GetFolderCategory(item.IsGitRepository && groupGitRepositories);
                     }
                     string ext = item.Extension.TrimStart('.').ToUpperInvariant();
                     return string.IsNullOrWhiteSpace(ext) ? "No Extension" : ext;
@@ -86,7 +72,7 @@ namespace FileOrganizer.Services
             ".srt", ".vtt", ".sub", ".ass", ".ssa", ".idx", ".smi"
         };
 
-        public static void ApplySubtitleCompanionPairing(List<FileItem> items)
+        public static void ApplySubtitleCompanionPairing(List<FileItem> items, bool packageIntoDedicatedFolder = false, bool isCategoryMode = false)
         {
             if (items == null || items.Count == 0) return;
 
@@ -102,28 +88,50 @@ namespace FileOrganizer.Services
 
             if (videoMap.Count == 0) return;
 
+            var packagedVideos = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+
             foreach (var item in items)
             {
                 if (!item.IsDirectory && SubtitleExtensions.Contains(item.Extension))
                 {
                     string subBase = Path.GetFileNameWithoutExtension(item.Name);
-                    // Check exact match (e.g. Movie.srt -> Movie.mp4)
-                    if (videoMap.TryGetValue(subBase, out var parentVideo))
+                    FileItem? parentVideo = null;
+                    string matchKey = "";
+
+                    if (videoMap.TryGetValue(subBase, out parentVideo))
                     {
-                        item.TargetFolder = parentVideo.TargetFolder;
+                        matchKey = subBase;
                     }
-                    // Check language code match (e.g. Movie.en.srt -> Movie.mp4)
                     else if (subBase.Contains('.'))
                     {
                         string candidate = Path.GetFileNameWithoutExtension(subBase);
-                        if (videoMap.TryGetValue(candidate, out var parentVideoWithLang))
+                        if (videoMap.TryGetValue(candidate, out parentVideo))
                         {
-                            item.TargetFolder = parentVideoWithLang.TargetFolder;
+                            matchKey = candidate;
+                        }
+                    }
+
+                    if (parentVideo != null)
+                    {
+                        if (packageIntoDedicatedFolder && isCategoryMode)
+                        {
+                            if (packagedVideos.Add(matchKey))
+                            {
+                                parentVideo.TargetFolder = Path.Combine(parentVideo.TargetFolder, matchKey);
+                            }
+                            item.TargetFolder = parentVideo.TargetFolder;
+                        }
+                        else
+                        {
+                            item.TargetFolder = parentVideo.TargetFolder;
                         }
                     }
                 }
             }
         }
+
+        public static void ApplySubtitleCompanionPairing(List<FileItem> items) =>
+            ApplySubtitleCompanionPairing(items, false, false);
 
         public static void ApplyHtmlCompanionPairing(List<FileItem> items)
         {

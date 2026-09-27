@@ -82,7 +82,8 @@ namespace FileOrganizer
                     _settings.CategorySuffix,
                     _settings.KeepSubtitleCompanionsTogether,
                     _settings.CreateSortedSubfolder,
-                    _settings.GroupGitRepositories);
+                    _settings.GroupGitRepositories,
+                    _settings.PackageVideoSubtitles);
             }
 
             if (_filesToOrganize != null && _filesToOrganize.Count > 0)
@@ -105,7 +106,10 @@ namespace FileOrganizer
                 }
                 if (_settings.KeepSubtitleCompanionsTogether)
                 {
-                    TargetFolderResolver.ApplySubtitleCompanionPairing(_filesToOrganize);
+                    bool isCat = _settings.OrgMode == OrganizationMode.Category
+                        || _settings.OrgMode == OrganizationMode.CategoryAndDate
+                        || _settings.OrgMode == OrganizationMode.DateAndCategory;
+                    TargetFolderResolver.ApplySubtitleCompanionPairing(_filesToOrganize, _settings.PackageVideoSubtitles, isCat);
                 }
                 UpdateFileList();
                 UpdateSummary();
@@ -144,7 +148,25 @@ namespace FileOrganizer
                 ReapplyOrganizationMode();
             }) { Checked = _settings.GroupGitRepositories, CheckOnClick = true, Padding = new Padding(0, 2, 45, 2) };
 
-            menu.Items.AddRange(new ToolStripItem[] { hdr, new ToolStripSeparator(), itemExclusions, new ToolStripSeparator(), itemGit, new ToolStripSeparator() });
+            var itemHtml = new ToolStripMenuItem("Keep HTML companion folders together", null, (s, a) =>
+            {
+                _settings.KeepHtmlCompanionsTogether = !_settings.KeepHtmlCompanionsTogether;
+                _settings.SaveToFile();
+                ReapplyOrganizationMode();
+            }) { Checked = _settings.KeepHtmlCompanionsTogether, CheckOnClick = true, Padding = new Padding(0, 2, 45, 2) };
+
+            var itemSubtitles = new ToolStripMenuItem("Group Video and Subtitles into dedicated folder", null, (s, a) =>
+            {
+                _settings.PackageVideoSubtitles = !_settings.PackageVideoSubtitles;
+                _settings.SaveToFile();
+                ReapplyOrganizationMode();
+            }) { Checked = _settings.PackageVideoSubtitles, CheckOnClick = true, Padding = new Padding(0, 2, 45, 2) };
+
+            menu.Items.AddRange(new ToolStripItem[] {
+                hdr, new ToolStripSeparator(),
+                itemExclusions, new ToolStripSeparator(),
+                itemGit, itemHtml, itemSubtitles, new ToolStripSeparator()
+            });
 
             bool isCategoryMode = _settings.OrgMode == OrganizationMode.Category
                 || _settings.OrgMode == OrganizationMode.CategoryAndDate
@@ -152,62 +174,65 @@ namespace FileOrganizer
 
             if (_settings.DarkMode) SetMenuColors(menu.Items, palette);
 
+            var activeItems = new List<string>();
             if (isCategoryMode)
             {
-                var lblActive = new ToolStripLabel("  🟢 Currently Active (Category Mode)")
-                {
-                    Font = new Font(this.Font, FontStyle.Bold),
-                    ForeColor = _settings.DarkMode ? Color.FromArgb(52, 211, 153) : Color.FromArgb(16, 185, 129)
-                };
-                var lblActiveDesc = new ToolStripLabel("  Folders with .git or .github are isolated into 'Git Repos'.")
-                {
-                    Font = new Font(this.Font.FontFamily, this.Font.Size - 0.5f, FontStyle.Regular),
-                    ForeColor = _settings.DarkMode ? Color.FromArgb(156, 163, 175) : Color.FromArgb(100, 116, 139)
-                };
-                menu.Items.AddRange(new ToolStripItem[] { lblActive, lblActiveDesc });
+                if (_settings.GroupGitRepositories) activeItems.Add("• Git repositories isolated into 'Git Repos'");
+                if (_settings.KeepHtmlCompanionsTogether) activeItems.Add("• HTML companion folders kept with HTML files");
+                if (_settings.PackageVideoSubtitles) activeItems.Add("• Matching video & subtitle pairs packaged");
             }
             else if (_settings.OrgMode == OrganizationMode.Extension)
             {
-                var lblActive = new ToolStripLabel("  🟢 Currently Active (File Extension Mode)")
+                if (_settings.GroupGitRepositories) activeItems.Add("• Git repositories grouped into 'Git Repos'");
+                if (_settings.KeepHtmlCompanionsTogether) activeItems.Add("• HTML companion folders kept with HTML files");
+                activeItems.Add("• Other loose folders placed into 'Folders'");
+            }
+            else // Date mode
+            {
+                if (_settings.KeepHtmlCompanionsTogether) activeItems.Add("• HTML companion folders kept with HTML files");
+            }
+
+            string modeName = isCategoryMode ? "Category Mode" : (_settings.OrgMode == OrganizationMode.Extension ? "Extension Mode" : "Date Mode");
+            Color headerColor = activeItems.Count > 0
+                ? (_settings.DarkMode ? Color.FromArgb(52, 211, 153) : Color.FromArgb(16, 185, 129))
+                : (_settings.DarkMode ? Color.FromArgb(156, 163, 175) : Color.FromArgb(100, 116, 139));
+            Color textColor = _settings.DarkMode ? Color.FromArgb(156, 163, 175) : Color.FromArgb(100, 116, 139);
+
+            var lblHeader = new ToolStripLabel(activeItems.Count > 0 ? $"  🟢 Active Rules ({modeName})" : $"  ⚪ No Folder Rules Active ({modeName})")
+            {
+                Font = new Font(this.Font, FontStyle.Bold),
+                ForeColor = headerColor
+            };
+            menu.Items.Add(lblHeader);
+
+            if (activeItems.Count > 0)
+            {
+                foreach (var text in activeItems)
                 {
-                    Font = new Font(this.Font, FontStyle.Bold),
-                    ForeColor = _settings.DarkMode ? Color.FromArgb(52, 211, 153) : Color.FromArgb(16, 185, 129)
-                };
-                var lblDesc1 = new ToolStripLabel("  Git repositories (.git / .github) are grouped into 'Git Repos'.")
-                {
-                    Font = new Font(this.Font.FontFamily, this.Font.Size - 0.5f, FontStyle.Regular),
-                    ForeColor = _settings.DarkMode ? Color.FromArgb(156, 163, 175) : Color.FromArgb(100, 116, 139)
-                };
-                var lblDesc2 = new ToolStripLabel("  Other loose folders are placed into 'Grouped Folders'.")
-                {
-                    Font = new Font(this.Font.FontFamily, this.Font.Size - 0.5f, FontStyle.Regular),
-                    ForeColor = _settings.DarkMode ? Color.FromArgb(156, 163, 175) : Color.FromArgb(100, 116, 139)
-                };
-                menu.Items.AddRange(new ToolStripItem[] { lblActive, lblDesc1, lblDesc2 });
+                    menu.Items.Add(new ToolStripLabel($"    {text}")
+                    {
+                        Font = new Font(this.Font.FontFamily, this.Font.Size - 0.5f, FontStyle.Regular),
+                        ForeColor = textColor
+                    });
+                }
             }
             else
             {
-                var lblInactive = new ToolStripLabel("  ℹ️ Currently Inactive (Date Timeline Mode)")
-                {
-                    Font = new Font(this.Font, FontStyle.Bold),
-                    ForeColor = _settings.DarkMode ? Color.FromArgb(251, 191, 36) : Color.FromArgb(217, 119, 6)
-                };
-                var lblDesc1 = new ToolStripLabel("  Applies when organizing by Category or Extension.")
+                menu.Items.Add(new ToolStripLabel("    Default folder routing applied.")
                 {
                     Font = new Font(this.Font.FontFamily, this.Font.Size - 0.5f, FontStyle.Regular),
-                    ForeColor = _settings.DarkMode ? Color.FromArgb(156, 163, 175) : Color.FromArgb(100, 116, 139)
-                };
-                var lblDesc2 = new ToolStripLabel("  In Date Timeline mode, folders are organized by date.")
-                {
-                    Font = new Font(this.Font.FontFamily, this.Font.Size - 0.5f, FontStyle.Regular),
-                    ForeColor = _settings.DarkMode ? Color.FromArgb(156, 163, 175) : Color.FromArgb(100, 116, 139)
-                };
-                var tipSwitch = new ToolStripMenuItem("  👉 Switch to By Smart Category to activate", null, (s, a) => SetOrganizationMode(OrganizationMode.Category))
+                    ForeColor = textColor
+                });
+            }
+
+            if (!isCategoryMode)
+            {
+                var tipSwitch = new ToolStripMenuItem("  👉 Switch to By Smart Category for all rules", null, (s, a) => SetOrganizationMode(OrganizationMode.Category))
                 {
                     Font = new Font(this.Font, FontStyle.Bold),
                     ForeColor = _settings.DarkMode ? Color.FromArgb(96, 165, 250) : AppConstants.ColorPrimary
                 };
-                menu.Items.AddRange(new ToolStripItem[] { lblInactive, lblDesc1, lblDesc2, tipSwitch });
+                menu.Items.Add(tipSwitch);
             }
 
             menu.Show(_btnFolderRules, new Point(0, _btnFolderRules.Height + 2));

@@ -105,11 +105,12 @@ namespace FileOrganizer
             Services.FileTypeService.Instance.RemoveCategoryOverride(".pptx");
             string defExt = Services.TargetFolderResolver.Resolve(pptxItem, Models.OrganizationMode.Extension, Models.FolderFormat.YearMonth, "", "");
             Services.FileTypeService.Instance.SetCategoryOverride(".pptx", "CAT");
+            string customCat = Services.TargetFolderResolver.Resolve(pptxItem, Models.OrganizationMode.Category, Models.FolderFormat.YearMonth, "", "");
             string customExt = Services.TargetFolderResolver.Resolve(pptxItem, Models.OrganizationMode.Extension, Models.FolderFormat.YearMonth, "", "");
             bool isCustom = Services.FileTypeService.Instance.IsCustomRoute(".pptx");
             Services.FileTypeService.Instance.RemoveCategoryOverride(".pptx");
             string revExt = Services.TargetFolderResolver.Resolve(pptxItem, Models.OrganizationMode.Extension, Models.FolderFormat.YearMonth, "", "");
-            if (defExt != "PPTX" || customExt != "CAT" || !isCustom || revExt != "PPTX")
+            if (defExt != "PPTX" || customCat != "CAT" || customExt != "PPTX" || !isCustom || revExt != "PPTX")
             {
                 Console.WriteLine($"[FAIL] Extension remap failed: def='{defExt}', custom='{customExt}', isCustom={isCustom}, rev='{revExt}'");
                 return 4;
@@ -405,7 +406,7 @@ namespace FileOrganizer
                 }
 
                 var projectItem = scanIgnoreFile.FirstOrDefault(f => f.Name.Equals("Projects", StringComparison.OrdinalIgnoreCase));
-                if (projectItem == null || !projectItem.IsExcludedByRule || projectItem.TypeDisplay != "Folder (Ignored)" || projectItem.TargetFolder != "— (Ignored)")
+                if (projectItem == null || !projectItem.IsExcludedByRule || projectItem.TypeDisplay != "📁 Folder (Ignored)" || projectItem.TargetFolder != "— (Ignored)")
                 {
                     Console.WriteLine("[FAIL] .timefold-ignore rule test failed: Projects was not excluded or TypeDisplay was incorrect");
                     return 18;

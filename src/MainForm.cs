@@ -153,7 +153,8 @@ namespace FileOrganizer
                     _settings.Use24HourTimestamp, _settings.OrgMode,
                     _settings.KeepHtmlCompanionsTogether, _settings.CategoryPrefix,
                     _settings.CategorySuffix, _settings.KeepSubtitleCompanionsTogether,
-                    _settings.CreateSortedSubfolder, _settings.GroupGitRepositories);
+                    _settings.CreateSortedSubfolder, _settings.GroupGitRepositories,
+                    _settings.PackageVideoSubtitles);
             }
             if (_chkUseSourceAsOutput != null && _chkUseSourceAsOutput.Checked != _settings.UseSourceAsOutput) _chkUseSourceAsOutput.Checked = _settings.UseSourceAsOutput;
             if (_chkIncludeFolders != null && _chkIncludeFolders.Checked != _settings.IncludeTopLevelFolders) _chkIncludeFolders.Checked = _settings.IncludeTopLevelFolders;
@@ -209,7 +210,8 @@ namespace FileOrganizer
                         _settings.FolderFormat, _settings.FolderPrefix, _settings.FolderSuffix,
                         _settings.Use24HourTimestamp, _settings.OrgMode, _settings.KeepHtmlCompanionsTogether,
                         _settings.CategoryPrefix, _settings.CategorySuffix, _settings.KeepSubtitleCompanionsTogether,
-                        _settings.CreateSortedSubfolder, _settings.GroupGitRepositories);
+                        _settings.CreateSortedSubfolder, _settings.GroupGitRepositories,
+                        _settings.PackageVideoSubtitles);
                     _shouldAutoFitColumns = true;
                     UpdateOutputFolder();
                     LoadPreview();
@@ -476,6 +478,7 @@ namespace FileOrganizer
             _cellToolTip?.Dispose();
             _toolTip?.Dispose();
             base.OnFormClosed(e);
+            Application.Exit();
         }
     }
 }

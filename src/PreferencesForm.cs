@@ -86,6 +86,8 @@ namespace FileOrganizer
                 CategorySuffix = currentSettings.CategorySuffix,
                 KeepHtmlCompanionsTogether = currentSettings.KeepHtmlCompanionsTogether,
                 KeepSubtitleCompanionsTogether = currentSettings.KeepSubtitleCompanionsTogether,
+                PackageVideoSubtitles = currentSettings.PackageVideoSubtitles,
+                GroupGitRepositories = currentSettings.GroupGitRepositories,
                 CreateSortedSubfolder = currentSettings.CreateSortedSubfolder,
                 UseSourceAsOutput = currentSettings.UseSourceAsOutput,
                 RecentFolders = new System.Collections.Generic.List<string>(currentSettings.RecentFolders)
@@ -246,6 +248,9 @@ namespace FileOrganizer
             _settings.CreateSortedSubfolder = AppConstants.DefaultCreateSortedSubfolder;
             _settings.UseSourceAsOutput = AppConstants.DefaultUseSourceAsOutput;
             _chkIgnoreSystemFiles.Checked = AppConstants.DefaultIgnoreSystemFiles;
+            _chkPackageVideoSubtitles.Checked = AppConstants.DefaultPackageVideoSubtitles;
+            _chkKeepHtmlCompanions.Checked = AppConstants.DefaultKeepHtmlCompanionsTogether;
+            _settings.PackageVideoSubtitles = AppConstants.DefaultPackageVideoSubtitles;
             _settings.KeepSubtitleCompanionsTogether = AppConstants.DefaultKeepSubtitleCompanionsTogether;
             _settings.KeepHtmlCompanionsTogether = AppConstants.DefaultKeepHtmlCompanionsTogether;
             _chkShowProgress.Checked = AppConstants.DefaultShowDetailedProgress;
@@ -290,6 +295,8 @@ namespace FileOrganizer
         {
             _settings.IncludeTopLevelFolders = _chkIncludeFolders.Checked;
             _settings.GroupGitRepositories = _chkGroupGitRepositories.Checked;
+            _settings.KeepHtmlCompanionsTogether = _chkKeepHtmlCompanions.Checked;
+            _settings.PackageVideoSubtitles = _chkPackageVideoSubtitles.Checked;
             _settings.IgnoreSystemFiles = _chkIgnoreSystemFiles.Checked;
             _settings.FileDateSource = (DateSource)_cmbFileDateSource.SelectedIndex;
             _settings.FolderDateSource = (DateSource)_cmbFolderDateSource.SelectedIndex;

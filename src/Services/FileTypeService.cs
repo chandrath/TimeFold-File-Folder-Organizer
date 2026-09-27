@@ -42,7 +42,8 @@ namespace FileOrganizer.Services
             ["Font Files"] = new[] { ".ttf", ".otf", ".woff", ".woff2", ".eot" },
             ["Shortcuts"] = new[] { ".lnk" },
             ["Web Links"] = new[] { ".url", ".website" },
-            ["Torrent Files"] = new[] { ".torrent", ".magnet" }
+            ["Torrent Files"] = new[] { ".torrent", ".magnet" },
+            ["Subtitle Files"] = new[] { ".srt", ".vtt", ".sub", ".ass", ".ssa", ".idx", ".smi" }
         };
 
         private UserTypeDelta _delta = new();
@@ -250,6 +251,42 @@ namespace FileOrganizer.Services
             if (string.IsNullOrWhiteSpace(extension)) return false;
             string cleanExt = extension.StartsWith('.') ? extension.ToLowerInvariant() : "." + extension.ToLowerInvariant();
             return _delta.ExtensionCategoryOverrides.ContainsKey(cleanExt);
+        }
+
+        public string GetFolderCategory(bool isGitRepo)
+        {
+            string key = isGitRepo ? Config.AppConstants.GitRepoCategoryKey : Config.AppConstants.FolderCategoryKey;
+            if (_delta.ExtensionCategoryOverrides.TryGetValue(key, out var customCat) && !string.IsNullOrWhiteSpace(customCat))
+                return customCat;
+            string def = isGitRepo ? Config.AppConstants.DefaultGitReposFolderName : Config.AppConstants.DefaultGroupedFolderName;
+            return ResolveCategoryName(def);
+        }
+
+        public void SetFolderCategoryOverride(bool isGitRepo, string targetCategory)
+        {
+            if (string.IsNullOrWhiteSpace(targetCategory)) return;
+            string key = isGitRepo ? Config.AppConstants.GitRepoCategoryKey : Config.AppConstants.FolderCategoryKey;
+            _delta.ExtensionCategoryOverrides[key] = targetCategory.Trim();
+            SaveDelta();
+        }
+
+        public void ResetFolderCategoryOverride(bool isGitRepo)
+        {
+            string key = isGitRepo ? Config.AppConstants.GitRepoCategoryKey : Config.AppConstants.FolderCategoryKey;
+            if (_delta.ExtensionCategoryOverrides.Remove(key))
+                SaveDelta();
+        }
+
+        public bool IsFolderCategoryOverridden(bool isGitRepo, out string currentCategory)
+        {
+            string key = isGitRepo ? Config.AppConstants.GitRepoCategoryKey : Config.AppConstants.FolderCategoryKey;
+            if (_delta.ExtensionCategoryOverrides.TryGetValue(key, out var custom) && !string.IsNullOrWhiteSpace(custom))
+            {
+                currentCategory = custom;
+                return true;
+            }
+            currentCategory = GetFolderCategory(isGitRepo);
+            return false;
         }
 
         public void LoadDelta()

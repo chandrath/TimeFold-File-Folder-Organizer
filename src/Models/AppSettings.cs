@@ -28,6 +28,7 @@ namespace FileOrganizer.Models
         public string CategorySuffix { get; set; } = Config.AppConstants.DefaultCategorySuffix;
         public bool KeepHtmlCompanionsTogether { get; set; } = Config.AppConstants.DefaultKeepHtmlCompanionsTogether;
         public bool KeepSubtitleCompanionsTogether { get; set; } = Config.AppConstants.DefaultKeepSubtitleCompanionsTogether;
+        public bool PackageVideoSubtitles { get; set; } = Config.AppConstants.DefaultPackageVideoSubtitles;
         public int MaxPreviewItems { get; set; } = Config.AppConstants.DefaultMaxPreviewItems;
         public bool CreateSortedSubfolder { get; set; } = Config.AppConstants.DefaultCreateSortedSubfolder;
         public bool UseSourceAsOutput { get; set; } = Config.AppConstants.DefaultUseSourceAsOutput;
@@ -142,6 +143,7 @@ namespace FileOrganizer.Models
                 || CategorySuffix != other.CategorySuffix
                 || KeepHtmlCompanionsTogether != other.KeepHtmlCompanionsTogether
                 || KeepSubtitleCompanionsTogether != other.KeepSubtitleCompanionsTogether
+                || PackageVideoSubtitles != other.PackageVideoSubtitles
                 || GroupGitRepositories != other.GroupGitRepositories
                 || UseMediaDateTaken != other.UseMediaDateTaken;
         }

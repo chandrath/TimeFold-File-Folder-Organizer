@@ -186,6 +186,9 @@ namespace FileOrganizer.Config
         public const int MaxPrefixSuffixLength = 30;
         public const bool DefaultKeepHtmlCompanionsTogether = true;
         public const bool DefaultKeepSubtitleCompanionsTogether = true;
+        public const bool DefaultPackageVideoSubtitles = true;
+        public const string FolderCategoryKey = "::folder::";
+        public const string GitRepoCategoryKey = "::git-repo::";
         public const DateSource DefaultFileDateSource = DateSource.Modified;
         public const DateSource DefaultFolderDateSource = DateSource.Modified;
         public const bool DefaultUseMediaDateTaken = true;

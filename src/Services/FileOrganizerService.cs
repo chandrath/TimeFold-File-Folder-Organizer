@@ -19,7 +19,7 @@ namespace FileOrganizer.Services
         private string _categoryPrefix = AppConstants.DefaultCategoryPrefix, _categorySuffix = AppConstants.DefaultCategorySuffix;
         private bool _use24HourTimestamp = AppConstants.DefaultUse24HourTimestamp, _groupGitRepositories = AppConstants.DefaultGroupGitRepositories;
         private OrganizationMode _organizationMode = OrganizationMode.Date;
-        private bool _keepHtmlCompanionsTogether = true, _keepSubtitleCompanionsTogether = true;
+        private bool _keepHtmlCompanionsTogether = true, _keepSubtitleCompanionsTogether = true, _packageVideoSubtitles = true;
         private bool _createSortedSubfolder = AppConstants.DefaultCreateSortedSubfolder;
         public bool CreateSortedSubfolder { get => _createSortedSubfolder; set => _createSortedSubfolder = value; }
 
@@ -147,7 +147,7 @@ namespace FileOrganizer.Services
             using (PerfLogger.Measure($"ScanFiles: Post-processing {files.Count} items"))
             {
                 if (_keepHtmlCompanionsTogether) TargetFolderResolver.ApplyHtmlCompanionPairing(files);
-                if (_keepSubtitleCompanionsTogether) TargetFolderResolver.ApplySubtitleCompanionPairing(files);
+                if (_keepSubtitleCompanionsTogether) TargetFolderResolver.ApplySubtitleCompanionPairing(files, _packageVideoSubtitles, _organizationMode == OrganizationMode.Category || _organizationMode == OrganizationMode.CategoryAndDate || _organizationMode == OrganizationMode.DateAndCategory);
                 return files.OrderByDescending(f => f.ModifiedDate).ToList();
             }
         }
@@ -445,13 +445,13 @@ namespace FileOrganizer.Services
             OrganizationMode mode = OrganizationMode.Date, bool keepHtmlCompanions = true,
             string categoryPrefix = "", string categorySuffix = "",
             bool keepSubtitleCompanions = true, bool createSortedSubfolder = true,
-            bool groupGitRepositories = true)
+            bool groupGitRepositories = true, bool packageVideoSubtitles = true)
         {
             _folderFormat = format; _folderPrefix = prefix ?? string.Empty; _folderSuffix = suffix ?? string.Empty;
             _use24HourTimestamp = use24Hour; _organizationMode = mode; _keepHtmlCompanionsTogether = keepHtmlCompanions;
             _categoryPrefix = categoryPrefix ?? string.Empty; _categorySuffix = categorySuffix ?? string.Empty;
             _keepSubtitleCompanionsTogether = keepSubtitleCompanions; _createSortedSubfolder = createSortedSubfolder;
-            _groupGitRepositories = groupGitRepositories;
+            _groupGitRepositories = groupGitRepositories; _packageVideoSubtitles = packageVideoSubtitles;
         }
 
         internal static bool IsGitRepository(string dirPath)

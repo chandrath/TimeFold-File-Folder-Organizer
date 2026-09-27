@@ -113,12 +113,11 @@ namespace FileOrganizer
                 }
 
                 var selItem = hit.Item.Tag as FileItem;
-                bool isFileWithExt = selItem != null && !selItem.IsDirectory && !string.IsNullOrEmpty(selItem.Extension);
                 bool isDirectory = selItem != null && selItem.IsDirectory;
+                bool isFileWithExt = selItem != null && !isDirectory && !string.IsNullOrEmpty(selItem.Extension);
                 bool isCatMode = _settings.OrgMode == OrganizationMode.Category
                     || _settings.OrgMode == OrganizationMode.CategoryAndDate
-                    || _settings.OrgMode == OrganizationMode.DateAndCategory
-                    || _settings.OrgMode == OrganizationMode.Extension;
+                    || _settings.OrgMode == OrganizationMode.DateAndCategory;
 
                 _menuItemExcludeFolder.Visible = isDirectory;
                 if (isDirectory && selItem != null)
@@ -141,15 +140,26 @@ namespace FileOrganizer
                 string originalFactoryName = "";
                 bool isRenamed = isFileWithExt && isCatMode && FileTypeService.Instance.IsCategoryRenamed(currentCategory, out originalFactoryName);
 
-                _sepTargetFolder.Visible = isFileWithExt && isCatMode;
+                _sepTargetFolder.Visible = (isFileWithExt || isDirectory) && isCatMode;
                 _menuItemRenameCategory.Visible = isFileWithExt && isCatMode;
                 if (_menuItemRenameCategory.Visible) _menuItemRenameCategory.Text = $"🏷️ Rename Category '{currentCategory}'...";
 
                 _menuItemResetCategoryName.Visible = isRenamed && isCatMode;
                 if (_menuItemResetCategoryName.Visible) _menuItemResetCategoryName.Text = $"↺ Revert Category to Factory Name ('{originalFactoryName}')";
 
-                _menuItemChangeCategory.Visible = isFileWithExt && isCatMode;
-                if (_menuItemChangeCategory.Visible) _menuItemChangeCategory.Text = $"📁 Set target folder for all {selItem!.Extension.ToLowerInvariant()} files...";
+                _menuItemChangeCategory.Visible = (isFileWithExt || isDirectory) && isCatMode;
+                if (_menuItemChangeCategory.Visible)
+                {
+                    if (isDirectory)
+                    {
+                        bool isGit = selItem!.IsGitRepository && _settings.GroupGitRepositories;
+                        _menuItemChangeCategory.Text = isGit ? "📁 Set target folder for all Git repositories..." : "📁 Set target folder for all folders...";
+                    }
+                    else
+                    {
+                        _menuItemChangeCategory.Text = $"📁 Set target folder for all {selItem!.Extension.ToLowerInvariant()} files...";
+                    }
+                }
 
                 _sepSelection.Visible = true;
                 _menuItemSelectAll.Visible = true;
@@ -356,29 +366,26 @@ namespace FileOrganizer
         private void ChangeCategoryForSelectedExtension()
         {
             var item = GetSelectedFileItem();
-            if (item == null || item.IsDirectory || string.IsNullOrWhiteSpace(item.Extension)) return;
+            if (item == null) return;
 
+            if (item.IsDirectory)
+            {
+                bool isGit = item.IsGitRepository && _settings.GroupGitRepositories;
+                string label = isGit ? "Git repositories" : "folders";
+                bool hasCustom = FileTypeService.Instance.IsFolderCategoryOverridden(isGit, out var curCat);
+                var (chosen, reset) = ShowCategoryPickerPrompt(label, curCat, FileTypeService.Instance.GetAllCategories(), hasCustom, _settings.DarkMode);
+                if (reset) { FileTypeService.Instance.ResetFolderCategoryOverride(isGit); ReapplyOrganizationMode(); }
+                else if (!string.IsNullOrWhiteSpace(chosen)) { FileTypeService.Instance.SetFolderCategoryOverride(isGit, chosen); ReapplyOrganizationMode(); }
+                return;
+            }
+
+            if (string.IsNullOrWhiteSpace(item.Extension)) return;
             string ext = item.Extension.ToLowerInvariant();
             bool hasCustomOverride = FileTypeService.Instance.IsCustomRoute(ext);
-            string currentCategory = _settings.OrgMode == OrganizationMode.Extension
-                ? (FileTypeService.Instance.TryGetExtensionOverride(ext, out var ovr) ? ovr : ext.TrimStart('.').ToUpperInvariant())
-                : FileTypeService.Instance.GetCategory(ext);
-            var categories = FileTypeService.Instance.GetAllCategories();
-
-            var (chosenCategory, resetRequested) = ShowCategoryPickerPrompt(ext, currentCategory, categories, hasCustomOverride, _settings.DarkMode);
-            if (resetRequested)
-            {
-                FileTypeService.Instance.RemoveCategoryOverride(ext);
-                ReapplyOrganizationMode();
-            }
-            else if (!string.IsNullOrWhiteSpace(chosenCategory))
-            {
-                if (_settings.OrgMode == OrganizationMode.Extension && string.Equals(chosenCategory, ext.TrimStart('.'), StringComparison.OrdinalIgnoreCase))
-                    FileTypeService.Instance.RemoveCategoryOverride(ext);
-                else
-                    FileTypeService.Instance.SetCategoryOverride(ext, chosenCategory);
-                ReapplyOrganizationMode();
-            }
+            string currentCategory = FileTypeService.Instance.GetCategory(ext);
+            var (chosenCategory, resetRequested) = ShowCategoryPickerPrompt(ext, currentCategory, FileTypeService.Instance.GetAllCategories(), hasCustomOverride, _settings.DarkMode);
+            if (resetRequested) { FileTypeService.Instance.RemoveCategoryOverride(ext); ReapplyOrganizationMode(); }
+            else if (!string.IsNullOrWhiteSpace(chosenCategory)) { FileTypeService.Instance.SetCategoryOverride(ext, chosenCategory); ReapplyOrganizationMode(); }
         }
 
         private static (string? category, bool resetRequested) ShowCategoryPickerPrompt(string ext, string currentCategory, List<string> categories, bool hasCustomOverride, bool isDark)
@@ -400,7 +407,7 @@ namespace FileOrganizer
 
             var lblDesc = new Label
             {
-                Text = $"All '{ext}' files are currently routed to: {currentCategory}\r\nSelect an existing category or type a custom destination folder:",
+                Text = $"All '{ext}' items are currently routed to: {currentCategory}\r\nSelect an existing category or type a custom destination folder:",
                 Location = new Point(20, 16),
                 Size = new Size(435, 38),
                 ForeColor = palette.TextPrimary
@@ -434,15 +441,7 @@ namespace FileOrganizer
             btnReset.FlatAppearance.BorderColor = palette.SecondaryButtonBorder;
             btnReset.Click += (s, a) => { resetClicked = true; prompt.DialogResult = DialogResult.OK; prompt.Close(); };
 
-            var btnOk = new Button
-            {
-                Text = "Apply",
-                Location = new Point(266, 125),
-                Size = new Size(90, 32),
-                BackColor = AppConstants.ColorPrimary,
-                ForeColor = Color.White,
-                FlatStyle = FlatStyle.Flat
-            };
+            var btnOk = new Button { Text = "Apply", Location = new Point(266, 125), Size = new Size(90, 32), BackColor = AppConstants.ColorPrimary, ForeColor = Color.White, FlatStyle = FlatStyle.Flat };
             btnOk.FlatAppearance.BorderSize = 0;
             btnOk.Click += (s, a) =>
             {
@@ -452,8 +451,7 @@ namespace FileOrganizer
                     MessageBox.Show(prompt, "Please enter a destination folder name.", "Empty Folder Name", MessageBoxButtons.OK, MessageBoxIcon.Warning);
                     return;
                 }
-                char[] invalid = Path.GetInvalidFileNameChars();
-                if (text.IndexOfAny(invalid) >= 0)
+                if (text.IndexOfAny(Path.GetInvalidFileNameChars()) >= 0)
                 {
                     MessageBox.Show(prompt, "Folder name cannot contain any of the following characters:\n\\ / : * ? \" < > |", "Invalid Characters", MessageBoxButtons.OK, MessageBoxIcon.Warning);
                     return;
@@ -462,16 +460,7 @@ namespace FileOrganizer
                 prompt.Close();
             };
 
-            var btnCancel = new Button
-            {
-                Text = "Cancel",
-                DialogResult = DialogResult.Cancel,
-                Location = new Point(362, 125),
-                Size = new Size(90, 32),
-                BackColor = palette.SecondaryButtonBg,
-                ForeColor = palette.SecondaryButtonText,
-                FlatStyle = FlatStyle.Flat
-            };
+            var btnCancel = new Button { Text = "Cancel", DialogResult = DialogResult.Cancel, Location = new Point(362, 125), Size = new Size(90, 32), BackColor = palette.SecondaryButtonBg, ForeColor = palette.SecondaryButtonText, FlatStyle = FlatStyle.Flat };
             btnCancel.FlatAppearance.BorderColor = palette.SecondaryButtonBorder;
 
             prompt.Controls.AddRange([lblDesc, cbo, btnReset, btnOk, btnCancel]);
