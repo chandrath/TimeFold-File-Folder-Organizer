@@ -82,7 +82,7 @@ namespace FileOrganizer
                         $"Dedicated Monthly Folders: Files from last month automatically move into their own folder (e.g., {lastMonth:yyyy-MM} or {lastMonth:yyyy MMM}).",
                         $"Older Archives: Files from three months ago move cleanly into {threeMonthsAgo:yyyy-MM} ({threeMonthsAgo:yyyy MMM}).",
                         $"Day-by-Day Organization: Want daily sorting? Choose day-wise folders (e.g., {now:yyyy-MM-dd}) — ideal for daily screenshots or camera photos.",
-                        $"Quarterly Grouping: Group by quarter (e.g., {now.Year}-Q{currentQuarter}) for invoices, tax receipts, and quarterly archives.",
+                        "Smart Date Defaults: Files use Date Modified, folders use Date Created, and photos/videos prioritize camera EXIF Date Taken. You can easily change this anytime in Preferences.",
                         $"Custom Naming: Add custom prefixes and suffixes (e.g., Photos_{lastMonth:yyyy-MM}) to match your exact naming preferences."
                     }
                 ),
@@ -97,7 +97,7 @@ namespace FileOrganizer
                         "Smart Categories: Automatically group files into intuitive categories (Images, Documents, Audio, Video, 3D, Code, Archives, etc.).",
                         $"Hybrid 2-Level Folders: Combine both dimensions (e.g., Images\\{now:yyyy-MM} or {now:yyyy-MM}\\Images) for deep organization.",
                         "Custom Type Rules: Remap file extensions, add custom folder prefixes & suffixes, or create your own custom categories.",
-                        "Smart Companion Pairing: Intelligently keep HTML files with their asset folders and subtitle files beside movies.",
+                        "Smart Companion Pairing: Automatically packages matching video & subtitle pairs into dedicated movie folders, and keeps HTML web pages with their asset folders.",
                         "1-Click Switching: Seamlessly toggle between Date, Category, and Hybrid modes directly from the main toolbar."
                     }
                 ),
@@ -109,8 +109,9 @@ namespace FileOrganizer
                     "Nothing is moved blindly. You stay in 100% control at every step.",
                     new[]
                     {
-                        "Full Interactive Preview: Inspect every item and see its exact destination folder before moving a single file.",
-                        "100% Non-Destructive: TimeFold only reorganizes your files into neat date folders — it never deletes, alters, or compresses your original files.",
+                        "100% Non-Destructive Guarantee: TimeFold only reorganizes your files into neat folders — it never deletes, alters, or compresses your original files.",
+                        "Interactive Preview & Checkboxes: See the exact target destination for every file before clicking Start. Check or uncheck individual items on the fly for that session.",
+                        "Folder Exclusion Rules & .timefold-ignore: Protect sensitive folders by rule or drop a .timefold-ignore file into any folder to permanently lock and skip it.",
                         "Automatic CSV Audit Log: Every organization creates a detailed timestamped CSV log so you always know where files went.",
                         "In-Place or Custom Output: Organize directly inside the source folder or route sorted files to an external backup drive."
                     }

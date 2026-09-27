@@ -238,10 +238,22 @@ TimeFold is designed to reduce that manual work while keeping the organization p
 TimeFold uses a **preview-first workflow** so you can see what it plans to do before organization begins.
 
 1. **Select Source:** Choose or drag and drop the folder you want to organize.
-2. **Review Preview:** TimeFold scans the directory and shows the planned destinations in the live preview grid.
-3. **Configure Options:** Choose your preferred date format, custom prefixes, or 24-hour timestamps in Preferences.
+2. **Review Preview:** TimeFold scans the directory and shows the exact planned destination for every file in the live preview grid. Use interactive checkboxes to include or skip files for this session.
+3. **Configure Options:** Choose your preferred date format, folder exclusion rules, custom prefixes, or 24-hour timestamps in Preferences.
 4. **Start Organizing:** Start the organization and watch progress in real time as items are moved into their destinations.
 5. **Review the Result:** Open the output folder and use the generated CSV audit log to review the organization run.
+
+### Default Date Sources
+
+TimeFold uses smart, sensible date defaults out of the box so your files land in the right timeline:
+
+| Item Type | Default Date Source | Why It's Chosen |
+| :--- | :--- | :--- |
+| **Files** | **Date Modified** | Reflects when document or file content was last saved |
+| **Folders** | **Date Created** | Reflects when the folder was originally created on your drive |
+| **Photos & Videos** | **Date Taken (EXIF / Video Metadata)** | Uses true camera capture time (automatically converted from UTC to local time) |
+
+> 💡 **Customizable Anytime:** You can easily change date sources anytime in **Settings > Preferences** (e.g., switch files or folders to Date Created, or toggle media EXIF prioritization to use filesystem dates).
 
 ---
 
@@ -253,9 +265,13 @@ TimeFold uses a **preview-first workflow** so you can see what it plans to do be
 - **🔤 File Extension Mode:** Organize files by their raw file extension for a more precise structure.
 - **🛡️ Non-Destructive Organization:** TimeFold does not delete, alter, or compress your original files. It relocates items cleanly into the organized structure you choose, and never extracts or touches files inside existing subfolders.
 - **↩️ Undo Operation (Beta):** Safely roll back your last organization run with robust collision protection, restoring items to their original locations and cleaning up session audit logs *(currently in beta while undergoing further real-world testing)*.
-- **🔍 Full Interactive Preview:** Review files and their exact destinations in the live preview before moving anything.
-- **📝 Automatic CSV Audit Logs:** Every organization run generates a timestamped audit trail so you can review where items went.
-- **📦 Safe Git Repository Detection:** Automatically identifies Git repositories (containing `.git` or `.github`, including single-wrapper root folders) and keeps them 100% intact. Routes them to a dedicated `Git Repos` folder in Category modes, or places them on the chronological timeline in Date mode.
+- **🔍 Full Interactive Preview & Checkboxes:** Review files and their exact planned destinations in the live preview before moving anything, with interactive session checkboxes to include or skip files on the fly.
+- **🛡️ Folder Exclusion Rules & Protection:** Protect your important folders from being organized. Set exclusion rules by name in the settings or simply drop a .timefold-ignore file into any folder to lock it completely and keep its contents untouched.
+- **📷 Camera EXIF & Video Date Taken:** Prioritizes original capture timestamps from photo EXIF (JPEG, HEIC, PNG, WebP) and video containers (MP4, MOV, M4V), converting UTC to local time so media sorts by when you actually shot it.
+- **🎬 Movie & Companion Pairing:** Automatically packages matching video and subtitle pairs (Movie.mp4 + Movie.srt) into dedicated movie folders, and keeps HTML web pages with their companion asset folders (_files, _data).
+- **📋 Automatic CSV Audit Logs:** Every organization run generates a timestamped audit trail so you can review where items went.
+- **📦 Safe Git Repository Detection:** Automatically identifies Git repositories (containing .git or .github, including single-wrapper root folders) and keeps them 100% intact. Routes them to a dedicated Git Repos folder in Category modes, or places them on the chronological timeline in Date mode.
+- **↔️ Dynamic Column Auto-Fitting:** Automatically fits and balances column widths on source folder load and mode switch for a clean, proportional view.
 - **🚀 Large-Folder Support:** Designed to scan and paginate through large collections, including **10,000 to 100,000+ files**.
 - **⚠️ Smart Timestamp Detection:** Detects and alerts you when files share identical timestamps, which can happen with extracted archives or downloaded files.
 - **📁 Top-Level Folder Support:** Optionally organize loose subfolders alongside files with a single toggle.
@@ -263,7 +279,6 @@ TimeFold uses a **preview-first workflow** so you can see what it plans to do be
 - **🖱️ Drag & Drop:** Drag and drop a folder into TimeFold to start the organization workflow.
 
 ---
-
 ## 🎬 Video Walkthrough
 
 See TimeFold in action organizing directories, managing smart categories, routing Git repositories, and rolling back operations:
