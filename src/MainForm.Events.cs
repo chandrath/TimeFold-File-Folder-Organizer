@@ -120,6 +120,7 @@ namespace FileOrganizer
                 UpdateSummary();
                 CheckTimestampSimilarity();
                 CheckExclusionsPausedWarning();
+                if (_shouldAutoFitColumns) { _shouldAutoFitColumns = false; this.BeginInvoke(new Action(AutoFitColumns)); }
             }
             catch (Exception ex)
             {
@@ -278,7 +279,6 @@ namespace FileOrganizer
             if (excludedCount > 0 || unselCount > 0) baseSummary += $" ({excludedCount + unselCount:N0} excluded/skipped)";
             _lblSummary.Text = baseSummary;
             _btnStart.Enabled = true;
-            if (_shouldAutoFitColumns) { _shouldAutoFitColumns = false; AutoFitColumns(); }
         }
 
         private void ShowConflictDialog()

@@ -471,10 +471,9 @@ namespace FileOrganizer
         {
             if (_lstFiles != null && _lstFiles.Columns.Count >= 6)
             {
-                int scrollbarWidth = SystemInformation.VerticalScrollBarWidth;
-                int otherCols = 70 + 140 + 140 + 160 + 75 + scrollbarWidth + 6;
-                int availableNameWidth = Math.Max(150, _lstFiles.ClientSize.Width - otherCols);
-                _lstFiles.Columns[0].Width = availableNameWidth;
+                int otherCols = SystemInformation.VerticalScrollBarWidth + 4;
+                for (int i = 1; i < _lstFiles.Columns.Count; i++) otherCols += _lstFiles.Columns[i].Width;
+                _lstFiles.Columns[0].Width = Math.Max(150, _lstFiles.ClientSize.Width - otherCols);
             }
 
             CenterCompletionButtons();

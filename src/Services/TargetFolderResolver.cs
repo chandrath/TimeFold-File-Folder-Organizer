@@ -72,7 +72,7 @@ namespace FileOrganizer.Services
             ".srt", ".vtt", ".sub", ".ass", ".ssa", ".idx", ".smi"
         };
 
-        public static void ApplySubtitleCompanionPairing(List<FileItem> items, bool packageIntoDedicatedFolder = false, bool isCategoryMode = false)
+        public static void ApplySubtitleCompanionPairing(List<FileItem> items, bool packageIntoDedicatedFolder = false)
         {
             if (items == null || items.Count == 0) return;
 
@@ -113,7 +113,7 @@ namespace FileOrganizer.Services
 
                     if (parentVideo != null)
                     {
-                        if (packageIntoDedicatedFolder && isCategoryMode)
+                        if (packageIntoDedicatedFolder)
                         {
                             if (packagedVideos.Add(matchKey))
                             {
@@ -130,8 +130,8 @@ namespace FileOrganizer.Services
             }
         }
 
-        public static void ApplySubtitleCompanionPairing(List<FileItem> items) =>
-            ApplySubtitleCompanionPairing(items, false, false);
+        public static void ApplySubtitleCompanionPairing(List<FileItem> items, bool packageIntoDedicatedFolder, bool isCategoryMode) =>
+            ApplySubtitleCompanionPairing(items, packageIntoDedicatedFolder);
 
         public static void ApplyHtmlCompanionPairing(List<FileItem> items)
         {

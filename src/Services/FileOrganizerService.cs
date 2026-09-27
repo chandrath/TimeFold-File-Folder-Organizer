@@ -137,17 +137,18 @@ namespace FileOrganizer.Services
                     }
                 }
             }
-
             foreach (var f in files)
             {
                 if (!f.IsDirectory)
                     f.TargetFolder = TargetFolderResolver.Resolve(f, _organizationMode, _folderFormat, _folderPrefix, _folderSuffix, _categoryPrefix, _categorySuffix);
             }
-
             using (PerfLogger.Measure($"ScanFiles: Post-processing {files.Count} items"))
             {
-                if (_keepHtmlCompanionsTogether) TargetFolderResolver.ApplyHtmlCompanionPairing(files);
-                if (_keepSubtitleCompanionsTogether) TargetFolderResolver.ApplySubtitleCompanionPairing(files, _packageVideoSubtitles, _organizationMode == OrganizationMode.Category || _organizationMode == OrganizationMode.CategoryAndDate || _organizationMode == OrganizationMode.DateAndCategory);
+                if (_organizationMode != OrganizationMode.Date)
+                {
+                    if (_keepHtmlCompanionsTogether) TargetFolderResolver.ApplyHtmlCompanionPairing(files);
+                    if (_keepSubtitleCompanionsTogether) TargetFolderResolver.ApplySubtitleCompanionPairing(files, _packageVideoSubtitles);
+                }
                 return files.OrderByDescending(f => f.ModifiedDate).ToList();
             }
         }

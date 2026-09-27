@@ -439,7 +439,6 @@ namespace FileOrganizer
             using (FileOrganizer.Services.PerfLogger.Measure("AutoFitColumns"))
             {
                 _isAdjustingColumns = true;
-                _lstFiles.BeginUpdate();
                 try
                 {
                     var boldFont = GetBoldListFont();
@@ -465,9 +464,9 @@ namespace FileOrganizer
                     }
 
                     int maxTargetW = TextRenderer.MeasureText(headers[targetCol], _lstFiles.Font).Width + 16;
-                    foreach (var f in _filesToOrganize)
+                    var distinctTargets = _filesToOrganize.Select(f => (!f.IsDirectory && _settings.OrgMode != OrganizationMode.Date && Services.FileTypeService.Instance.IsCustomRoute(f.Extension)) ? $"📁 {f.TargetFolder} (Custom)" : $"📁 {f.TargetFolder}").Distinct();
+                    foreach (var tgt in distinctTargets)
                     {
-                        string tgt = (!f.IsDirectory && _settings.OrgMode != OrganizationMode.Date && Services.FileTypeService.Instance.IsCustomRoute(f.Extension)) ? $"📁 {f.TargetFolder} (Custom)" : $"📁 {f.TargetFolder}";
                         int w = TextRenderer.MeasureText(tgt, boldFont).Width + 16;
                         if (w > maxTargetW) maxTargetW = w;
                     }
@@ -486,7 +485,6 @@ namespace FileOrganizer
                 }
                 finally
                 {
-                    _lstFiles.EndUpdate();
                     _isAdjustingColumns = false;
                 }
             }
