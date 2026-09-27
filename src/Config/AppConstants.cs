@@ -182,9 +182,36 @@ namespace FileOrganizer.Config
         public const DateSource DefaultFileDateSource = DateSource.Modified;
         public const DateSource DefaultFolderDateSource = DateSource.Modified;
         public const bool DefaultUseMediaDateTaken = true;
+        public const string MediaDateTakenSettingLabel = "Prioritize original media Date Taken (EXIF / Camera timestamp)";
+        public const string MediaDateTakenSettingTooltip = "When checked, extracts original capture/creation dates from photo EXIF and video metadata (JPEG, MP4, HEIC, MOV, PNG) to organize media by when it was taken.\n\nWhen unchecked, media files follow your selected Date Modified or Date Created source instead.";
         public const string TooltipDateFormat = "dd MMM yyyy hh:mm:ss tt";
         public static string FormatTooltipDate(DateTime dt) => dt.ToString(TooltipDateFormat, CultureInfo.InvariantCulture);
         public static string FormatDisplayDate(DateTime dt) => dt.ToString(TooltipDateFormat, CultureInfo.InvariantCulture);
+
+        public static string BuildDateTooltip(FileItem file)
+        {
+            var sb = new System.Text.StringBuilder();
+            if (file.IsMediaDateActive && file.MediaDateTaken.HasValue)
+            {
+                sb.AppendLine($"📷 Date Taken:    {FormatTooltipDate(file.MediaDateTaken.Value)}  ✔ (Active)");
+                sb.AppendLine($"📅 Date Modified: {FormatTooltipDate(file.ModifiedDate)}");
+                sb.AppendLine($"📁 Date Created:  {FormatTooltipDate(file.CreatedDate)}");
+                sb.AppendLine();
+                sb.AppendLine($"Used to organize this item into target folder '{file.TargetFolder}'.");
+                sb.Append($"Tip: To use Modified/Created date instead for media as well, disable '{MediaDateTakenSettingLabel}' in Settings > Preferences.");
+            }
+            else
+            {
+                string modActive = !file.IsCreatedDateActive ? "  ✔ (Active)" : "";
+                string creActive = file.IsCreatedDateActive ? "  ✔ (Active)" : "";
+                sb.AppendLine($"📅 Date Modified: {FormatTooltipDate(file.ModifiedDate)}{modActive}");
+                sb.AppendLine($"📁 Date Created:  {FormatTooltipDate(file.CreatedDate)}{creActive}");
+                sb.AppendLine();
+                sb.AppendLine($"Used to organize this item into target folder '{file.TargetFolder}'.");
+                sb.Append("Tip: Change date source rules in Settings > Preferences");
+            }
+            return sb.ToString();
+        }
         public const int DefaultMaxPreviewItems = 1000;
         public const int MaxAllowedPreviewItems = 100000;
         public const int MinAllowedPreviewItems = 100;

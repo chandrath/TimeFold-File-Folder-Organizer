@@ -460,6 +460,23 @@ namespace FileOrganizer
                     Console.WriteLine($"[FAIL] MP4 creation date test failed: expected year 2024, got '{mp4Date}'");
                     return 23;
                 }
+
+                // Test 10: Verify AppConstants.BuildDateTooltip contains guidance
+                var testMediaItem = new Models.FileItem
+                {
+                    Name = "photo.jpg",
+                    MediaDateTaken = new DateTime(2023, 8, 14, 15, 30, 22),
+                    ModifiedDate = new DateTime(2026, 9, 20, 11, 45, 10),
+                    CreatedDate = new DateTime(2026, 9, 26, 18, 20, 0),
+                    IsMediaDateActive = true,
+                    TargetFolder = "2023-08"
+                };
+                string mediaTip = Config.AppConstants.BuildDateTooltip(testMediaItem);
+                if (!mediaTip.Contains("📷 Date Taken:") || !mediaTip.Contains("disable 'Prioritize original media Date Taken"))
+                {
+                    Console.WriteLine("[FAIL] BuildDateTooltip media test failed");
+                    return 24;
+                }
             }
             finally
             {

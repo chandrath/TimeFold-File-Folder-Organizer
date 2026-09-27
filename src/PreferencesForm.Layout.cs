@@ -83,12 +83,15 @@ namespace FileOrganizer
 
             _chkMediaDateTaken = new CheckBox
             {
-                Text = "Prioritize Date Taken for photos & videos (EXIF / Media)",
+                Text = AppConstants.MediaDateTakenSettingLabel,
+                UseMnemonic = false,
                 Location = new Point(leftMargin, currentY),
                 Size = new Size(contentWidth, 24),
                 Checked = _settings.UseMediaDateTaken,
                 Font = new Font("Segoe UI", 9F)
             };
+            var prefToolTip = new ToolTip { ShowAlways = true, InitialDelay = 300, AutoPopDelay = 10000, ReshowDelay = 150 };
+            prefToolTip.SetToolTip(_chkMediaDateTaken, AppConstants.MediaDateTakenSettingTooltip);
             currentY += 28;
 
             _chkIncludeFolders = new CheckBox { Text = "Also organize folders (keeps contents intact)", Location = new Point(leftMargin, currentY), Size = new Size(contentWidth - 145, 24), Checked = _settings.IncludeTopLevelFolders };

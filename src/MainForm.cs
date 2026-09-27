@@ -424,21 +424,7 @@ namespace FileOrganizer
             }
             else if (subIndex == 2 || subIndex == 3 || (_hasMediaDateColumn && subIndex == 4)) // Date Columns
             {
-                var sb = new System.Text.StringBuilder();
-                if (file.IsMediaDateActive && file.MediaDateTaken.HasValue)
-                {
-                    sb.AppendLine($"📷 Date Taken:    {AppConstants.FormatTooltipDate(file.MediaDateTaken.Value)}  ✔ (Active)");
-                    sb.AppendLine($"📅 Date Modified: {AppConstants.FormatTooltipDate(file.ModifiedDate)}");
-                    sb.Append($"📁 Date Created:  {AppConstants.FormatTooltipDate(file.CreatedDate)}");
-                }
-                else
-                {
-                    string modActive = !file.IsCreatedDateActive ? "  ✔ (Active)" : "";
-                    string creActive = file.IsCreatedDateActive ? "  ✔ (Active)" : "";
-                    sb.AppendLine($"📅 Date Modified: {AppConstants.FormatTooltipDate(file.ModifiedDate)}{modActive}");
-                    sb.Append($"📁 Date Created:  {AppConstants.FormatTooltipDate(file.CreatedDate)}{creActive}");
-                }
-                newText = sb.ToString();
+                newText = AppConstants.BuildDateTooltip(file);
             }
             else if (subIndex == (_hasMediaDateColumn ? 5 : 4)) // Target Folder
             {

@@ -130,6 +130,10 @@ namespace FileOrganizer
                 ForeColor = _settings.DarkMode ? palette.TextPrimary : Color.FromArgb(30, 41, 59)
             };
 
+            int ruleCount = _settings.ExcludedFolderNames?.Count ?? 0;
+            string exStatus = !_settings.EnableFolderExclusions ? " (Disabled)" : (ruleCount > 0 ? $" ({ruleCount} defined)" : "");
+            var itemExclusions = new ToolStripMenuItem($"🛡 Folder Exclusion Rules{exStatus}...", null, (s, a) => ShowFolderExclusionDialog());
+
             var itemGit = new ToolStripMenuItem("Group Git Repositories into dedicated folder", null, (s, a) =>
             {
                 _settings.GroupGitRepositories = !_settings.GroupGitRepositories;
@@ -137,11 +141,7 @@ namespace FileOrganizer
                 ReapplyOrganizationMode();
             }) { Checked = _settings.GroupGitRepositories, CheckOnClick = true };
 
-            int ruleCount = _settings.ExcludedFolderNames?.Count ?? 0;
-            string exStatus = !_settings.EnableFolderExclusions ? " (Disabled)" : (ruleCount > 0 ? $" ({ruleCount} defined)" : "");
-            var itemExclusions = new ToolStripMenuItem($"🛡 Folder Exclusion Rules{exStatus}...", null, (s, a) => ShowFolderExclusionDialog());
-
-            menu.Items.AddRange(new ToolStripItem[] { hdr, new ToolStripSeparator(), itemGit, new ToolStripSeparator(), itemExclusions, new ToolStripSeparator() });
+            menu.Items.AddRange(new ToolStripItem[] { hdr, new ToolStripSeparator(), itemExclusions, new ToolStripSeparator(), itemGit, new ToolStripSeparator() });
 
             bool isCategoryMode = _settings.OrgMode == OrganizationMode.Category
                 || _settings.OrgMode == OrganizationMode.CategoryAndDate
