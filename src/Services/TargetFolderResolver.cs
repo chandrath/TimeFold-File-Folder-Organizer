@@ -58,6 +58,10 @@ namespace FileOrganizer.Services
                             ? FileTypeService.Instance.ResolveCategoryName(AppConstants.DefaultGitReposFolderName)
                             : AppConstants.DefaultGroupedFolderName;
                     }
+                    if (FileTypeService.Instance.TryGetExtensionOverride(item.Extension, out var customDest))
+                    {
+                        return AppConstants.FormatCategoryFolder(customDest, categoryPrefix, categorySuffix);
+                    }
                     string ext = item.Extension.TrimStart('.').ToUpperInvariant();
                     return string.IsNullOrWhiteSpace(ext) ? "No Extension" : ext;
 

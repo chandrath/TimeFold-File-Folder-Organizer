@@ -44,8 +44,7 @@ namespace FileOrganizer
             _lblIgnoredHeader.Click += (s, e) => ShowFolderExclusionDialog();
             _toolTip?.SetToolTip(_lblIgnoredHeader, "Click to view or edit folder exclusion rules");
 
-            _flowPreviewHeader.Controls.Add(_lblPreviewHeader);
-            _flowPreviewHeader.Controls.Add(_lblIgnoredHeader);
+            _flowPreviewHeader.Controls.AddRange([_lblPreviewHeader, _lblIgnoredHeader]);
             pnlPreviewHeader.Controls.Add(_flowPreviewHeader);
 
             _pnlExclusionsPausedWarning = new Panel
@@ -345,8 +344,9 @@ namespace FileOrganizer
                     ? (_settings.DarkMode ? Color.FromArgb(248, 113, 113) : Color.FromArgb(220, 38, 38))
                     : (_settings.DarkMode ? Color.FromArgb(52, 211, 153) : Color.FromArgb(22, 101, 52));
                 item.SubItems[statusIndex].Font = conflict != null ? boldFont : _lstFiles.Font;
-                item.SubItems[targetIndex].Text = $"📁 {file.TargetFolder}";
-                item.SubItems[targetIndex].ForeColor = palette.ListTargetFolder;
+                bool isCustom = !file.IsDirectory && Services.FileTypeService.Instance.IsCustomRoute(file.Extension);
+                item.SubItems[targetIndex].Text = isCustom ? $"📁 {file.TargetFolder} (Custom)" : $"📁 {file.TargetFolder}";
+                item.SubItems[targetIndex].ForeColor = isCustom ? palette.ListCustomTargetFolder : palette.ListTargetFolder;
                 item.SubItems[targetIndex].Font = boldFont;
                 RestoreItemSubItems(item, file, palette);
             }
@@ -470,7 +470,8 @@ namespace FileOrganizer
                     int maxTargetW = TextRenderer.MeasureText(headers[targetCol], _lstFiles.Font).Width + 16;
                     foreach (var f in _filesToOrganize)
                     {
-                        int w = TextRenderer.MeasureText($"📁 {f.TargetFolder}", boldFont).Width + 16;
+                        string tgt = (!f.IsDirectory && Services.FileTypeService.Instance.IsCustomRoute(f.Extension)) ? $"📁 {f.TargetFolder} (Custom)" : $"📁 {f.TargetFolder}";
+                        int w = TextRenderer.MeasureText(tgt, boldFont).Width + 16;
                         if (w > maxTargetW) maxTargetW = w;
                     }
                     _lstFiles.Columns[targetCol].Width = Math.Max(maxTargetW, 90);

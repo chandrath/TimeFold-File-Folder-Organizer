@@ -96,10 +96,21 @@ namespace FileOrganizer
             // Prefix/Suffix Test
             var jsonItem = new Models.FileItem { Name = "app.json", FullPath = @"C:\app.json", ModifiedDate = DateTime.Now };
             string prefCat = Services.TargetFolderResolver.Resolve(jsonItem, Models.OrganizationMode.Category, Models.FolderFormat.YearMonth, "", "", "Pre_", "_Post");
-            if (prefCat != "Pre_JSON Files_Post")
+            if (prefCat != "Pre_JSON Files_Post") { Console.WriteLine($"[FAIL] Prefix/suffix failed: got '{prefCat}'"); return 3; }
+
+            // Extension Mode Custom Remap Test (e.g. .pptx remapped to CAT)
+            var pptxItem = new Models.FileItem { Name = "slides.pptx", FullPath = @"C:\slides.pptx", ModifiedDate = DateTime.Now };
+            Services.FileTypeService.Instance.RemoveCategoryOverride(".pptx");
+            string defExt = Services.TargetFolderResolver.Resolve(pptxItem, Models.OrganizationMode.Extension, Models.FolderFormat.YearMonth, "", "");
+            Services.FileTypeService.Instance.SetCategoryOverride(".pptx", "CAT");
+            string customExt = Services.TargetFolderResolver.Resolve(pptxItem, Models.OrganizationMode.Extension, Models.FolderFormat.YearMonth, "", "");
+            bool isCustom = Services.FileTypeService.Instance.IsCustomRoute(".pptx");
+            Services.FileTypeService.Instance.RemoveCategoryOverride(".pptx");
+            string revExt = Services.TargetFolderResolver.Resolve(pptxItem, Models.OrganizationMode.Extension, Models.FolderFormat.YearMonth, "", "");
+            if (defExt != "PPTX" || customExt != "CAT" || !isCustom || revExt != "PPTX")
             {
-                Console.WriteLine($"[FAIL] Prefix/suffix failed: got '{prefCat}'");
-                return 3;
+                Console.WriteLine($"[FAIL] Extension remap failed: def='{defExt}', custom='{customExt}', isCustom={isCustom}, rev='{revExt}'");
+                return 4;
             }
 
             // Git Repository Detection & Mode Isolation Tests

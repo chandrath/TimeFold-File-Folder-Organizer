@@ -231,6 +231,26 @@ namespace FileOrganizer.Services
             SaveDelta();
         }
 
+        public bool TryGetExtensionOverride(string extension, out string targetCategory)
+        {
+            targetCategory = "";
+            if (string.IsNullOrWhiteSpace(extension)) return false;
+            string cleanExt = extension.StartsWith('.') ? extension.ToLowerInvariant() : "." + extension.ToLowerInvariant();
+            if (_delta.ExtensionCategoryOverrides.TryGetValue(cleanExt, out var cat) && !string.IsNullOrWhiteSpace(cat))
+            {
+                targetCategory = cat;
+                return true;
+            }
+            return false;
+        }
+
+        public bool IsCustomRoute(string extension)
+        {
+            if (string.IsNullOrWhiteSpace(extension)) return false;
+            string cleanExt = extension.StartsWith('.') ? extension.ToLowerInvariant() : "." + extension.ToLowerInvariant();
+            return _delta.ExtensionCategoryOverrides.ContainsKey(cleanExt);
+        }
+
         public void LoadDelta()
         {
             try

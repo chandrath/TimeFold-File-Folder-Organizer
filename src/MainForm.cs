@@ -435,6 +435,10 @@ namespace FileOrganizer
                 string notice = _settings.CreateSortedSubfolder
                     ? "✔ 'Create Sorted Subfolder' is ON:\nIsolates files inside a clean timestamped folder."
                     : "ℹ 'Create Sorted Subfolder' is OFF:\nFiles will be placed directly in output folder.";
+                if (!file.IsDirectory && Services.FileTypeService.Instance.IsCustomRoute(file.Extension))
+                {
+                    notice += $"\n\n🏷️ Custom Route: '{file.Extension.ToLowerInvariant()}' ➔ '{file.TargetFolder}'\nTip: Right-click this file to remap or reset destination.";
+                }
                 newText = $"📁 Planned Destination:\n{Path.Combine(outputBase, subPath)}\n\n{notice}";
             }
 

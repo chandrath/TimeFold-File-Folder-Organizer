@@ -365,13 +365,22 @@ namespace FileOrganizer
             if (item == null || item.IsDirectory || string.IsNullOrWhiteSpace(item.Extension)) return;
 
             string ext = item.Extension.ToLowerInvariant();
-            string currentCategory = FileTypeService.Instance.GetCategory(ext);
+            string currentCategory = _settings.OrgMode == OrganizationMode.Extension
+                ? (FileTypeService.Instance.TryGetExtensionOverride(ext, out var ovr) ? ovr : ext.TrimStart('.').ToUpperInvariant())
+                : FileTypeService.Instance.GetCategory(ext);
             var categories = FileTypeService.Instance.GetAllCategories();
 
             string? chosenCategory = ShowCategoryPickerPrompt(ext, currentCategory, categories, _settings.DarkMode);
-            if (!string.IsNullOrWhiteSpace(chosenCategory) && !string.Equals(chosenCategory, currentCategory, StringComparison.OrdinalIgnoreCase))
+            if (!string.IsNullOrWhiteSpace(chosenCategory))
             {
-                FileTypeService.Instance.SetCategoryOverride(ext, chosenCategory);
+                if (_settings.OrgMode == OrganizationMode.Extension && string.Equals(chosenCategory, ext.TrimStart('.'), StringComparison.OrdinalIgnoreCase))
+                {
+                    FileTypeService.Instance.RemoveCategoryOverride(ext);
+                }
+                else
+                {
+                    FileTypeService.Instance.SetCategoryOverride(ext, chosenCategory);
+                }
                 ReapplyOrganizationMode();
             }
         }
@@ -408,7 +417,8 @@ namespace FileOrganizer
                 DropDownStyle = ComboBoxStyle.DropDown,
                 Font = new Font("Segoe UI", 10F),
                 BackColor = palette.InputBg,
-                ForeColor = palette.TextPrimary
+                ForeColor = palette.TextPrimary,
+                MaxLength = 50
             };
             foreach (var cat in categories)
             {
@@ -419,7 +429,6 @@ namespace FileOrganizer
             var btnOk = new Button
             {
                 Text = "Apply",
-                DialogResult = DialogResult.OK,
                 Location = new Point(236, 125),
                 Size = new Size(90, 32),
                 BackColor = AppConstants.ColorPrimary,
@@ -427,6 +436,23 @@ namespace FileOrganizer
                 FlatStyle = FlatStyle.Flat
             };
             btnOk.FlatAppearance.BorderSize = 0;
+            btnOk.Click += (s, a) =>
+            {
+                string text = cbo.Text.Trim();
+                if (string.IsNullOrWhiteSpace(text))
+                {
+                    MessageBox.Show(prompt, "Please enter a destination folder name.", "Empty Folder Name", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                    return;
+                }
+                char[] invalid = Path.GetInvalidFileNameChars();
+                if (text.IndexOfAny(invalid) >= 0)
+                {
+                    MessageBox.Show(prompt, "Folder name cannot contain any of the following characters:\n\\ / : * ? \" < > |", "Invalid Characters", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                    return;
+                }
+                prompt.DialogResult = DialogResult.OK;
+                prompt.Close();
+            };
 
             var btnCancel = new Button
             {

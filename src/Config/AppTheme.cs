@@ -43,6 +43,7 @@ namespace FileOrganizer.Config
             public Color ListDateActive { get; init; }
             public Color ListDateMuted { get; init; }
             public Color ListTargetFolder { get; init; }
+            public Color ListCustomTargetFolder { get; init; }
         }
 
         public static readonly ThemePalette Light = new()
@@ -76,7 +77,8 @@ namespace FileOrganizer.Config
             DangerText = Color.FromArgb(220, 38, 38),
             ListDateActive = Color.FromArgb(29, 78, 216),    // Royal Blue 700
             ListDateMuted = Color.FromArgb(100, 116, 139),   // Slate 500
-            ListTargetFolder = Color.FromArgb(67, 56, 202)   // Deep Indigo 700
+            ListTargetFolder = Color.FromArgb(67, 56, 202),  // Deep Indigo 700
+            ListCustomTargetFolder = Color.FromArgb(147, 51, 234) // Vibrant Purple 600
         };
 
         public static readonly ThemePalette Dark = new()
@@ -110,7 +112,8 @@ namespace FileOrganizer.Config
             DangerText = Color.FromArgb(252, 165, 165),
             ListDateActive = Color.FromArgb(56, 189, 248),   // Radiant Sky 400
             ListDateMuted = Color.FromArgb(203, 213, 225),   // Crisp Slate 300
-            ListTargetFolder = Color.FromArgb(251, 191, 36)  // Radiant Amber Gold 400
+            ListTargetFolder = Color.FromArgb(251, 191, 36), // Radiant Amber Gold 400
+            ListCustomTargetFolder = Color.FromArgb(192, 132, 252) // Radiant Purple 400
         };
 
         public static ThemePalette GetPalette(bool isDark) => isDark ? Dark : Light;
