@@ -276,6 +276,43 @@ namespace FileOrganizer
             }
         }
 
+        private bool _preventItemCheck = false;
+
+        private void HookListCheckEvents()
+        {
+            _lstFiles.MouseDown += (s, e) =>
+            {
+                if (e.Button == MouseButtons.Left)
+                {
+                    var hit = _lstFiles.HitTest(e.Location);
+                    _preventItemCheck = !hit.Location.HasFlag(ListViewHitTestLocations.StateImage);
+                }
+            };
+            _lstFiles.MouseUp += (s, e) => _preventItemCheck = false;
+            _lstFiles.ItemCheck += (s, e) => HandleListItemCheck(e);
+            _lstFiles.ItemChecked += (s, e) => HandleListItemChecked(e);
+        }
+
+        private void HandleListItemCheck(ItemCheckEventArgs e)
+        {
+            if (_isUpdatingList) return;
+            if (_preventItemCheck)
+            {
+                e.NewValue = e.CurrentValue;
+                _preventItemCheck = false;
+                return;
+            }
+            if (Control.MouseButtons != MouseButtons.None)
+            {
+                Point pt = _lstFiles.PointToClient(Cursor.Position);
+                var hit = _lstFiles.HitTest(pt);
+                if (!hit.Location.HasFlag(ListViewHitTestLocations.StateImage))
+                {
+                    e.NewValue = e.CurrentValue;
+                }
+            }
+        }
+
         private void HandleListItemChecked(ItemCheckedEventArgs e)
         {
             if (_isUpdatingList || e.Item == null) return;

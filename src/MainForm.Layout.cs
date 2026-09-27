@@ -267,11 +267,10 @@ namespace FileOrganizer
             _lstFiles.Columns.AddRange([new ColumnHeader { Text = "File Name", Width = 230 }, new ColumnHeader { Text = "Type", Width = 44 }, new ColumnHeader { Text = "Modified Date", Width = 175 }, new ColumnHeader { Text = "Created Date", Width = 170 }, new ColumnHeader { Text = "📁 Target Folder", Width = 130 }, new ColumnHeader { Text = "Status", Width = 100 }, new ColumnHeader { Text = "Size", Width = 50 }]);
             _lstFiles.ColumnClick += LstFiles_ColumnClick;
             _lstFiles.Click += LstFiles_Click;
-            _lstFiles.ItemChecked += (s, e) => HandleListItemChecked(e);
+            HookListCheckEvents();
 
             _pnlLoadMore = new Panel { Dock = DockStyle.Bottom, Height = 34, Visible = false, Padding = new Padding(0, 4, 0, 0) };
-            _btnLoadMore = new ModernButton { Text = "➕ Load 1,000 More", Dock = DockStyle.Fill, BorderRadius = 6, Cursor = Cursors.Hand };
-            _btnLoadMore.Click += BtnLoadMore_Click;
+            _btnLoadMore = new ModernButton { Text = "➕ Load 1,000 More", Dock = DockStyle.Fill, BorderRadius = 6, Cursor = Cursors.Hand }; _btnLoadMore.Click += BtnLoadMore_Click;
             _pnlLoadMore.Controls.Add(_btnLoadMore);
 
             // Empty State Card

@@ -256,9 +256,9 @@ namespace FileOrganizer
             _txtSuffix.TextChanged += (s, e) => UpdateLivePreview();
             currentY += 32;
 
-            // Live Multi-Folder Preview Card
+            // Multi-Folder Preview Card
             _pnlLivePreview = new Panel { Location = new Point(leftMargin, currentY), Width = contentWidth, Height = 120, BorderStyle = BorderStyle.FixedSingle, BackColor = Color.FromArgb(249, 250, 251), Padding = new Padding(12, 8, 12, 8) };
-            _lblPreviewTitle = new Label { Text = "👁 Live Multi-Folder Preview:", UseMnemonic = false, Font = new Font("Segoe UI Emoji", 8.5F, FontStyle.Bold), ForeColor = Color.FromArgb(75, 85, 99), Dock = DockStyle.Top, Height = 18 };
+            _lblPreviewTitle = new Label { Text = "👁 Multi-Folder Preview:", UseMnemonic = false, Font = new Font("Segoe UI Emoji", 8.5F, FontStyle.Bold), ForeColor = Color.FromArgb(75, 85, 99), Dock = DockStyle.Top, Height = 18 };
             _lblSample1 = new Label { Text = "", UseMnemonic = false, Font = new Font("Segoe UI Emoji", 9F, FontStyle.Regular), ForeColor = AppConstants.ColorTextDark, Dock = DockStyle.Top, Height = 22 };
             _lblSample2 = new Label { Text = "", UseMnemonic = false, Font = new Font("Segoe UI Emoji", 9F, FontStyle.Regular), ForeColor = AppConstants.ColorTextDark, Dock = DockStyle.Top, Height = 22 };
             _lblSample3 = new Label { Text = "", UseMnemonic = false, Font = new Font("Segoe UI Emoji", 9F, FontStyle.Regular), ForeColor = AppConstants.ColorTextDark, Dock = DockStyle.Top, Height = 22 };
