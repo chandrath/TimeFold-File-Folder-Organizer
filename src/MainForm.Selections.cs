@@ -341,7 +341,7 @@ namespace FileOrganizer
                     ? (_settings.DarkMode ? Color.FromArgb(248, 113, 113) : Color.FromArgb(220, 38, 38))
                     : (_settings.DarkMode ? Color.FromArgb(52, 211, 153) : Color.FromArgb(22, 101, 52));
                 item.SubItems[statusIndex].Font = conflict != null ? boldFont : _lstFiles.Font;
-                bool isCustom = !file.IsDirectory && Services.FileTypeService.Instance.IsCustomRoute(file.Extension);
+                bool isCustom = !file.IsDirectory && _settings.OrgMode != OrganizationMode.Date && Services.FileTypeService.Instance.IsCustomRoute(file.Extension);
                 item.SubItems[targetIndex].Text = isCustom ? $"📁 {file.TargetFolder} (Custom)" : $"📁 {file.TargetFolder}";
                 item.SubItems[targetIndex].ForeColor = isCustom ? palette.ListCustomTargetFolder : palette.ListTargetFolder;
                 item.SubItems[targetIndex].Font = boldFont;
@@ -467,7 +467,7 @@ namespace FileOrganizer
                     int maxTargetW = TextRenderer.MeasureText(headers[targetCol], _lstFiles.Font).Width + 16;
                     foreach (var f in _filesToOrganize)
                     {
-                        string tgt = (!f.IsDirectory && Services.FileTypeService.Instance.IsCustomRoute(f.Extension)) ? $"📁 {f.TargetFolder} (Custom)" : $"📁 {f.TargetFolder}";
+                        string tgt = (!f.IsDirectory && _settings.OrgMode != OrganizationMode.Date && Services.FileTypeService.Instance.IsCustomRoute(f.Extension)) ? $"📁 {f.TargetFolder} (Custom)" : $"📁 {f.TargetFolder}";
                         int w = TextRenderer.MeasureText(tgt, boldFont).Width + 16;
                         if (w > maxTargetW) maxTargetW = w;
                     }

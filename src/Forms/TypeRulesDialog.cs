@@ -244,12 +244,8 @@ namespace FileOrganizer.Forms
         {
             _isPopulating = true;
             _lstRules.Items.Clear();
-            _cboTargetCategory.Items.Clear();
-
-            var categories = new HashSet<string>(FileTypeService.FactoryCategories.Keys, StringComparer.OrdinalIgnoreCase);
-            foreach (var customCat in _service.Delta.CustomCategories.Keys) categories.Add(customCat);
-            categories.Add(_service.ResolveCategoryName(AppConstants.DefaultGitReposFolderName));
-            foreach (var cat in categories.OrderBy(c => c)) _cboTargetCategory.Items.Add(cat);
+            var categories = _service.GetAllCategories();
+            foreach (var cat in categories) _cboTargetCategory.Items.Add(cat);
             if (_cboTargetCategory.Items.Count > 0) _cboTargetCategory.SelectedIndex = 0;
 
             // Collect all known extensions
@@ -261,11 +257,18 @@ namespace FileOrganizer.Forms
                 foreach (var ext in extList) allExtensions.Add(ext);
 
             string query = _txtSearch?.Text.Trim().ToLowerInvariant() ?? string.Empty;
+            var palette = AppTheme.GetPalette(_darkMode);
 
-            foreach (var ext in allExtensions.OrderBy(e => e))
+            // Sort: User Overrides first, then alphabetical by extension
+            var sortedExts = allExtensions
+                .OrderByDescending(ext => _service.Delta.ExtensionCategoryOverrides.ContainsKey(ext))
+                .ThenBy(ext => ext);
+
+            foreach (var ext in sortedExts)
             {
                 bool isFactory = FileTypeService.FactoryCategories.Values.Any(list => list.Contains(ext, StringComparer.OrdinalIgnoreCase));
                 bool isDisabled = _service.Delta.DisabledFactoryExtensions.Contains(ext);
+                bool isOverride = _service.Delta.ExtensionCategoryOverrides.ContainsKey(ext);
                 string currentCat = _service.GetCategory(ext);
 
                 // Filter by search query if present
@@ -276,17 +279,23 @@ namespace FileOrganizer.Forms
                     if (!matchExt && !matchCat) continue;
                 }
 
-                string status = isFactory ? (isDisabled ? "Disabled" : "Factory Default") : "Custom User Rule";
-                if (_service.Delta.ExtensionCategoryOverrides.ContainsKey(ext)) status = "User Override";
+                string status = isOverride ? "🏷️ User Override" : (isFactory ? (isDisabled ? "Disabled" : "Factory Default") : "Custom User Rule");
 
                 var lvi = new ListViewItem(ext) { Checked = !isDisabled };
-                lvi.SubItems.Add(AppConstants.FormatCategoryFolder(currentCat, _settings.CategoryPrefix, _settings.CategorySuffix));
+                string displayCat = AppConstants.FormatCategoryFolder(currentCat, _settings.CategoryPrefix, _settings.CategorySuffix);
+                if (isOverride) displayCat += " (Custom)";
+                lvi.SubItems.Add(displayCat);
                 lvi.SubItems.Add(status);
                 lvi.Tag = ext;
 
                 if (isDisabled)
                 {
                     lvi.ForeColor = Color.Gray;
+                }
+                else if (isOverride)
+                {
+                    lvi.ForeColor = palette.ListCustomTargetFolder;
+                    lvi.Font = new Font(_lstRules.Font, FontStyle.Bold);
                 }
 
                 _lstRules.Items.Add(lvi);

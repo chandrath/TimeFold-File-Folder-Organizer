@@ -47,7 +47,7 @@ namespace FileOrganizer
             _menuItemCopy = new ToolStripMenuItem("📋 Copy File Path", null, (s, e) => CopySelectedPath());
             _menuItemRenameCategory = new ToolStripMenuItem("🏷️ Rename Category...", null, (s, e) => RenameCurrentCategory());
             _menuItemResetCategoryName = new ToolStripMenuItem("↺ Revert Category to Factory Name", null, (s, e) => ResetCurrentCategoryName());
-            _menuItemChangeCategory = new ToolStripMenuItem("🔀 Remap all files...", null, (s, e) => ChangeCategoryForSelectedExtension());
+            _menuItemChangeCategory = new ToolStripMenuItem("📁 Set target folder for all files...", null, (s, e) => ChangeCategoryForSelectedExtension());
             _menuItemRename = new ToolStripMenuItem("✏ Rename File...", null, (s, e) => RenameSelectedFile());
             _menuItemDelete = new ToolStripMenuItem("🗑 Delete (Recycle Bin)", null, (s, e) => DeleteSelectedFile());
             _menuItemAutoFit = new ToolStripMenuItem("↔ Auto-fit All Columns", null, (s, e) => AutoFitColumns());
@@ -149,7 +149,7 @@ namespace FileOrganizer
                 if (_menuItemResetCategoryName.Visible) _menuItemResetCategoryName.Text = $"↺ Revert Category to Factory Name ('{originalFactoryName}')";
 
                 _menuItemChangeCategory.Visible = isFileWithExt && isCatMode;
-                if (_menuItemChangeCategory.Visible) _menuItemChangeCategory.Text = $"🔀 Remap all {selItem!.Extension.ToLowerInvariant()} files...";
+                if (_menuItemChangeCategory.Visible) _menuItemChangeCategory.Text = $"📁 Set target folder for all {selItem!.Extension.ToLowerInvariant()} files...";
 
                 _sepSelection.Visible = true;
                 _menuItemSelectAll.Visible = true;
@@ -349,14 +349,8 @@ namespace FileOrganizer
         {
             var item = GetSelectedFileItem();
             if (item == null || item.IsDirectory || string.IsNullOrWhiteSpace(item.Extension)) return;
-
-            string ext = item.Extension.ToLowerInvariant();
-            string currentCategory = FileTypeService.Instance.GetCategory(ext);
-
-            if (FileTypeService.Instance.ResetCategoryName(currentCategory))
-            {
+            if (FileTypeService.Instance.ResetCategoryName(FileTypeService.Instance.GetCategory(item.Extension.ToLowerInvariant())))
                 ReapplyOrganizationMode();
-            }
         }
 
         private void ChangeCategoryForSelectedExtension()
@@ -365,33 +359,35 @@ namespace FileOrganizer
             if (item == null || item.IsDirectory || string.IsNullOrWhiteSpace(item.Extension)) return;
 
             string ext = item.Extension.ToLowerInvariant();
+            bool hasCustomOverride = FileTypeService.Instance.IsCustomRoute(ext);
             string currentCategory = _settings.OrgMode == OrganizationMode.Extension
                 ? (FileTypeService.Instance.TryGetExtensionOverride(ext, out var ovr) ? ovr : ext.TrimStart('.').ToUpperInvariant())
                 : FileTypeService.Instance.GetCategory(ext);
             var categories = FileTypeService.Instance.GetAllCategories();
 
-            string? chosenCategory = ShowCategoryPickerPrompt(ext, currentCategory, categories, _settings.DarkMode);
-            if (!string.IsNullOrWhiteSpace(chosenCategory))
+            var (chosenCategory, resetRequested) = ShowCategoryPickerPrompt(ext, currentCategory, categories, hasCustomOverride, _settings.DarkMode);
+            if (resetRequested)
+            {
+                FileTypeService.Instance.RemoveCategoryOverride(ext);
+                ReapplyOrganizationMode();
+            }
+            else if (!string.IsNullOrWhiteSpace(chosenCategory))
             {
                 if (_settings.OrgMode == OrganizationMode.Extension && string.Equals(chosenCategory, ext.TrimStart('.'), StringComparison.OrdinalIgnoreCase))
-                {
                     FileTypeService.Instance.RemoveCategoryOverride(ext);
-                }
                 else
-                {
                     FileTypeService.Instance.SetCategoryOverride(ext, chosenCategory);
-                }
                 ReapplyOrganizationMode();
             }
         }
 
-        private static string? ShowCategoryPickerPrompt(string ext, string currentCategory, List<string> categories, bool isDark)
+        private static (string? category, bool resetRequested) ShowCategoryPickerPrompt(string ext, string currentCategory, List<string> categories, bool hasCustomOverride, bool isDark)
         {
             var palette = AppTheme.GetPalette(isDark);
             using var prompt = new Form
             {
-                Text = $"Change Destination for {ext}",
-                Size = new Size(460, 220),
+                Text = $"Set Target Folder for {ext}",
+                Size = new Size(490, 220),
                 StartPosition = FormStartPosition.CenterParent,
                 FormBorderStyle = FormBorderStyle.FixedDialog,
                 MaximizeBox = false,
@@ -406,30 +402,42 @@ namespace FileOrganizer
             {
                 Text = $"All '{ext}' files are currently routed to: {currentCategory}\r\nSelect an existing category or type a custom destination folder:",
                 Location = new Point(20, 16),
-                Size = new Size(405, 38),
+                Size = new Size(435, 38),
                 ForeColor = palette.TextPrimary
             };
 
             var cbo = new ComboBox
             {
                 Location = new Point(22, 64),
-                Width = 400,
+                Width = 430,
                 DropDownStyle = ComboBoxStyle.DropDown,
                 Font = new Font("Segoe UI", 10F),
                 BackColor = palette.InputBg,
                 ForeColor = palette.TextPrimary,
                 MaxLength = 50
             };
-            foreach (var cat in categories)
-            {
-                cbo.Items.Add(cat);
-            }
+            foreach (var cat in categories) cbo.Items.Add(cat);
             cbo.Text = currentCategory;
+
+            bool resetClicked = false;
+            var btnReset = new Button
+            {
+                Text = "↺ Reset to Default",
+                Location = new Point(22, 125),
+                Size = new Size(130, 32),
+                BackColor = palette.SecondaryButtonBg,
+                ForeColor = palette.SecondaryButtonText,
+                FlatStyle = FlatStyle.Flat,
+                Visible = hasCustomOverride,
+                Cursor = Cursors.Hand
+            };
+            btnReset.FlatAppearance.BorderColor = palette.SecondaryButtonBorder;
+            btnReset.Click += (s, a) => { resetClicked = true; prompt.DialogResult = DialogResult.OK; prompt.Close(); };
 
             var btnOk = new Button
             {
                 Text = "Apply",
-                Location = new Point(236, 125),
+                Location = new Point(266, 125),
                 Size = new Size(90, 32),
                 BackColor = AppConstants.ColorPrimary,
                 ForeColor = Color.White,
@@ -458,7 +466,7 @@ namespace FileOrganizer
             {
                 Text = "Cancel",
                 DialogResult = DialogResult.Cancel,
-                Location = new Point(332, 125),
+                Location = new Point(362, 125),
                 Size = new Size(90, 32),
                 BackColor = palette.SecondaryButtonBg,
                 ForeColor = palette.SecondaryButtonText,
@@ -466,11 +474,16 @@ namespace FileOrganizer
             };
             btnCancel.FlatAppearance.BorderColor = palette.SecondaryButtonBorder;
 
-            prompt.Controls.AddRange([lblDesc, cbo, btnOk, btnCancel]);
+            prompt.Controls.AddRange([lblDesc, cbo, btnReset, btnOk, btnCancel]);
             prompt.AcceptButton = btnOk;
             prompt.CancelButton = btnCancel;
 
-            return prompt.ShowDialog() == DialogResult.OK ? cbo.Text.Trim() : null;
+            if (prompt.ShowDialog() == DialogResult.OK)
+            {
+                if (resetClicked) return (null, true);
+                return (cbo.Text.Trim(), false);
+            }
+            return (null, false);
         }
 
         private void ToggleStatusColumn()
