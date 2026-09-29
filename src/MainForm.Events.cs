@@ -494,5 +494,63 @@ namespace FileOrganizer
             MessageBox.Show("Output folder is not available yet.", "Folder Unavailable", MessageBoxButtons.OK, MessageBoxIcon.Information);
         }
         private void BtnStartNewProject_Click(object? sender, EventArgs e) => ResetForm();
+
+        // ── Update Check ──────────────────────────────────────────────────────────
+
+        /// <summary>
+        /// Fires an async update check after <paramref name="delayMs"/> ms.
+        /// Runs entirely off the UI thread; marshals back via BeginInvoke.
+        /// </summary>
+        private async void RunStartupUpdateCheckAsync(int delayMs = 2500)
+        {
+            try
+            {
+                await System.Threading.Tasks.Task.Delay(delayMs).ConfigureAwait(false);
+                var info = await Services.UpdateService.CheckAsync().ConfigureAwait(false);
+                if (info == null) return;
+                // Skip silently if user previously chose to skip this version
+                if (!string.IsNullOrEmpty(_settings.SkippedUpdateVersion) &&
+                    !Services.UpdateService.IsNewer(info.Version, _settings.SkippedUpdateVersion))
+                    return;
+
+                this.BeginInvoke(new Action(() => ShowUpdateDialog(info)));
+            }
+            catch { /* never surface update errors to the user */ }
+        }
+
+        private void MenuCheckForUpdates_Click(object? sender, EventArgs e)
+        {
+            _ = CheckForUpdatesManualAsync();
+        }
+
+        private async System.Threading.Tasks.Task CheckForUpdatesManualAsync()
+        {
+            var info = await Services.UpdateService.CheckAsync().ConfigureAwait(false);
+            this.BeginInvoke(new Action(() =>
+            {
+                if (info == null)
+                {
+                    MessageBox.Show(this,
+                        $"TimeFold {AppConstants.AppVersion} is the latest version. You're up to date!",
+                        "No Updates Available",
+                        MessageBoxButtons.OK,
+                        MessageBoxIcon.Information);
+                    return;
+                }
+                ShowUpdateDialog(info);
+            }));
+        }
+
+        private void ShowUpdateDialog(Services.UpdateService.UpdateInfo info)
+        {
+            using var dlg = new Forms.UpdateAvailableDialog(info, _settings.DarkMode);
+            dlg.ShowDialog(this);
+
+            if (dlg.ChosenAction == Forms.UpdateAvailableDialog.UpdateAction.Skip)
+            {
+                _settings.SkippedUpdateVersion = info.Version;
+                _settings.SaveToFile();
+            }
+        }
     }
 }

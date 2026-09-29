@@ -41,8 +41,9 @@ namespace FileOrganizer
             _menuPreferences = new ToolStripMenuItem("Preferences", null, MenuPreferences_Click);
             _menuHelp = new ToolStripMenuItem("Help");
             var menuTour = new ToolStripMenuItem("💡 Quick Tour & Guide...", null, MenuWelcomeTour_Click);
+            _menuCheckForUpdates = new ToolStripMenuItem("Check for Updates...", null, MenuCheckForUpdates_Click);
             _menuAbout = new ToolStripMenuItem("About", null, MenuAbout_Click);
-            _menuHelp.DropDownItems.AddRange(new ToolStripItem[] { menuTour, new ToolStripSeparator(), _menuAbout });
+            _menuHelp.DropDownItems.AddRange(new ToolStripItem[] { menuTour, new ToolStripSeparator(), _menuCheckForUpdates, new ToolStripSeparator(), _menuAbout });
 
             _menuStrip.Items.AddRange(new ToolStripItem[] { _menuFile, _menuPreferences, _menuHelp });
             this.MainMenuStrip = _menuStrip;

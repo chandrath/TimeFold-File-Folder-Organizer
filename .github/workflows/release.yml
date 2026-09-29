@@ -1,4 +1,4 @@
-name: Release TimeFold
+﻿name: Release TimeFold
 
 on:
   push:
@@ -39,48 +39,84 @@ jobs:
           } else {
             $tag = "v1.0.0"
           }
+          $ver = $tag.TrimStart('v','V')
           echo "tag=$tag" >> $env:GITHUB_OUTPUT
+          echo "ver=$ver" >> $env:GITHUB_OUTPUT
 
-      - name: Build 1 - ReadyToRun (Self-Contained / Standalone)
+      # ── Build 1: Self-Contained (ReadyToRun / Standalone) ──────────────────
+      - name: Build — Self-Contained (Portable + Installer)
         shell: pwsh
         run: |
-          dotnet publish src/TimeFold.csproj -c Release -r win-x64 --self-contained -p:PublishSingleFile=true -p:EnableCompressionInSingleFile=true -p:DebugType=none -o ./publish_ready_to_run
+          dotnet publish src/TimeFold.csproj -c Release -r win-x64 --self-contained `
+            -p:PublishSingleFile=true -p:EnableCompressionInSingleFile=true `
+            -p:DebugType=none -o ./publish_ready_to_run
 
-      - name: Build 2 - RequiresDotNet10 (Framework-Dependent / Lightweight)
+      # ── Build 2: Framework-Dependent (Lightweight) ────────────────────────
+      - name: Build — Framework-Dependent (Portable + Installer)
         shell: pwsh
         run: |
-          dotnet publish src/TimeFold.csproj -c Release -r win-x64 --no-self-contained -p:PublishSingleFile=true -p:EnableCompressionInSingleFile=false -p:DebugType=none -o ./publish_requires_dotnet
+          dotnet publish src/TimeFold.csproj -c Release -r win-x64 --no-self-contained `
+            -p:PublishSingleFile=true -p:EnableCompressionInSingleFile=false `
+            -p:DebugType=none -o ./publish_requires_dotnet
 
-      - name: Create Release Archives
+      # ── Install Inno Setup ────────────────────────────────────────────────
+      - name: Install Inno Setup
+        shell: pwsh
+        run: choco install innosetup --no-progress -y
+
+      # ── Package Artifacts ─────────────────────────────────────────────────
+      - name: Create Release Artifacts
         shell: pwsh
         run: |
           $tag = "${{ steps.get_version.outputs.tag }}"
-          
-          # Clean any PDBs
+          $ver = "${{ steps.get_version.outputs.ver }}"
+
+          # Remove PDBs
           Remove-Item -Path ./publish_ready_to_run/*.pdb -Force -ErrorAction SilentlyContinue
           Remove-Item -Path ./publish_requires_dotnet/*.pdb -Force -ErrorAction SilentlyContinue
 
-          # 1. Package ReadyToRun edition (Direct standalone exe and zip archive)
-          $rtrExeName = "TimeFold-${tag}-win-x64-ReadyToRun.exe"
-          Rename-Item -Path ./publish_ready_to_run/TimeFold.exe -NewName $rtrExeName
-          Copy-Item -Path "./publish_ready_to_run/$rtrExeName" -Destination "./$rtrExeName"
-          $rtrZip = "TimeFold-${tag}-win-x64-ReadyToRun.zip"
-          Compress-Archive -Path ./publish_ready_to_run/* -DestinationPath "./$rtrZip"
+          # ── Self-Contained Portable ZIP ──────────────────────────────────
+          $scPortableDir = "./publish_ready_to_run"
+          $scExeSrc = "$scPortableDir/TimeFold.exe"
+          $scPortableZip = "TimeFold-${tag}-win-x64-Portable.zip"
+          Compress-Archive -Path "$scExeSrc" -DestinationPath "./$scPortableZip"
 
-          # 2. Package RequiresDotNet10 edition (Direct standalone exe and zip archive)
-          $reqExeName = "TimeFold-${tag}-win-x64-RequiresDotNet10.exe"
-          Rename-Item -Path ./publish_requires_dotnet/TimeFold.exe -NewName $reqExeName
-          Copy-Item -Path "./publish_requires_dotnet/$reqExeName" -Destination "./$reqExeName"
-          $reqZip = "TimeFold-${tag}-win-x64-RequiresDotNet10.zip"
-          Compress-Archive -Path ./publish_requires_dotnet/* -DestinationPath "./$reqZip"
+          # ── Framework-Dependent Portable ZIP ─────────────────────────────
+          $fdPortableDir = "./publish_requires_dotnet"
+          $fdExeSrc = "$fdPortableDir/TimeFold.exe"
+          $fdPortableZip = "TimeFold-${tag}-win-x64-Portable-ReqDotNet10.zip"
+          Compress-Archive -Path "$fdExeSrc" -DestinationPath "./$fdPortableZip"
 
-          # Generate Checksums for both standalone EXEs and ZIPs
-          $rtrExeHash = (Get-FileHash -Path "./$rtrExeName" -Algorithm SHA256).Hash
-          $reqExeHash = (Get-FileHash -Path "./$reqExeName" -Algorithm SHA256).Hash
-          $rtrZipHash = (Get-FileHash -Path "./$rtrZip" -Algorithm SHA256).Hash
-          $reqZipHash = (Get-FileHash -Path "./$reqZip" -Algorithm SHA256).Hash
-          "$rtrExeHash  $rtrExeName`n$reqExeHash  $reqExeName`n$rtrZipHash  $rtrZip`n$reqZipHash  $reqZip" | Out-File -FilePath "./checksums.txt" -Encoding utf8
+          # ── Self-Contained Installer ──────────────────────────────────────
+          New-Item -ItemType Directory -Path ./publish_installer -Force | Out-Null
+          Copy-Item "$scExeSrc" -Destination "./publish_installer/TimeFold.exe"
+          & 'C:\Program Files (x86)\Inno Setup 6\ISCC.exe' `
+            "/DMyAppVersion=$ver" `
+            "/O." `
+            "installer\timefold.iss"
+          # ISCC outputs: TimeFold-{ver}-win-x64-Setup.exe
 
+          # ── Framework-Dependent Installer ────────────────────────────────
+          Copy-Item "$fdExeSrc" -Destination "./publish_installer/TimeFold.exe" -Force
+          & 'C:\Program Files (x86)\Inno Setup 6\ISCC.exe' `
+            "/DMyAppVersion=$ver" `
+            ""/DOutputBaseName=TimeFold-${tag}-win-x64-Setup-ReqDotNet10" `
+            "/O." `
+            "installer\timefold.iss"
+
+          # ── Checksums ────────────────────────────────────────────────────
+          $files = @(
+            "TimeFold-${tag}-win-x64-Setup.exe",
+            "TimeFold-${tag}-win-x64-Setup-ReqDotNet10.exe",
+            "TimeFold-${tag}-win-x64-Portable.zip",
+            "TimeFold-${tag}-win-x64-Portable-ReqDotNet10.zip"
+          )
+          $lines = foreach ($f in $files) {
+            if (Test-Path "./$f") { "$(( Get-FileHash -Path ./$f -Algorithm SHA256 ).Hash)  $f" }
+          }
+          $lines | Out-File -FilePath "./checksums.txt" -Encoding utf8
+
+      # ── Publish GitHub Release ────────────────────────────────────────────
       - name: Publish GitHub Release
         uses: softprops/action-gh-release@v2
         with:
@@ -90,11 +126,16 @@ jobs:
           prerelease: false
           generate_release_notes: true
           body: |
-            ### 📦 Which file should I download?
-            * **⭐ If in doubt, choose:** **`TimeFold-${{ steps.get_version.outputs.tag }}-win-x64-ReadyToRun.zip`**  
-              *(Recommended for everyone — extracts to `TimeFold-${{ steps.get_version.outputs.tag }}-win-x64-ReadyToRun.exe`. Double-click to run. No installation or setup needed).*
-            * **💻 For Developers & Power Users:** **`TimeFold-${{ steps.get_version.outputs.tag }}-win-x64-RequiresDotNet10.zip`**  
-              *(Tiny 1.5MB download — extracts to `TimeFold-${{ steps.get_version.outputs.tag }}-win-x64-RequiresDotNet10.exe`. Only works if you already have the .NET 10 Desktop Runtime installed on your PC).*
+            ### ⬇️ Which file should I download?
+
+            | File | Who it's for |
+            |---|---|
+            | **`TimeFold-${{ steps.get_version.outputs.tag }}-win-x64-Setup.exe`** | ✅ Recommended — Windows installer, no .NET required |
+            | **`TimeFold-${{ steps.get_version.outputs.tag }}-win-x64-Portable.zip`** | Portable — extract and run, no installation needed |
+            | `TimeFold-${{ steps.get_version.outputs.tag }}-win-x64-Setup-ReqDotNet10.exe` | Installer (tiny, requires [.NET 10 Runtime](https://dotnet.microsoft.com/download/dotnet/10.0)) |
+            | `TimeFold-${{ steps.get_version.outputs.tag }}-win-x64-Portable-ReqDotNet10.zip` | Portable (tiny, requires [.NET 10 Runtime](https://dotnet.microsoft.com/download/dotnet/10.0)) |
+
+            > **Tip for release notes in-app:** Wrap your short summary between `<!-- timefold-summary-start -->` and `<!-- timefold-summary-end -->` above this table — TimeFold will display it in the update notification.
           files: |
             TimeFold-*.exe
             TimeFold-*.zip

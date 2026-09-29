@@ -36,6 +36,8 @@ namespace FileOrganizer.Models
         public bool EnableFolderExclusions { get; set; } = Config.AppConstants.DefaultEnableFolderExclusions;
         public bool UseMediaDateTaken { get; set; } = Config.AppConstants.DefaultUseMediaDateTaken;
         public bool ShowIgnoreMarkerWarning { get; set; } = Config.AppConstants.DefaultShowIgnoreMarkerWarning;
+        public bool CheckForUpdatesOnStartup { get; set; } = true;
+        public string SkippedUpdateVersion { get; set; } = string.Empty;
 
         public static AppSettings LoadFromFile()
         {

@@ -15,6 +15,7 @@ namespace FileOrganizer
         private CheckBox _chkGenerateCsvLog = null!;
         private CheckBox _chkUse24Hour = null!;
         private CheckBox _chkAutoLoadExeDir = null!;
+        private CheckBox _chkCheckForUpdates = null!;
         private Button _btnTypeRules = null!;
         private ComboBox _cmbFileDateSource = null!;
         private ComboBox _cmbFolderDateSource = null!;
@@ -323,6 +324,9 @@ namespace FileOrganizer
             currentY += spacing;
 
             _chkAutoLoadExeDir = new CheckBox { Text = "Auto-load application folder on startup", Location = new Point(leftMargin, currentY), AutoSize = true, Checked = _settings.AutoLoadExeDirectoryOnStartup };
+            currentY += spacing;
+
+            _chkCheckForUpdates = new CheckBox { Text = "Check for updates on startup", Location = new Point(leftMargin, currentY), AutoSize = true, Checked = _settings.CheckForUpdatesOnStartup };
             currentY += spacing + 4;
 
             // Preview Limit Row
@@ -370,7 +374,7 @@ namespace FileOrganizer
                 lblNamingHeader, _cmbFormat, _btnFlipOrder, _chkShortMonth, lblPrefix, lblSuffix, _txtPrefix, _txtSuffix,
                 _pnlLivePreview,
                 lblAppearanceHeader, _btnThemeLight, _btnThemeDark,
-                lblBehaviorHeader, _chkShowProgress, _chkGenerateCsvLog, _chkShowOnTop, _chkUse24Hour, _chkAutoLoadExeDir,
+                lblBehaviorHeader, _chkShowProgress, _chkGenerateCsvLog, _chkShowOnTop, _chkUse24Hour, _chkAutoLoadExeDir, _chkCheckForUpdates,
                 lblPreviewLimit, _cmbPreviewLimit, _lblPreviewLimitWarning,
                 _btnOpenConfig, _btnDefaults, _btnTypeRules, _btnOK, _btnCancel
             ]);

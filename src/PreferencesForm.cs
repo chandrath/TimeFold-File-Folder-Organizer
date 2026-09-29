@@ -90,7 +90,9 @@ namespace FileOrganizer
                 GroupGitRepositories = currentSettings.GroupGitRepositories,
                 CreateSortedSubfolder = currentSettings.CreateSortedSubfolder,
                 UseSourceAsOutput = currentSettings.UseSourceAsOutput,
-                RecentFolders = new System.Collections.Generic.List<string>(currentSettings.RecentFolders)
+                RecentFolders = new System.Collections.Generic.List<string>(currentSettings.RecentFolders),
+                CheckForUpdatesOnStartup = currentSettings.CheckForUpdatesOnStartup,
+                SkippedUpdateVersion = currentSettings.SkippedUpdateVersion
             };
             _isDarkMode = _settings.DarkMode;
             InitializeComponent();
@@ -258,6 +260,7 @@ namespace FileOrganizer
             _chkGenerateCsvLog.Checked = AppConstants.DefaultGenerateCsvLog;
             _chkUse24Hour.Checked = AppConstants.DefaultUse24HourTimestamp;
             _chkAutoLoadExeDir.Checked = AppConstants.DefaultAutoLoadExeDirectoryOnStartup;
+            _chkCheckForUpdates.Checked = true;
             _isDarkMode = AppConstants.DefaultDarkMode;
 
             _cmbFileDateSource.SelectedIndex = (int)AppConstants.DefaultFileDateSource;
@@ -307,6 +310,7 @@ namespace FileOrganizer
             _settings.Use24HourTimestamp = _chkUse24Hour.Checked;
             _settings.AutoLoadExeDirectoryOnStartup = _chkAutoLoadExeDir.Checked;
             _settings.DarkMode = _isDarkMode;
+            _settings.CheckForUpdatesOnStartup = _chkCheckForUpdates.Checked;
             _settings.FolderFormat = ResolveFolderFormat();
             _settings.FolderPrefix = AppConstants.SanitizeFolderName(_txtPrefix.Text);
             _settings.FolderSuffix = AppConstants.SanitizeFolderName(_txtSuffix.Text);

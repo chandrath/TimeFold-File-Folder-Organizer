@@ -31,6 +31,7 @@ namespace FileOrganizer
         private ToolStripMenuItem _menuPreferences = null!;
         private ToolStripMenuItem _menuHelp = null!;
         private ToolStripMenuItem _menuAbout = null!;
+        private ToolStripMenuItem _menuCheckForUpdates = null!;
 
         // UI Controls - Main Panel
         private Panel _pnlMain = null!;
@@ -97,9 +98,9 @@ namespace FileOrganizer
 
             this.Shown += (s, e) =>
             {
-                if (!_settings.HasSeenWelcomeTour)
+                this.BeginInvoke(new Action(() =>
                 {
-                    this.BeginInvoke(new Action(() =>
+                    if (!_settings.HasSeenWelcomeTour)
                     {
                         using var tourForm = new WelcomeTourForm(_settings.DarkMode, isDark =>
                         {
@@ -111,8 +112,15 @@ namespace FileOrganizer
                         _settings.HasSeenWelcomeTour = true;
                         _settings.SaveToFile();
                         ApplyTheme(_settings.DarkMode);
-                    }));
-                }
+                        // Run update check after tour closes (short delay so the form feels settled)
+                        if (_settings.CheckForUpdatesOnStartup)
+                            RunStartupUpdateCheckAsync(delayMs: 1500);
+                    }
+                    else if (_settings.CheckForUpdatesOnStartup)
+                    {
+                        RunStartupUpdateCheckAsync(delayMs: 2500);
+                    }
+                }));
             };
         }
 

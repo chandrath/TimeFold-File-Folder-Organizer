@@ -42,6 +42,11 @@ namespace FileOrganizer.Config
         public const string AppDescription = "Fast, non-destructive file and folder organizer for Windows that sorts messy directories into clean date-based timelines or smart file-type categories.";
         public const string Author = "Shree";
         public const string RepositoryUrl = "https://github.com/chandrath/TimeFold-File-Folder-Organizer";
+        // GitHub Releases — derived from RepositoryUrl, no personal credentials
+        public const string ReleasesApiUrl = "https://api.github.com/repos/chandrath/TimeFold-File-Folder-Organizer/releases/latest";
+        public const string ReleasesPageUrl = RepositoryUrl + "/releases/latest";
+        public const string ReleaseSummaryStart = "<!-- timefold-summary-start -->";
+        public const string ReleaseSummaryEnd = "<!-- timefold-summary-end -->";
         public const string LicenseText = "GNU General Public License v3.0 (GPLv3) - Free and Open Source";
         public const string CopyrightText = LicenseText;
 
