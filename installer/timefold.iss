@@ -34,16 +34,15 @@ Compression=lzma2/ultra64
 SolidCompression=yes
 WizardStyle=modern
 PrivilegesRequired=admin
-PrivilegesRequiredOverridesAllowed=dialog
 ArchitecturesAllowed=x64compatible
 ArchitecturesInstallIn64BitMode=x64compatible
 MinVersion=10.0.17763
-LicenseFile=..\LICENSE
 
 [Languages]
 Name: "english"; MessagesFile: "compiler:Default.isl"
 
 [Tasks]
+Name: "desktopicon"; Description: "Create a &desktop shortcut"; GroupDescription: "Additional shortcuts:"; Flags: unchecked
 ; Both context-menu options are UNCHECKED by default
 Name: "contextmenu_folder"; Description: "Add ""Open in TimeFold"" to folder right-click menu"; GroupDescription: "Windows Explorer Integration (optional):"; Flags: unchecked
 Name: "contextmenu_background"; Description: "Add ""Open this folder in TimeFold"" to folder background right-click menu"; GroupDescription: "Windows Explorer Integration (optional):"; Flags: unchecked
@@ -54,7 +53,7 @@ Source: "..\publish_installer\{#MyAppExeName}"; DestDir: "{app}"; Flags: ignorev
 [Icons]
 Name: "{group}\{#MyAppName}"; Filename: "{app}\{#MyAppExeName}"
 Name: "{group}\Uninstall {#MyAppName}"; Filename: "{uninstallexe}"
-Name: "{commondesktop}\{#MyAppName}"; Filename: "{app}\{#MyAppExeName}"; Flags: unchecked
+Name: "{commondesktop}\{#MyAppName}"; Filename: "{app}\{#MyAppExeName}"; Tasks: desktopicon
 
 [Registry]
 ; Install-presence marker — read by TimeFold to detect installed vs portable mode.

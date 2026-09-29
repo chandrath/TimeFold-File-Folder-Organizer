@@ -100,7 +100,7 @@ jobs:
           Copy-Item "$fdExeSrc" -Destination "./publish_installer/TimeFold.exe" -Force
           & 'C:\Program Files (x86)\Inno Setup 6\ISCC.exe' `
             "/DMyAppVersion=$ver" `
-            ""/DOutputBaseName=TimeFold-${tag}-win-x64-Setup-ReqDotNet10" `
+            "/DOutputBaseName=TimeFold-${tag}-win-x64-Setup-ReqDotNet10" `
             "/O." `
             "installer\timefold.iss"
 
