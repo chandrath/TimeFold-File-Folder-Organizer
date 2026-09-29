@@ -332,40 +332,30 @@ namespace FileOrganizer
             _chkCheckForUpdates = new CheckBox { Text = "Check for updates on startup", Location = new Point(leftMargin, currentY), AutoSize = true, Checked = _settings.CheckForUpdatesOnStartup };
             currentY += spacing + 4;
 
-            // Context Menu Status — installed builds only
-            _pnlCtxMenuStatus = new Panel { Location = new Point(leftMargin, currentY), Width = contentWidth, Height = 0, Visible = false };
+            // Context Menu Status — installed builds only (flat labels, no Panel to avoid theme artifacts)
+            _pnlCtxMenuStatus = new Panel { Height = 0, Visible = false }; // kept for Controls.AddRange compat
             if (AppConstants.IsInstalledBuild)
             {
                 bool ctxActive = AppConstants.IsContextMenuRegistered;
-                _pnlCtxMenuStatus.Height = 28;
-                _pnlCtxMenuStatus.Visible = true;
-
-                var lblCtxIcon = new Label
+                string statusText = ctxActive
+                    ? "  ✔  Explorer context menu is active"
+                    : "  ⚠  Explorer context menu is not installed.";
+                var lblCtxStatus = new Label
                 {
-                    Text = ctxActive ? "✅" : "ℹ️",
-                    Location = new Point(0, 4),
-                    AutoSize = true,
-                    Font = new Font("Segoe UI Emoji", 9F)
-                };
-                var lblCtxText = new Label
-                {
-                    Text = ctxActive
-                        ? "Explorer context menu is active"
-                        : "Explorer context menu is not installed.",
-                    Location = new Point(24, 5),
+                    Text = statusText,
+                    Location = new Point(leftMargin, currentY),
                     AutoSize = true,
                     Font = new Font("Segoe UI", 9F),
                     ForeColor = ctxActive ? AppConstants.ColorSuccess : AppConstants.ColorTextMuted
                 };
-                _pnlCtxMenuStatus.Controls.Add(lblCtxIcon);
-                _pnlCtxMenuStatus.Controls.Add(lblCtxText);
+                this.Controls.Add(lblCtxStatus);
 
                 if (!ctxActive)
                 {
                     var lnkRestore = new LinkLabel
                     {
-                        Text = "Run the installer to restore it →",
-                        Location = new Point(lblCtxText.Location.X + 222, 5),
+                        Text = "Run installer to restore →",
+                        Location = new Point(leftMargin + 240, currentY + 1),
                         AutoSize = true,
                         Font = new Font("Segoe UI", 9F),
                         LinkColor = AppConstants.ColorPrimary
@@ -375,9 +365,9 @@ namespace FileOrganizer
                         try { System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo(AppConstants.ReleasesPageUrl) { UseShellExecute = true }); }
                         catch { }
                     };
-                    _pnlCtxMenuStatus.Controls.Add(lnkRestore);
+                    this.Controls.Add(lnkRestore);
                 }
-                currentY += 32;
+                currentY += 26;
             }
 
             // Preview Limit Row

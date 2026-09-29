@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Windows.Forms;
 
 namespace FileOrganizer
@@ -16,7 +16,10 @@ namespace FileOrganizer
             Application.EnableVisualStyles();
             Application.SetCompatibleTextRenderingDefault(false);
             Application.SetHighDpiMode(HighDpiMode.PerMonitorV2);
-            Application.Run(new MainForm());
+            // args[0] may be a folder path from Explorer context menu (%1 / %V)
+            string? initialFolder = (args != null && args.Length > 0 && System.IO.Directory.Exists(args[0]))
+                ? args[0] : null;
+            Application.Run(new MainForm(initialFolder));
             return 0;
         }
 
@@ -359,7 +362,7 @@ namespace FileOrganizer
                 var scanned = exclOrganizer.ScanFiles(includeTopLevelFolders: true, excludedFolders: rules, enableFolderExclusions: true);
 
                 var exclItem = scanned.FirstOrDefault(f => f.Name.Equals("MYFILES", StringComparison.OrdinalIgnoreCase));
-                if (exclItem == null || !exclItem.IsExcludedByRule || exclItem.IsSelected || exclItem.TargetFolder != "— (Ignored)")
+                if (exclItem == null || !exclItem.IsExcludedByRule || exclItem.IsSelected || exclItem.TargetFolder != "â€” (Ignored)")
                 {
                     Console.WriteLine("[FAIL] Exclusion rule test failed: MYFILES was not excluded or target was wrong");
                     return 13;
@@ -406,7 +409,7 @@ namespace FileOrganizer
                 }
 
                 var projectItem = scanIgnoreFile.FirstOrDefault(f => f.Name.Equals("Projects", StringComparison.OrdinalIgnoreCase));
-                if (projectItem == null || !projectItem.IsExcludedByRule || projectItem.TypeDisplay != "📁 Folder (Ignored)" || projectItem.TargetFolder != "— (Ignored)")
+                if (projectItem == null || !projectItem.IsExcludedByRule || projectItem.TypeDisplay != "ðŸ“ Folder (Ignored)" || projectItem.TargetFolder != "â€” (Ignored)")
                 {
                     Console.WriteLine("[FAIL] .timefold-ignore rule test failed: Projects was not excluded or TypeDisplay was incorrect");
                     return 18;
@@ -478,7 +481,7 @@ namespace FileOrganizer
                 // Test 10: Verify AppConstants.BuildDateTooltip contains guidance
                 var testMediaItem = new Models.FileItem { Name = "photo.jpg", MediaDateTaken = new DateTime(2023, 8, 14, 15, 30, 22), ModifiedDate = new DateTime(2026, 9, 20, 11, 45, 10), CreatedDate = new DateTime(2026, 9, 26, 18, 20, 0), IsMediaDateActive = true, TargetFolder = "2023-08" };
                 string mediaTip = Config.AppConstants.BuildDateTooltip(testMediaItem);
-                if (!mediaTip.Contains("📷 Date Taken:") || !mediaTip.Contains("disable 'Prioritize original media Date Taken"))
+                if (!mediaTip.Contains("ðŸ“· Date Taken:") || !mediaTip.Contains("disable 'Prioritize original media Date Taken"))
                 {
                     Console.WriteLine("[FAIL] BuildDateTooltip media test failed");
                     return 24;

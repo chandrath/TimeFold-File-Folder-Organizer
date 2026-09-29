@@ -19,6 +19,7 @@ namespace FileOrganizer
         private CancellationTokenSource? _cancellationTokenSource;
         private readonly string _executablePath;
         private readonly string _executableDirectory;
+        private readonly string? _initialFolderPath;
         private AppSettings _settings = AppSettings.LoadFromFile();
         private OrganizationResult? _lastResult;
 
@@ -70,10 +71,11 @@ namespace FileOrganizer
         private Label _lblSubtitle = null!, _lblSourceTitle = null!, _lblDropHint = null!, _lblPreviewHeader = null!;
         private Label _lblEmptyIcon = null!, _lblEmptyTitle = null!, _lblEmptyDesc = null!;
 
-        public MainForm()
+        public MainForm(string? initialFolderPath = null)
         {
             _executablePath = Application.ExecutablePath;
             _executableDirectory = Path.GetDirectoryName(_executablePath) ?? Environment.CurrentDirectory;
+            _initialFolderPath = initialFolderPath;
             InitializeComponent();
             InitializeOrganizer();
         }
@@ -87,7 +89,12 @@ namespace FileOrganizer
             ApplySettings();
             ApplyTheme(_settings.DarkMode);
             UpdateRecentMenus();
-            if (_settings.AutoLoadExeDirectoryOnStartup && Directory.Exists(_executableDirectory))
+            // If launched from Explorer context menu, prefill with the passed folder
+            if (!string.IsNullOrEmpty(_initialFolderPath) && Directory.Exists(_initialFolderPath))
+            {
+                SetSourceFolder(_initialFolderPath);
+            }
+            else if (_settings.AutoLoadExeDirectoryOnStartup && Directory.Exists(_executableDirectory))
             {
                 SetSourceFolder(_executableDirectory);
             }
