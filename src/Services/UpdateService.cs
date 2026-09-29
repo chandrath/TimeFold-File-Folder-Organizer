@@ -27,15 +27,25 @@ namespace FileOrganizer.Services
             bool HasFullNotes);
 
         /// <summary>
-        /// Returns an UpdateInfo if a newer version is available, otherwise null.
-        /// Never throws — returns null on any network or parse error.
+        /// Result of an update check.
+        /// <list type="bullet">
+        ///   <item><c>Success=false</c>: could not reach GitHub (offline, timeout, API error)</item>
+        ///   <item><c>Success=true, Info=null</c>: reachable, already on latest version</item>
+        ///   <item><c>Success=true, Info!=null</c>: update available</item>
+        /// </list>
         /// </summary>
-        public static async Task<UpdateInfo?> CheckAsync()
+        public record UpdateCheckResult(bool Success, UpdateInfo? Info);
+
+        /// <summary>
+        /// Checks GitHub for the latest release. Never throws.
+        /// </summary>
+        public static async Task<UpdateCheckResult> CheckAsync()
         {
             try
             {
                 using var response = await _http.GetAsync(AppConstants.ReleasesApiUrl).ConfigureAwait(false);
-                if (!response.IsSuccessStatusCode) return null;
+                if (!response.IsSuccessStatusCode)
+                    return new UpdateCheckResult(false, null);
 
                 string json = await response.Content.ReadAsStringAsync().ConfigureAwait(false);
                 using var doc = JsonDocument.Parse(json);
@@ -46,22 +56,25 @@ namespace FileOrganizer.Services
                 string htmlUrl = root.TryGetProperty("html_url", out var urlEl) ? urlEl.GetString() ?? AppConstants.ReleasesPageUrl : AppConstants.ReleasesPageUrl;
 
                 string remoteVersion = tagName.TrimStart('v', 'V');
-                if (!IsNewer(remoteVersion, AppConstants.AppVersion)) return null;
+
+                // Successfully reached GitHub but no newer version
+                if (!IsNewer(remoteVersion, AppConstants.AppVersion))
+                    return new UpdateCheckResult(true, null);
 
                 string summary = ExtractSummary(body);
                 bool hasFullNotes = !string.IsNullOrWhiteSpace(body);
 
-                return new UpdateInfo(tagName, remoteVersion, htmlUrl, summary, hasFullNotes);
+                return new UpdateCheckResult(true, new UpdateInfo(tagName, remoteVersion, htmlUrl, summary, hasFullNotes));
             }
             catch
             {
-                return null;
+                // Network error, timeout, DNS failure, offline — not an update answer
+                return new UpdateCheckResult(false, null);
             }
         }
 
         /// <summary>
         /// Returns true if remoteVersion is strictly greater than localVersion.
-        /// Compares using System.Version for correct semantic ordering.
         /// </summary>
         public static bool IsNewer(string remoteVersion, string localVersion)
         {
@@ -75,7 +88,6 @@ namespace FileOrganizer.Services
 
         private static string NormalizeVersion(string v)
         {
-            // Ensure at least Major.Minor.Patch so Version.TryParse works
             var parts = v.Split('.');
             return parts.Length switch
             {
@@ -89,7 +101,6 @@ namespace FileOrganizer.Services
         {
             if (string.IsNullOrWhiteSpace(body)) return string.Empty;
 
-            // Try to extract between structured markers
             int start = body.IndexOf(AppConstants.ReleaseSummaryStart, StringComparison.Ordinal);
             int end = body.IndexOf(AppConstants.ReleaseSummaryEnd, StringComparison.Ordinal);
             if (start >= 0 && end > start)
@@ -98,7 +109,7 @@ namespace FileOrganizer.Services
                 if (!string.IsNullOrWhiteSpace(extracted)) return extracted;
             }
 
-            // Fallback: first ~300 chars, stripped of markdown/HTML comments
+            // Fallback: first ~300 chars, stripped of HTML comments
             string stripped = Regex.Replace(body, @"<!--.*?-->", string.Empty, RegexOptions.Singleline).Trim();
             if (stripped.Length <= 300) return stripped;
             int cutAt = stripped.LastIndexOf(' ', 300);

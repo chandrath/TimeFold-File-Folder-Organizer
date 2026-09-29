@@ -506,14 +506,16 @@ namespace FileOrganizer
             try
             {
                 await System.Threading.Tasks.Task.Delay(delayMs).ConfigureAwait(false);
-                var info = await Services.UpdateService.CheckAsync().ConfigureAwait(false);
-                if (info == null) return;
+                var result = await Services.UpdateService.CheckAsync().ConfigureAwait(false);
+                // Offline or API error: stay silent on startup — never show a false "up to date"
+                if (!result.Success || result.Info == null) return;
+
                 // Skip silently if user previously chose to skip this version
                 if (!string.IsNullOrEmpty(_settings.SkippedUpdateVersion) &&
-                    !Services.UpdateService.IsNewer(info.Version, _settings.SkippedUpdateVersion))
+                    !Services.UpdateService.IsNewer(result.Info.Version, _settings.SkippedUpdateVersion))
                     return;
 
-                this.BeginInvoke(new Action(() => ShowUpdateDialog(info)));
+                this.BeginInvoke(new Action(() => ShowUpdateDialog(result.Info)));
             }
             catch { /* never surface update errors to the user */ }
         }
@@ -525,11 +527,22 @@ namespace FileOrganizer
 
         private async System.Threading.Tasks.Task CheckForUpdatesManualAsync()
         {
-            var info = await Services.UpdateService.CheckAsync().ConfigureAwait(false);
+            var result = await Services.UpdateService.CheckAsync().ConfigureAwait(false);
             this.BeginInvoke(new Action(() =>
             {
-                if (info == null)
+                if (!result.Success)
                 {
+                    // Could not reach GitHub — offline, timeout, or API error
+                    MessageBox.Show(this,
+                        "Could not reach the update server. Please check your internet connection and try again.",
+                        "Update Check Failed",
+                        MessageBoxButtons.OK,
+                        MessageBoxIcon.Warning);
+                    return;
+                }
+                if (result.Info == null)
+                {
+                    // Successfully checked — already on latest
                     MessageBox.Show(this,
                         $"TimeFold {AppConstants.AppVersion} is the latest version. You're up to date!",
                         "No Updates Available",
@@ -537,7 +550,7 @@ namespace FileOrganizer
                         MessageBoxIcon.Information);
                     return;
                 }
-                ShowUpdateDialog(info);
+                ShowUpdateDialog(result.Info);
             }));
         }
 
