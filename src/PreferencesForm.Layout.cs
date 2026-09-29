@@ -48,11 +48,14 @@ namespace FileOrganizer
         private Button _btnOK = null!;
         private Button _btnCancel = null!;
 
+        // Context Menu Status (installed builds only)
+        private Panel _pnlCtxMenuStatus = null!;
+
         private void InitializeComponent()
         {
             this.Text = "Preferences";
             if (AppConstants.AppIcon != null) this.Icon = AppConstants.AppIcon;
-            this.Size = new Size(600, 870);
+            this.Size = new Size(600, 898);
             this.StartPosition = FormStartPosition.CenterParent;
             this.FormBorderStyle = FormBorderStyle.FixedDialog;
             this.MaximizeBox = false;
@@ -329,6 +332,54 @@ namespace FileOrganizer
             _chkCheckForUpdates = new CheckBox { Text = "Check for updates on startup", Location = new Point(leftMargin, currentY), AutoSize = true, Checked = _settings.CheckForUpdatesOnStartup };
             currentY += spacing + 4;
 
+            // Context Menu Status — installed builds only
+            _pnlCtxMenuStatus = new Panel { Location = new Point(leftMargin, currentY), Width = contentWidth, Height = 0, Visible = false };
+            if (AppConstants.IsInstalledBuild)
+            {
+                bool ctxActive = AppConstants.IsContextMenuRegistered;
+                _pnlCtxMenuStatus.Height = 28;
+                _pnlCtxMenuStatus.Visible = true;
+
+                var lblCtxIcon = new Label
+                {
+                    Text = ctxActive ? "✅" : "ℹ️",
+                    Location = new Point(0, 4),
+                    AutoSize = true,
+                    Font = new Font("Segoe UI Emoji", 9F)
+                };
+                var lblCtxText = new Label
+                {
+                    Text = ctxActive
+                        ? "Explorer context menu is active"
+                        : "Explorer context menu is not installed.",
+                    Location = new Point(24, 5),
+                    AutoSize = true,
+                    Font = new Font("Segoe UI", 9F),
+                    ForeColor = ctxActive ? AppConstants.ColorSuccess : AppConstants.ColorTextMuted
+                };
+                _pnlCtxMenuStatus.Controls.Add(lblCtxIcon);
+                _pnlCtxMenuStatus.Controls.Add(lblCtxText);
+
+                if (!ctxActive)
+                {
+                    var lnkRestore = new LinkLabel
+                    {
+                        Text = "Run the installer to restore it →",
+                        Location = new Point(lblCtxText.Location.X + 222, 5),
+                        AutoSize = true,
+                        Font = new Font("Segoe UI", 9F),
+                        LinkColor = AppConstants.ColorPrimary
+                    };
+                    lnkRestore.LinkClicked += (s, e) =>
+                    {
+                        try { System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo(AppConstants.ReleasesPageUrl) { UseShellExecute = true }); }
+                        catch { }
+                    };
+                    _pnlCtxMenuStatus.Controls.Add(lnkRestore);
+                }
+                currentY += 32;
+            }
+
             // Preview Limit Row
             var lblPreviewLimit = new Label { Text = "Preview Items Limit:", Location = new Point(leftMargin, currentY + 3), AutoSize = true, Font = new Font("Segoe UI", 9F) };
             _cmbPreviewLimit = new ComboBox { Location = new Point(leftMargin + 140, currentY), Width = 190, DropDownStyle = ComboBoxStyle.DropDownList, Font = new Font("Segoe UI", 9F) };
@@ -375,6 +426,7 @@ namespace FileOrganizer
                 _pnlLivePreview,
                 lblAppearanceHeader, _btnThemeLight, _btnThemeDark,
                 lblBehaviorHeader, _chkShowProgress, _chkGenerateCsvLog, _chkShowOnTop, _chkUse24Hour, _chkAutoLoadExeDir, _chkCheckForUpdates,
+                _pnlCtxMenuStatus,
                 lblPreviewLimit, _cmbPreviewLimit, _lblPreviewLimitWarning,
                 _btnOpenConfig, _btnDefaults, _btnTypeRules, _btnOK, _btnCancel
             ]);

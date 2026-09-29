@@ -94,6 +94,35 @@ namespace FileOrganizer.Config
 
         public const int UndoSessionMaxAgeDays = 7;
 
+        // Installation detection (SSoT)
+        // IsInstalledBuild: true only when the Inno Setup installer has written the HKLM marker.
+        // Portable builds never have this key → IsInstalledBuild = false.
+        private static readonly Lazy<bool> _lazyIsInstalled = new(() =>
+        {
+            try
+            {
+                using var key = Microsoft.Win32.Registry.LocalMachine.OpenSubKey(
+                    $@"Software\{VendorName}\{ShortAppName}");
+                return key != null;
+            }
+            catch { return false; }
+        });
+        public static bool IsInstalledBuild => _lazyIsInstalled.Value;
+
+        // IsContextMenuRegistered: true when the Explorer shell key is present (either entry).
+        private static readonly Lazy<bool> _lazyCtxMenu = new(() =>
+        {
+            try
+            {
+                using var key = Microsoft.Win32.Registry.ClassesRoot.OpenSubKey(
+                    @"Directory\shell\TimeFold");
+                return key != null;
+            }
+            catch { return false; }
+        });
+        public static bool IsContextMenuRegistered => _lazyCtxMenu.Value;
+
+
         public static void OpenConfigLocation()
         {
             string dir = GetConfigDirectoryPath();
