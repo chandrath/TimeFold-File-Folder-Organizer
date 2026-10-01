@@ -49,13 +49,14 @@ namespace FileOrganizer
         private Button _btnCancel = null!;
 
         // Context Menu Status (installed builds only)
-        private Panel _pnlCtxMenuStatus = null!;
+        private Label? _lblCtxStatus;
+        private LinkLabel? _lnkRestoreCtxMenu;
 
         private void InitializeComponent()
         {
             this.Text = "Preferences";
             if (AppConstants.AppIcon != null) this.Icon = AppConstants.AppIcon;
-            this.Size = new Size(600, 898);
+            this.ClientSize = new Size(600, 880);
             this.StartPosition = FormStartPosition.CenterParent;
             this.FormBorderStyle = FormBorderStyle.FixedDialog;
             this.MaximizeBox = false;
@@ -332,15 +333,14 @@ namespace FileOrganizer
             _chkCheckForUpdates = new CheckBox { Text = "Check for updates on startup", Location = new Point(leftMargin, currentY), AutoSize = true, Checked = _settings.CheckForUpdatesOnStartup };
             currentY += spacing + 4;
 
-            // Context Menu Status — installed builds only (flat labels, no Panel to avoid theme artifacts)
-            _pnlCtxMenuStatus = new Panel { Height = 0, Visible = false }; // kept for Controls.AddRange compat
+            // Context Menu Status — installed builds only
             if (AppConstants.IsInstalledBuild)
             {
                 bool ctxActive = AppConstants.IsContextMenuRegistered;
                 string statusText = ctxActive
                     ? "  ✔  Explorer context menu is active"
                     : "  ⚠  Explorer context menu is not installed.";
-                var lblCtxStatus = new Label
+                _lblCtxStatus = new Label
                 {
                     Text = statusText,
                     Location = new Point(leftMargin, currentY),
@@ -348,11 +348,11 @@ namespace FileOrganizer
                     Font = new Font("Segoe UI", 9F),
                     ForeColor = ctxActive ? AppConstants.ColorSuccess : AppConstants.ColorTextMuted
                 };
-                this.Controls.Add(lblCtxStatus);
+                this.Controls.Add(_lblCtxStatus);
 
                 if (!ctxActive)
                 {
-                    var lnkRestore = new LinkLabel
+                    _lnkRestoreCtxMenu = new LinkLabel
                     {
                         Text = "Run installer to restore →",
                         Location = new Point(leftMargin + 240, currentY + 1),
@@ -360,12 +360,12 @@ namespace FileOrganizer
                         Font = new Font("Segoe UI", 9F),
                         LinkColor = AppConstants.ColorPrimary
                     };
-                    lnkRestore.LinkClicked += (s, e) =>
+                    _lnkRestoreCtxMenu.LinkClicked += (s, e) =>
                     {
                         try { System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo(AppConstants.ReleasesPageUrl) { UseShellExecute = true }); }
                         catch { }
                     };
-                    this.Controls.Add(lnkRestore);
+                    this.Controls.Add(_lnkRestoreCtxMenu);
                 }
                 currentY += 26;
             }
@@ -389,7 +389,9 @@ namespace FileOrganizer
             currentY += 48;
 
             // Buttons: Left (Config Location, Defaults, File Types), Right (Save / Cancel)
-            int buttonY = this.ClientSize.Height - 52;
+            int buttonY = currentY + 8;
+            this.ClientSize = new Size(600, buttonY + 32 + 16);
+
             _btnOpenConfig = new Button { Text = "📂 Config Location", UseMnemonic = false, Size = new Size(125, 32), Location = new Point(leftMargin, buttonY), Font = new Font("Segoe UI Emoji", 8.5F) };
             _btnOpenConfig.Click += (s, e) => AppConstants.OpenConfigLocation();
 
@@ -416,7 +418,6 @@ namespace FileOrganizer
                 _pnlLivePreview,
                 lblAppearanceHeader, _btnThemeLight, _btnThemeDark,
                 lblBehaviorHeader, _chkShowProgress, _chkGenerateCsvLog, _chkShowOnTop, _chkUse24Hour, _chkAutoLoadExeDir, _chkCheckForUpdates,
-                _pnlCtxMenuStatus,
                 lblPreviewLimit, _cmbPreviewLimit, _lblPreviewLimitWarning,
                 _btnOpenConfig, _btnDefaults, _btnTypeRules, _btnOK, _btnCancel
             ]);

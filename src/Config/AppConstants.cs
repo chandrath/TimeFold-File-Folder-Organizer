@@ -95,32 +95,56 @@ namespace FileOrganizer.Config
         public const int UndoSessionMaxAgeDays = 7;
 
         // Installation detection (SSoT)
-        // IsInstalledBuild: true only when the Inno Setup installer has written the HKLM marker.
-        // Portable builds never have this key → IsInstalledBuild = false.
+        // IsInstalledBuild: true only when running from the installed directory (written by Inno Setup to HKLM marker).
+        // Portable builds running outside the install folder → IsInstalledBuild = false.
         private static readonly Lazy<bool> _lazyIsInstalled = new(() =>
         {
             try
             {
                 using var key = Microsoft.Win32.Registry.LocalMachine.OpenSubKey(
                     $@"Software\{VendorName}\{ShortAppName}");
-                return key != null;
+                if (key == null) return false;
+
+                string currentDir = AppDomain.CurrentDomain.BaseDirectory.TrimEnd('\\', '/');
+                string? installPath = key.GetValue("InstallPath") as string;
+                if (!string.IsNullOrWhiteSpace(installPath))
+                {
+                    string targetDir = installPath.TrimEnd('\\', '/');
+                    if (string.Equals(currentDir, targetDir, StringComparison.OrdinalIgnoreCase))
+                    {
+                        return true;
+                    }
+                }
+
+                // Fallback: check if the executable is running inside Program Files under VendorName/ShortAppName
+                string programFiles = Environment.GetFolderPath(Environment.SpecialFolder.ProgramFiles).TrimEnd('\\', '/');
+                string programFilesX86 = Environment.GetFolderPath(Environment.SpecialFolder.ProgramFilesX86).TrimEnd('\\', '/');
+                if (currentDir.StartsWith(programFiles, StringComparison.OrdinalIgnoreCase) ||
+                    currentDir.StartsWith(programFilesX86, StringComparison.OrdinalIgnoreCase))
+                {
+                    return true;
+                }
+
+                return false;
             }
             catch { return false; }
         });
         public static bool IsInstalledBuild => _lazyIsInstalled.Value;
 
         // IsContextMenuRegistered: true when the Explorer shell key is present (either entry).
-        private static readonly Lazy<bool> _lazyCtxMenu = new(() =>
+        public static bool IsContextMenuRegistered
         {
-            try
+            get
             {
-                using var key = Microsoft.Win32.Registry.ClassesRoot.OpenSubKey(
-                    @"Directory\shell\TimeFold");
-                return key != null;
+                try
+                {
+                    using var key1 = Microsoft.Win32.Registry.ClassesRoot.OpenSubKey(@"Directory\shell\TimeFold");
+                    using var key2 = Microsoft.Win32.Registry.ClassesRoot.OpenSubKey(@"Directory\Background\shell\TimeFold");
+                    return key1 != null || key2 != null;
+                }
+                catch { return false; }
             }
-            catch { return false; }
-        });
-        public static bool IsContextMenuRegistered => _lazyCtxMenu.Value;
+        }
 
 
         public static void OpenConfigLocation()

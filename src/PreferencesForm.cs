@@ -328,7 +328,7 @@ namespace FileOrganizer
             foreach (Control c in this.Controls)
             {
                 if (c is CheckBox chk) chk.ForeColor = palette.TextPrimary;
-                else if (c is Label lbl && lbl != _lblPreviewLimitWarning) lbl.ForeColor = palette.TextPrimary;
+                else if (c is Label lbl && lbl != _lblPreviewLimitWarning && lbl != _lblCtxStatus) lbl.ForeColor = palette.TextPrimary;
                 else if (c is TextBox txt)
                 {
                     txt.BackColor = palette.InputBg;
@@ -381,6 +381,14 @@ namespace FileOrganizer
             if (_lblPreviewLimitWarning != null)
             {
                 _lblPreviewLimitWarning.ForeColor = isDark ? Color.FromArgb(251, 191, 36) : Color.FromArgb(180, 83, 9);
+            }
+
+            if (_lblCtxStatus != null)
+            {
+                bool ctxActive = AppConstants.IsContextMenuRegistered;
+                _lblCtxStatus.ForeColor = ctxActive
+                    ? (isDark ? Color.FromArgb(74, 222, 128) : AppConstants.ColorSuccess)
+                    : (isDark ? Color.FromArgb(148, 163, 184) : AppConstants.ColorTextMuted);
             }
 
             if (_pnlLivePreview != null)
